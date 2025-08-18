@@ -31,12 +31,12 @@ export default function Home() {
             />
           </div>
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-6 leading-tight">
-            Your Personal
+            Il Tuo Assistente
             <br />
-            Nutrition Assistant
+            Nutrizionale Personale
           </h1>
           <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-            AI-powered meal planning that adapts to your lifestyle, dietary preferences, and health goals. Get personalized recipes and nutrition plans in seconds.
+            Pianificazione alimentare alimentata dall'IA che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button
@@ -46,7 +46,7 @@ export default function Home() {
               data-testid="create-meal-plan-button"
             >
               <Sparkles className="mr-2 h-5 w-5" />
-              Create Meal Plan
+              Crea Piano Alimentare
             </Button>
             <Button
               variant="outline"
@@ -55,7 +55,7 @@ export default function Home() {
               data-testid="how-it-works-button"
             >
               <Play className="mr-2 h-5 w-5" />
-              See How it Works
+              Scopri Come Funziona
             </Button>
           </div>
         </div>
@@ -93,33 +93,33 @@ export default function Home() {
                 <span className="font-bold text-2xl">NutriAI</span>
               </div>
               <p className="text-slate-300 mb-6 max-w-md">
-                Empowering healthier lifestyles through AI-powered nutrition planning. Personalized meal plans and recipes that adapt to your unique needs and preferences.
+                Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
               </p>
             </div>
             
             <div>
-              <h4 className="font-semibold text-lg mb-4">Product</h4>
+              <h4 className="font-semibold text-lg mb-4">Prodotto</h4>
               <ul className="space-y-2 text-slate-300">
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Meal Planning</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Recipe Generator</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Nutrition Tracking</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Premium Features</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Pianificazione Alimentare</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Generatore di Ricette</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Monitoraggio Nutrizionale</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Funzionalità Premium</a></li>
               </ul>
             </div>
             
             <div>
-              <h4 className="font-semibold text-lg mb-4">Support</h4>
+              <h4 className="font-semibold text-lg mb-4">Supporto</h4>
               <ul className="space-y-2 text-slate-300">
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Contact Us</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Centro Assistenza</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Contattaci</a></li>
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Terms of Service</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Termini di Servizio</a></li>
               </ul>
             </div>
           </div>
           
           <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 NutriAI. All rights reserved. Powered by OpenAI technology.</p>
+            <p>&copy; 2025 NutriAI. Tutti i diritti riservati. Alimentato dalla tecnologia OpenAI.</p>
           </div>
         </div>
       </footer>

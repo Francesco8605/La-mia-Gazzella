@@ -5,8 +5,8 @@ export default function LoadingStates() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">AI Generation Process</h2>
-        <p className="text-slate-600 text-lg">Modern loading states and progress indicators</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Processo di Generazione IA</h2>
+        <p className="text-slate-600 text-lg">Stati di caricamento moderni e indicatori di progresso</p>
       </div>
 
       {/* Loading State Examples */}

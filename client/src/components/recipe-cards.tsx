@@ -17,8 +17,8 @@ export default function RecipeCards() {
     return (
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Featured Recipes</h2>
-          <p className="text-slate-600 text-lg">Detailed recipes from your meal plan with step-by-step instructions</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Ricette in Evidenza</h2>
+          <p className="text-slate-600 text-lg">Ricette dettagliate dal tuo piano alimentare con istruzioni passo-passo</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -44,13 +44,13 @@ export default function RecipeCards() {
     return (
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Featured Recipes</h2>
-          <p className="text-slate-600 text-lg">Detailed recipes from your meal plan with step-by-step instructions</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Ricette in Evidenza</h2>
+          <p className="text-slate-600 text-lg">Ricette dettagliate dal tuo piano alimentare con istruzioni passo-passo</p>
         </div>
         
         <div className="glass-morphism rounded-3xl p-8 shadow-2xl border border-red-200">
           <div className="text-center text-red-600">
-            <p>No recipes available at the moment. Generate a meal plan to see personalized recipes!</p>
+            <p>Nessuna ricetta disponibile al momento. Genera un piano alimentare per vedere ricette personalizzate!</p>
           </div>
         </div>
       </div>
@@ -62,21 +62,21 @@ export default function RecipeCards() {
     return (
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Featured Recipes</h2>
-          <p className="text-slate-600 text-lg">Detailed recipes from your meal plan with step-by-step instructions</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Ricette in Evidenza</h2>
+          <p className="text-slate-600 text-lg">Ricette dettagliate dal tuo piano alimentare con istruzioni passo-passo</p>
         </div>
         
         <div className="glass-morphism rounded-3xl p-8 shadow-2xl">
           <div className="text-center">
             <BookOpen className="mx-auto h-16 w-16 text-slate-400 mb-4" />
-            <h3 className="text-xl font-semibold text-slate-700 mb-2">No Recipes Yet</h3>
-            <p className="text-slate-600 mb-6">Generate your first meal plan to discover personalized recipes tailored to your preferences!</p>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">Nessuna Ricetta Ancora</h3>
+            <p className="text-slate-600 mb-6">Genera il tuo primo piano alimentare per scoprire ricette personalizzate su misura per le tue preferenze!</p>
             <Button 
               className="bg-primary hover:bg-primary/90"
               onClick={() => document.getElementById('meal-plan-form')?.scrollIntoView({ behavior: 'smooth' })}
               data-testid="create-first-meal-plan"
             >
-              Create Your First Meal Plan
+              Crea il Tuo Primo Piano Alimentare
             </Button>
           </div>
         </div>
@@ -87,8 +87,8 @@ export default function RecipeCards() {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Featured Recipes</h2>
-        <p className="text-slate-600 text-lg">Detailed recipes from your meal plan with step-by-step instructions</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Ricette in Evidenza</h2>
+        <p className="text-slate-600 text-lg">Ricette dettagliate dal tuo piano alimentare con istruzioni passo-passo</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

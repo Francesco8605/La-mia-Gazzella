@@ -62,8 +62,8 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Your Personalized Meal Plan</h2>
-        <p className="text-slate-600 text-lg">A 7-day nutrition plan tailored to your goals and preferences</p>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Il Tuo Piano Alimentare Personalizzato</h2>
+        <p className="text-slate-600 text-lg">Un piano nutrizionale di 7 giorni su misura per i tuoi obiettivi e preferenze</p>
       </div>
 
       {/* Weekly Overview */}

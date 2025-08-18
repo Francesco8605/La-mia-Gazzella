@@ -31,37 +31,37 @@ interface UserInputFormProps {
 }
 
 const dietaryOptions = [
-  { id: "vegetarian", label: "Vegetarian", icon: "🌱" },
-  { id: "vegan", label: "Vegan", icon: "🥕" },
-  { id: "gluten-free", label: "Gluten-Free", icon: "🌾" },
-  { id: "keto", label: "Keto", icon: "🐟" },
+  { id: "vegetarian", label: "Vegetariano", icon: "🌱" },
+  { id: "vegan", label: "Vegano", icon: "🥕" },
+  { id: "gluten-free", label: "Senza Glutine", icon: "🌾" },
+  { id: "keto", label: "Chetogenica", icon: "🐟" },
   { id: "paleo", label: "Paleo", icon: "🥩" },
-  { id: "mediterranean", label: "Mediterranean", icon: "🫒" },
+  { id: "mediterranean", label: "Mediterranea", icon: "🫒" },
 ];
 
 const activityLevels = [
   { 
     id: "sedentary", 
-    label: "Sedentary", 
-    description: "Little to no exercise",
+    label: "Sedentario", 
+    description: "Poco o nessun esercizio",
     icon: "🛋️"
   },
   { 
     id: "moderate", 
-    label: "Moderate", 
-    description: "Light exercise 1-3 days/week",
+    label: "Moderato", 
+    description: "Esercizio leggero 1-3 giorni/settimana",
     icon: "🚶"
   },
   { 
     id: "active", 
-    label: "Active", 
-    description: "Moderate exercise 3-5 days/week",
+    label: "Attivo", 
+    description: "Esercizio moderato 3-5 giorni/settimana",
     icon: "🏃"
   },
   { 
     id: "very_active", 
-    label: "Very Active", 
-    description: "Hard exercise 6-7 days/week",
+    label: "Molto Attivo", 
+    description: "Esercizio intenso 6-7 giorni/settimana",
     icon: "🏋️"
   },
 ];
@@ -89,15 +89,15 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
     },
     onSuccess: (mealPlan) => {
       toast({
-        title: "Meal Plan Generated!",
-        description: "Your personalized meal plan has been created successfully.",
+        title: "Piano Alimentare Generato!",
+        description: "Il tuo piano alimentare personalizzato è stato creato con successo.",
       });
       onMealPlanGenerated(mealPlan.id);
     },
     onError: (error) => {
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to generate meal plan",
+        title: "Errore",
+        description: error instanceof Error ? error.message : "Impossibile generare il piano alimentare",
         variant: "destructive",
       });
     },
@@ -115,8 +115,8 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
     <div className="max-w-4xl mx-auto">
       <div className="glass-morphism rounded-3xl p-8 md:p-12 shadow-2xl animate-scale-in">
         <div className="text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Tell Us About Yourself</h2>
-          <p className="text-slate-600 text-lg">Help us create the perfect nutrition plan tailored just for you</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Parlaci di Te</h2>
+          <p className="text-slate-600 text-lg">Aiutaci a creare il piano nutrizionale perfetto su misura per te</p>
         </div>
 
         <Form {...form}>
@@ -130,12 +130,12 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
                   <FormItem>
                     <FormLabel className="text-slate-700 font-semibold flex items-center space-x-2">
                       <User className="text-primary h-5 w-5" />
-                      <span>Age</span>
+                      <span>Età</span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="Enter your age"
+                        placeholder="Inserisci la tua età"
                         className="glass-dark rounded-xl border-0 focus:ring-2 focus:ring-primary/50 text-slate-800 placeholder-slate-500"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || "")}
@@ -154,12 +154,12 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
                   <FormItem>
                     <FormLabel className="text-slate-700 font-semibold flex items-center space-x-2">
                       <Weight className="text-primary h-5 w-5" />
-                      <span>Weight (kg)</span>
+                      <span>Peso (kg)</span>
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="number"
-                        placeholder="Enter your weight"
+                        placeholder="Inserisci il tuo peso"
                         className="glass-dark rounded-xl border-0 focus:ring-2 focus:ring-primary/50 text-slate-800 placeholder-slate-500"
                         {...field}
                         onChange={(e) => field.onChange(parseInt(e.target.value) || "")}
@@ -176,7 +176,7 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
             <div className="space-y-4">
               <Label className="text-slate-700 font-semibold flex items-center space-x-2">
                 <Leaf className="text-secondary h-5 w-5" />
-                <span>Dietary Preferences</span>
+                <span>Preferenze Alimentari</span>
               </Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {dietaryOptions.map((option) => (
@@ -213,20 +213,20 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
                 <FormItem>
                   <FormLabel className="text-slate-700 font-semibold flex items-center space-x-2">
                     <Target className="text-accent h-5 w-5" />
-                    <span>Health Goals</span>
+                    <span>Obiettivi di Salute</span>
                   </FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger className="glass-dark rounded-xl border-0 focus:ring-2 focus:ring-primary/50 text-slate-800" data-testid="select-health-goal">
-                        <SelectValue placeholder="Select your health goal" />
+                        <SelectValue placeholder="Seleziona il tuo obiettivo di salute" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="weight_loss">Weight Loss</SelectItem>
-                      <SelectItem value="weight_gain">Weight Gain</SelectItem>
-                      <SelectItem value="muscle_building">Muscle Building</SelectItem>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="general_health">General Health</SelectItem>
+                      <SelectItem value="weight_loss">Perdita di Peso</SelectItem>
+                      <SelectItem value="weight_gain">Aumento di Peso</SelectItem>
+                      <SelectItem value="muscle_building">Sviluppo Muscolare</SelectItem>
+                      <SelectItem value="maintenance">Mantenimento</SelectItem>
+                      <SelectItem value="general_health">Salute Generale</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -242,7 +242,7 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
                 <FormItem>
                   <FormLabel className="text-slate-700 font-semibold flex items-center space-x-2">
                     <Activity className="text-secondary h-5 w-5" />
-                    <span>Activity Level</span>
+                    <span>Livello di Attività</span>
                   </FormLabel>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {activityLevels.map((level) => (
@@ -280,12 +280,12 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
                 {generateMealPlanMutation.isPending ? (
                   <div className="flex items-center space-x-3">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Generating...</span>
+                    <span>Generando...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-3">
                     <Sparkles className="h-5 w-5" />
-                    <span>Generate My Meal Plan</span>
+                    <span>Genera il Mio Piano Alimentare</span>
                     <ArrowRight className="h-5 w-5" />
                   </div>
                 )}

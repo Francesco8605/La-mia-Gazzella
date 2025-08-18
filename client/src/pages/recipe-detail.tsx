@@ -55,13 +55,13 @@ export default function RecipeDetail() {
           <Link href="/">
             <Button variant="ghost" className="mb-6" data-testid="back-home">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Home
+              Torna alla Home
             </Button>
           </Link>
           <div className="glass-morphism rounded-3xl p-8 shadow-2xl border border-red-200">
             <div className="text-center text-red-600">
-              <h1 className="text-2xl font-bold mb-4">Recipe Not Found</h1>
-              <p>The requested recipe could not be found.</p>
+              <h1 className="text-2xl font-bold mb-4">Ricetta Non Trovata</h1>
+              <p>La ricetta richiesta non è stata trovata.</p>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function RecipeDetail() {
         <Link href="/">
           <Button variant="ghost" className="mb-6" data-testid="back-home">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Home
+            Torna alla Home
           </Button>
         </Link>
 
@@ -98,7 +98,7 @@ export default function RecipeDetail() {
                 </div>
                 <div className="flex items-center space-x-2 bg-white/30 rounded-full px-4 py-2">
                   <Users className="h-5 w-5 text-primary" />
-                  <span className="font-semibold">{recipe.servings} servings</span>
+                  <span className="font-semibold">{recipe.servings} porzioni</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-white/30 rounded-full px-4 py-2">
                   <ChefHat className="h-5 w-5 text-primary" />
@@ -138,25 +138,25 @@ export default function RecipeDetail() {
             {/* Nutrition Info */}
             <Card className="glass-dark rounded-xl mb-8">
               <CardHeader>
-                <CardTitle className="text-slate-800">Nutrition Information</CardTitle>
+                <CardTitle className="text-slate-800">Informazioni Nutrizionali</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">{recipe.calories}</div>
-                    <div className="text-sm text-slate-600">Calories</div>
+                    <div className="text-sm text-slate-600">Calorie</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-secondary">{recipe.protein}g</div>
-                    <div className="text-sm text-slate-600">Protein</div>
+                    <div className="text-sm text-slate-600">Proteine</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-accent">{recipe.carbs}g</div>
-                    <div className="text-sm text-slate-600">Carbs</div>
+                    <div className="text-sm text-slate-600">Carboidrati</div>
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-slate-600">{recipe.fat}g</div>
-                    <div className="text-sm text-slate-600">Fat</div>
+                    <div className="text-sm text-slate-600">Grassi</div>
                   </div>
                 </div>
               </CardContent>
@@ -166,7 +166,7 @@ export default function RecipeDetail() {
               {/* Ingredients */}
               <Card className="glass-dark rounded-xl">
                 <CardHeader>
-                  <CardTitle className="text-slate-800">Ingredients</CardTitle>
+                  <CardTitle className="text-slate-800">Ingredienti</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2" data-testid="ingredients-list">
@@ -183,7 +183,7 @@ export default function RecipeDetail() {
               {/* Instructions */}
               <Card className="glass-dark rounded-xl">
                 <CardHeader>
-                  <CardTitle className="text-slate-800">Instructions</CardTitle>
+                  <CardTitle className="text-slate-800">Istruzioni</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <ol className="space-y-4" data-testid="instructions-list">
@@ -203,23 +203,23 @@ export default function RecipeDetail() {
             {/* Timing Info */}
             <Card className="glass-dark rounded-xl mt-8">
               <CardHeader>
-                <CardTitle className="text-slate-800">Timing</CardTitle>
+                <CardTitle className="text-slate-800">Tempi</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center">
                     <div className="text-xl font-bold text-slate-700">{recipe.prepTime || 0} min</div>
-                    <div className="text-sm text-slate-600">Prep Time</div>
+                    <div className="text-sm text-slate-600">Tempo di Preparazione</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-slate-700">{recipe.cookTime || 0} min</div>
-                    <div className="text-sm text-slate-600">Cook Time</div>
+                    <div className="text-sm text-slate-600">Tempo di Cottura</div>
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-primary">
                       {(recipe.prepTime || 0) + (recipe.cookTime || 0)} min
                     </div>
-                    <div className="text-sm text-slate-600">Total Time</div>
+                    <div className="text-sm text-slate-600">Tempo Totale</div>
                   </div>
                 </div>
               </CardContent>
