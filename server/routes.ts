@@ -216,6 +216,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Meal Plans
+  app.post("/api/meal-plans/generate", async (req, res) => {
+    try {
+      console.log("POST /api/meal-plans/generate called");
+      
+      // Per ora useremo un profilo demo, in futuro useremo l'ID dalla sessione
+      const profile = await storage.getUserProfile("demo-user");
+      
+      console.log("Profile found:", !!profile);
+      
+      if (!profile) {
+        console.log("No profile found, returning 404");
+        return res.status(404).json({ message: "Profilo non trovato. Completa prima la personalizzazione." });
+      }
+
+      // Validate profile has required fields
+      if (!profile.email || !profile.phone || !profile.age || !profile.weight || !profile.height) {
+        return res.status(400).json({ 
+          message: "Profilo incompleto. Assicurati di aver compilato tutti i campi obbligatori." 
+        });
+      }
+
+      // Convert database profile to API format
+      const validatedProfile = {
+        userId: profile.userId,
+        email: profile.email,
+        phone: profile.phone,
+        age: profile.age,
+        weight: profile.weight,
+        height: profile.height,
+        thyroidIssues: profile.thyroidIssues as "si" | "no" | "eutirox" || "no",
+        intestinalIssues: profile.intestinalIssues as "mai" | "qualche_volta" | "spesso" || "mai",
+        weeklyExercise: profile.weeklyExercise || 0,
+        breakfastTime: profile.breakfastTime || "08:00",
+        lunchTime: profile.lunchTime || "13:00",
+        dinnerTime: profile.dinnerTime || "20:00",
+        excludedFoods: profile.excludedFoods || [],
+        allergies: profile.allergies || [],
+        dailyWaterIntake: profile.dailyWaterIntake as "si" | "no" || "si",
+        cravingTimeFrame: profile.cravingTimeFrame || "",
+        preferredCheatFood: profile.preferredCheatFood || "",
+        takingFormulaGazzella: profile.takingFormulaGazzella as "si" | "no" | "ho_iniziato" || "no",
+        dietaryPreferences: profile.dietaryPreferences || ["menopausa"],
+        healthGoal: (profile.healthGoal as "weight_loss" | "weight_gain" | "muscle_building" | "maintenance" | "general_health") || "maintenance",
+        activityLevel: (profile.activityLevel as "sedentary" | "lightly_active" | "moderately_active" | "very_active") || "lightly_active"
+      };
+
+      // Calculate nutritional needs
+      const nutritionalNeeds = await calculateNutritionalNeeds(validatedProfile);
+      
+      // Generate meal plan using OpenAI
+      const aiMealPlan = await generateMealPlan({
+        userProfile: validatedProfile,
+        targetCalories: nutritionalNeeds.calories,
+        durationDays: 7,
+      });
+      
+      // Save to storage
+      const mealPlan = await storage.createMealPlan({
+        userId: profile.userId,
+        title: aiMealPlan.title,
+        description: aiMealPlan.description,
+        targetCalories: aiMealPlan.targetCalories,
+        targetProtein: aiMealPlan.targetProtein,
+        targetCarbs: aiMealPlan.targetCarbs,
+        targetFat: aiMealPlan.targetFat,
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        days: aiMealPlan.days,
+      });
+      
+      res.status(201).json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ 
+        message: "Errore nella generazione del piano nutrizionale", 
+        error: error instanceof Error ? error.message : "Errore sconosciuto" 
+      });
+    }
+  });
+
   app.get("/api/meal-plans/:userId", async (req, res) => {
     try {
       const mealPlans = await storage.getMealPlansByUser(req.params.userId);
