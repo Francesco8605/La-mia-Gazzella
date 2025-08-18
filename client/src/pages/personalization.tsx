@@ -78,6 +78,11 @@ export default function Personalization() {
         description: "I tuoi dati sono stati salvati con successo. Ora possiamo creare piani alimentari personalizzati per te.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user-profiles"] });
+      
+      // Reindirizza alla pagina di generazione del meal plan dopo 2 secondi
+      setTimeout(() => {
+        window.location.href = "/meal-plan-generator";
+      }, 2000);
     },
     onError: () => {
       toast({

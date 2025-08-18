@@ -158,6 +158,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // User Profiles
+  app.get("/api/user-profiles/current", async (req, res) => {
+    try {
+      // Per ora useremo un profilo demo, in futuro useremo l'ID dalla sessione
+      const profile = await storage.getUserProfile("demo-user");
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Profilo non trovato" });
+      }
+
+      res.json(profile);
+    } catch (error) {
+      console.error("Get profile error:", error);
+      res.status(500).json({ message: "Errore durante il recupero del profilo" });
+    }
+  });
+
   app.get("/api/profile/:userId", async (req, res) => {
     try {
       const profile = await storage.getUserProfile(req.params.userId);
