@@ -11,7 +11,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
     try {
+      console.log("Registration request body:", req.body);
+      
       const { username, email, password } = req.body;
+      
+      // Validate input
+      if (!username || !email || !password) {
+        return res.status(400).json({ message: "Username, email e password sono obbligatori" });
+      }
       
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
@@ -28,6 +35,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email,
         password: hashedPassword,
       });
+
+      console.log("User created successfully:", user.username);
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
