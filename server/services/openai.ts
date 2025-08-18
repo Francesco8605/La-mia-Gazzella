@@ -105,9 +105,11 @@ ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigo
 Genera piano con:
 1. Riepilogo cliente (età, peso, altezza, obiettivo)
 2. Linee guida applicate (3-6 bullet)
-3. Piano 7 giorni con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
+3. Piano COMPLETO di 7 giorni (lunedì-domenica) con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
 4. Grammature precise per ogni pasto
 5. Note pratiche meal-prep e sostituzioni
+
+IMPORTANTE: Genera TUTTI i 7 giorni della settimana (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
 
 Rispondi in JSON con:
 {
@@ -130,7 +132,9 @@ Rispondi in JSON con:
         ]
       },
       "totalCalories": number
-    }
+    },
+    // ... Continua con Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday
+    // DEVI generare TUTTI i 7 giorni della settimana
   ]
 }`;
 
@@ -142,6 +146,10 @@ Rispondi in JSON con:
           content: `Sei "Nutrizionista Gazzella", esperta nel Manuale della Gazzella per donne in menopausa. 
           Segui RIGOROSAMENTE le regole del manuale. NO legumi, NO latticini, NO affettati (eccetto toast previsto), 
           NO ultra-processati. Solo ingredienti freschi, cotture semplici, 5 pasti al giorno con grammature precise.
+          
+          IMPORTANTE: Devi generare UN PIANO COMPLETO DI 7 GIORNI (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday).
+          L'array "days" deve contenere ESATTAMENTE 7 elementi, uno per ogni giorno della settimana.
+          
           Rispondi sempre in italiano e in formato JSON valido.`
         },
         {
@@ -158,6 +166,54 @@ Rispondi in JSON con:
     // Validate and ensure proper structure
     if (!result.days || !Array.isArray(result.days)) {
       throw new Error("Invalid meal plan structure received from AI");
+    }
+    
+    // Ensure we have all 7 days - if not, generate the missing ones
+    if (result.days.length < 7) {
+      console.log(`Piano incompleto: ricevuti ${result.days.length} giorni, genero i restanti...`);
+      
+      const missingDays = ["Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].slice(result.days.length - 2);
+      
+      for (const dayName of missingDays) {
+        const dayPrompt = `Genera solo il giorno ${dayName} seguendo il Manuale della Gazzella per menopausa.
+        
+Rispondi in JSON con:
+{
+  "day": "${dayName}",
+  "date": "2025-01-${22 + missingDays.indexOf(dayName)}",
+  "meals": {
+    "breakfast": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
+    "lunch": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
+    "dinner": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
+    "snacks": [
+      {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number}
+    ]
+  },
+  "totalCalories": number
+}`;
+
+        const dayResponse = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `Sei "Nutrizionista Gazzella", esperta nel Manuale della Gazzella per donne in menopausa. 
+              Segui RIGOROSAMENTE le regole del manuale. NO legumi, NO latticini, NO affettati (eccetto toast previsto), 
+              NO ultra-processati. Solo ingredienti freschi, cotture semplici, 5 pasti al giorno con grammature precise.
+              Rispondi sempre in italiano e in formato JSON valido.`
+            },
+            {
+              role: "user",
+              content: dayPrompt
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.3,
+        });
+
+        const dayResult = JSON.parse(dayResponse.choices[0].message.content || "{}");
+        result.days.push(dayResult);
+      }
     }
 
     return result;
