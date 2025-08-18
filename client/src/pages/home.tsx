@@ -5,6 +5,7 @@ import MealPlanDisplay from "@/components/meal-plan-display";
 import RecipeCards from "@/components/recipe-cards";
 import LoadingStates from "@/components/loading-states";
 import { useState } from "react";
+import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
   const [showMealPlan, setShowMealPlan] = useState(false);
@@ -20,6 +21,15 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 mb-16">
         <div className="text-center max-w-4xl mx-auto animate-slide-up">
+          {/* Logo Image */}
+          <div className="mb-8 flex justify-center">
+            <img 
+              src={logoGazzella} 
+              alt="Logo della Gazzella" 
+              className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full shadow-2xl glass-morphism p-4 animate-float"
+              data-testid="hero-logo"
+            />
+          </div>
           <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent mb-6 leading-tight">
             Your Personal
             <br />
