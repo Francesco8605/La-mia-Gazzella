@@ -40,14 +40,16 @@ export default function Home() {
                 Inizia Personalizzazione
               </Button>
             </Link>
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              data-testid="create-meal-plan-button"
-            >
-              <Sparkles className="mr-2 h-5 w-5" />
-              Crea Piano Alimentare
-            </Button>
+            <Link href="/recipe-generator">
+              <Button
+                size="lg"
+                className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="create-meal-plan-button"
+              >
+                <Sparkles className="mr-2 h-5 w-5" />
+                Genera Ricette
+              </Button>
+            </Link>
             <Button
               variant="outline"
               size="lg"

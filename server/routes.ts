@@ -201,6 +201,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint specifico per il generatore ricette Gazzella
+  app.post("/api/recipes/generate", async (req, res) => {
+    try {
+      const schema = z.object({
+        mealName: z.string().min(1),
+        dietaryPreferences: z.array(z.string()).default([]),
+        targetCalories: z.number().min(50).max(2000),
+        allergies: z.array(z.string()).optional(),
+        cuisine: z.string().optional(),
+        userProfile: z.object({
+          email: z.string().email(),
+          fullName: z.string().min(1),
+          phone: z.string().min(1),
+          age: z.number(),
+          currentWeight: z.number(),
+          height: z.number(),
+          targetWeight: z.number(),
+          preferredProteins: z.string(),
+          preferredFish: z.string().optional(),
+          meatOrFish: z.enum(["carne", "pesce"]),
+          excludedFoods: z.string().optional(),
+          additionalDetails: z.string().optional(),
+        }),
+      });
+      
+      const requestData = schema.parse(req.body);
+      
+      // Generate recipe using OpenAI with Gazzella protocol
+      const aiRecipe = await generateRecipe({
+        mealName: requestData.mealName,
+        dietaryPreferences: requestData.dietaryPreferences,
+        targetCalories: requestData.targetCalories,
+        allergies: requestData.allergies,
+        cuisine: requestData.cuisine || "italiana",
+      });
+      
+      // Ritorna direttamente la ricetta senza salvarla automaticamente
+      res.status(200).json(aiRecipe);
+    } catch (error) {
+      console.error("Error generating Gazzella recipe:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ 
+        message: "Failed to generate recipe",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
   app.get("/api/recipes/by-tags", async (req, res) => {
     try {
       const tags = Array.isArray(req.query.tags) 
