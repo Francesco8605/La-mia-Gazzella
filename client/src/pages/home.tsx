@@ -1,22 +1,12 @@
 import { Sparkles, Play, User } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import UserInputForm from "@/components/user-input-form";
-import MealPlanDisplay from "@/components/meal-plan-display";
+
 import RecipeCards from "@/components/recipe-cards";
 import LoadingStates from "@/components/loading-states";
-import { useState } from "react";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
-  const [showMealPlan, setShowMealPlan] = useState(false);
-  const [generatedMealPlanId, setGeneratedMealPlanId] = useState<string | null>(null);
-
-  const handleMealPlanGenerated = (mealPlanId: string) => {
-    setGeneratedMealPlanId(mealPlanId);
-    setShowMealPlan(true);
-  };
-
   return (
     <div className="pt-24 pb-12">
       {/* Hero Section */}
@@ -53,7 +43,6 @@ export default function Home() {
             <Button
               size="lg"
               className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              onClick={() => document.getElementById('meal-plan-form')?.scrollIntoView({ behavior: 'smooth' })}
               data-testid="create-meal-plan-button"
             >
               <Sparkles className="mr-2 h-5 w-5" />
@@ -71,18 +60,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      {/* User Input Form */}
-      <section id="meal-plan-form" className="container mx-auto px-4 mb-16">
-        <UserInputForm onMealPlanGenerated={handleMealPlanGenerated} />
-      </section>
-
-      {/* Show Meal Plan if generated */}
-      {showMealPlan && generatedMealPlanId && (
-        <section className="container mx-auto px-4 mb-16">
-          <MealPlanDisplay mealPlanId={generatedMealPlanId} />
-        </section>
-      )}
 
       {/* Featured Recipes */}
       <section className="container mx-auto px-4 mb-16">
@@ -123,14 +100,16 @@ export default function Home() {
               <ul className="space-y-2 text-slate-300">
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Centro Assistenza</a></li>
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Contattaci</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Termini di Servizio</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">FAQ</a></li>
+                <li><a href="#" className="hover:text-white transition-colors duration-300">Community</a></li>
               </ul>
             </div>
           </div>
           
-          <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 La Mia Gazzella. Tutti i diritti riservati. Alimentato dalla tecnologia OpenAI.</p>
+          <div className="border-t border-slate-700 mt-12 pt-8 text-center">
+            <p className="text-slate-400">
+              © 2024 La Mia Gazzella. Tutti i diritti riservati. Alimentato dall'intelligenza artificiale per nutrire il tuo futuro.
+            </p>
           </div>
         </div>
       </footer>
