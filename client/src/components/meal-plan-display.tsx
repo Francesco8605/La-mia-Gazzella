@@ -53,10 +53,23 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', { 
+    return new Date(dateStr).toLocaleDateString('it-IT', { 
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  const translateDay = (day: string) => {
+    const dayTranslations: Record<string, string> = {
+      'Monday': 'Lunedì',
+      'Tuesday': 'Martedì', 
+      'Wednesday': 'Mercoledì',
+      'Thursday': 'Giovedì',
+      'Friday': 'Venerdì',
+      'Saturday': 'Sabato',
+      'Sunday': 'Domenica'
+    };
+    return dayTranslations[day] || day;
   };
 
   return (
@@ -78,11 +91,11 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
             <div className="flex items-center space-x-4 text-sm">
               <Badge variant="outline" className="flex items-center">
                 <Target className="mr-1 h-3 w-3" />
-                {mealPlan.targetCalories} calories
+                {mealPlan.targetCalories} calorie
               </Badge>
-              <Badge variant="outline">{mealPlan.targetProtein}g protein</Badge>
-              <Badge variant="outline">{mealPlan.targetCarbs}g carbs</Badge>
-              <Badge variant="outline">{mealPlan.targetFat}g fat</Badge>
+              <Badge variant="outline">{mealPlan.targetProtein}g proteine</Badge>
+              <Badge variant="outline">{mealPlan.targetCarbs}g carboidrati</Badge>
+              <Badge variant="outline">{mealPlan.targetFat}g grassi</Badge>
             </div>
           </div>
           <div className="flex space-x-4 mt-4 lg:mt-0">
@@ -92,7 +105,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
               data-testid="export-meal-plan"
             >
               <Download className="mr-2 h-4 w-4" />
-              Export
+              Esporta
             </Button>
             <Button
               variant="outline"
@@ -100,13 +113,13 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
               data-testid="regenerate-meal-plan"
             >
               <RotateCw className="mr-2 h-4 w-4" />
-              Regenerate
+              Rigenera
             </Button>
           </div>
         </div>
 
         {/* Days Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-4">
           {mealPlan.days?.map((day: MealPlanDay, index: number) => (
             <div
               key={`${day.day}-${index}`}
@@ -114,7 +127,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
               data-testid={`meal-day-${day.day.toLowerCase()}`}
             >
               <div className="text-center mb-4">
-                <h4 className="font-bold text-slate-800 text-lg">{day.day}</h4>
+                <h4 className="font-bold text-slate-800 text-lg">{translateDay(day.day)}</h4>
                 <p className="text-sm text-slate-600">{day.totalCalories} kcal</p>
                 {day.date && <p className="text-xs text-slate-500">{formatDate(day.date)}</p>}
               </div>
@@ -124,7 +137,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
                 <div className="bg-white/30 rounded-lg p-3">
                   <h5 className="font-semibold text-slate-700 text-sm mb-1 flex items-center">
                     <span className="mr-2">{mealIcons.breakfast}</span>
-                    Breakfast
+                    Colazione
                   </h5>
                   <p className="text-xs text-slate-600" data-testid={`breakfast-${day.day.toLowerCase()}`}>
                     {day.meals.breakfast.name}
@@ -136,7 +149,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
                 <div className="bg-white/30 rounded-lg p-3">
                   <h5 className="font-semibold text-slate-700 text-sm mb-1 flex items-center">
                     <span className="mr-2">{mealIcons.lunch}</span>
-                    Lunch
+                    Pranzo
                   </h5>
                   <p className="text-xs text-slate-600" data-testid={`lunch-${day.day.toLowerCase()}`}>
                     {day.meals.lunch.name}
@@ -148,7 +161,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
                 <div className="bg-white/30 rounded-lg p-3">
                   <h5 className="font-semibold text-slate-700 text-sm mb-1 flex items-center">
                     <span className="mr-2">{mealIcons.dinner}</span>
-                    Dinner
+                    Cena
                   </h5>
                   <p className="text-xs text-slate-600" data-testid={`dinner-${day.day.toLowerCase()}`}>
                     {day.meals.dinner.name}
@@ -161,7 +174,7 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
                   <div className="bg-white/30 rounded-lg p-3">
                     <h5 className="font-semibold text-slate-700 text-sm mb-1 flex items-center">
                       <span className="mr-2">{mealIcons.snacks}</span>
-                      Snacks
+                      Spuntini
                     </h5>
                     {day.meals.snacks.map((snack, snackIndex) => (
                       <div key={snackIndex}>
