@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, Menu, X } from "lucide-react";
+import { Leaf, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +13,6 @@ export default function Navigation() {
     { href: "/recipe-generator", label: "Genera Ricette" },
     { href: "/meal-plans", label: "Piani Alimentari" },
     { href: "/recipes", label: "Ricette" },
-    { href: "/auth", label: "Accedi" },
   ];
 
   return (
@@ -38,6 +37,21 @@ export default function Navigation() {
               {item.label}
             </Link>
           ))}
+          
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              // Per ora reindirizza semplicemente alla pagina di auth
+              window.location.href = "/auth";
+            }}
+            className="text-slate-700 hover:text-red-600 transition-colors duration-300"
+            data-testid="logout-button"
+          >
+            <LogOut className="h-4 w-4 mr-1" />
+            Esci
+          </Button>
         </div>
         
         {/* Mobile Menu Button */}

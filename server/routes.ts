@@ -62,6 +62,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore durante l'accesso" });
     }
   });
+
+  app.get("/api/auth/user", async (req, res) => {
+    // Per ora ritorniamo sempre null (non autenticato) 
+    // In futuro questo controllerà la sessione
+    res.status(401).json({ message: "Non autenticato" });
+  });
   
   // User Profiles
   app.get("/api/profile/:userId", async (req, res) => {
