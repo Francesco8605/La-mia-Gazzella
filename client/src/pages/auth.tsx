@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 
 const loginSchema = z.object({
@@ -72,8 +72,14 @@ export default function Auth() {
         title: "Benvenuto!",
         description: `Accesso effettuato con successo come ${user.username}`,
       });
-      // Controlla se l'utente ha già un profilo, altrimenti vai alla personalizzazione
-      setLocation("/personalization");
+      // Invalida e aggiorna la cache dell'autenticazione
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.setQueryData(["/api/auth/user"], user);
+      
+      // Breve delay per assicurarsi che la cache sia aggiornata
+      setTimeout(() => {
+        setLocation("/personalization");
+      }, 100);
     },
     onError: (error) => {
       toast({
@@ -104,8 +110,15 @@ export default function Auth() {
         title: "Registrazione Completata!",
         description: `Account creato con successo per ${user.username}. Completa ora il tuo profilo nutrizionale.`,
       });
-      // Dopo la registrazione, reindirizza sempre alla personalizzazione
-      setLocation("/personalization");
+      
+      // Invalida e aggiorna la cache dell'autenticazione
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.setQueryData(["/api/auth/user"], user);
+      
+      // Breve delay per assicurarsi che la cache sia aggiornata
+      setTimeout(() => {
+        setLocation("/personalization");
+      }, 100);
     },
     onError: (error) => {
       toast({

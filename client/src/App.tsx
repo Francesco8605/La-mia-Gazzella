@@ -44,6 +44,11 @@ function Router() {
       <Navigation />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/auth" component={() => { 
+          // Se l'utente autenticato prova ad accedere a /auth, reindirizza alla home
+          window.location.href = "/";
+          return null;
+        }} />
         <Route path="/personalization" component={Personalization} />
         <Route path="/recipe-generator" component={RecipeGenerator} />
         <Route path="/meal-plan/:id" component={MealPlan} />

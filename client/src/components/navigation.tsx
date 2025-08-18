@@ -45,10 +45,11 @@ export default function Navigation() {
             onClick={async () => {
               try {
                 await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-                window.location.href = "/auth";
+                // Pulisci la cache
+                window.location.reload();
               } catch (error) {
                 console.error("Logout error:", error);
-                window.location.href = "/auth";
+                window.location.reload();
               }
             }}
             className="text-slate-700 hover:text-red-600 transition-colors duration-300"
