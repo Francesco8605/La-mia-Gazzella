@@ -10,6 +10,9 @@
 - **Gazzella Protocol Integration**: Updated OpenAI service with authentic Manuale della Gazzella rules from provided text files
 - **Complete Italian Localization**: All UI elements, days of week, meals, and macronutrients fully translated to Italian
 - **Improved Responsive Layout**: Enhanced mobile/tablet viewing with better grid layout for 7-day meal plans
+- **CRITICAL RULE IMPLEMENTED**: Every meal (breakfast, snacks, lunch, dinner) now ALWAYS contains both protein + complex carbohydrates as required by Gazzella protocol
+- **Perfect Compliance**: Eliminated all forbidden foods (legumes, dairy, quinoa, oats, yogurt, smoothies) and ensured authentic Gazzella meal combinations
+- **Balanced Meal Structure**: Snacks now properly combine ingredients like "Mela con mandorle e gallette di riso" instead of separate items
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 
