@@ -7,6 +7,9 @@
 - **AI Meal Plan Generation**: Fully functional OpenAI integration generating personalized 7-day meal plans following Gazzella protocol
 - **Authentication System**: Complete user registration and login with session management working with PostgreSQL
 - **Meal Plan API**: Endpoint `/api/meal-plans/generate` successfully creating and storing AI-generated meal plans in database
+- **Gazzella Protocol Integration**: Updated OpenAI service with authentic Manuale della Gazzella rules from provided text files
+- **Complete Italian Localization**: All UI elements, days of week, meals, and macronutrients fully translated to Italian
+- **Improved Responsive Layout**: Enhanced mobile/tablet viewing with better grid layout for 7-day meal plans
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 

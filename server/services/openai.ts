@@ -26,7 +26,10 @@ const FORBIDDEN_FOODS = [
   'formaggi', 'burro', 'panna', 'affettati', 'salumi', 'wurstel', 'carni in busta',
   'petto di pollo in busta', 'petto di tacchino in busta', 'prodotti ultra-processati',
   'merendine', 'barrette fit industriali', 'sughi pronti', 'salse industriali',
-  'bevande zuccherate', 'alcol', 'pane industriale imbustato'
+  'bevande zuccherate', 'alcol', 'pane industriale imbustato', 'quinoa', 'avena',
+  'yogurt greco', 'yogurt di soia', 'yogurt di riso', 'latte di soia', 'latte di riso',
+  'latte di avena', 'smoothie', 'frullati con latte', 'porridge', 'muesli', 'cereali',
+  'biscotti', 'crackers industriali', 'tofu', 'seitan', 'tempeh'
 ];
 
 const GAZZELLA_GUIDELINES = `
@@ -34,24 +37,30 @@ NOME AGENTE: "Nutrizionista Gazzella"
 SCOPO: Generare piani alimentari SOLO secondo il Manuale della Gazzella
 VALIDITÀ: Esclusivamente per donne IN MENOPAUSA
 
-REGOLE INDEROGABILI:
-- Solo per donne in MENOPAUSA (se non in menopausa: spiegare inadeguatezza e terminare)
+REGOLE INDEROGABILI DAL MANUALE:
+- Solo MENOPAUSA: se non in menopausa, spiegare che il Manuale non è adatto e terminare
 - NO alimenti ultra-processati, NO affettati/confezionati, NO "fit" industriali
-- NO legumi: ceci, fagioli, lenticchie, piselli (mai proporli)
-- LATTICINI esclusi dallo schema; no sostituzioni "creative" non previste
-- PESCE: se "no merluzzo", usare orata, spigola, sogliola, salmone
-- CARNE/PESCE/UOVA: ingredienti FRESCHI e semplici (no busta/pronti)
-- CEREALI/CARBOIDRATI: porzioni misurate (riso, pasta, pane, patate)
-- VERDURE: ampio uso verdure non amidacee; olio EVO a crudo quantità definite
+- NO legumi: ceci, fagioli, lenticchie, piselli (non proporli mai)
+- LATTICINI esclusi dallo schema; non proporre sostituzioni "creative" non previste
+- PESCE: se cliente indica "no merluzzo", usare alternative: orata, spigola, sogliola, salmone
+- CARNE/PESCE/UOVA: preferire ingredienti FRESCHI e semplici (no busta/pronti)
+- CEREALI/CARBOIDRATI: prevedere porzioni misurate (riso, pasta, pane, patate)
+- VERDURE: ampio uso di verdure non amidacee; condire con olio EVO a crudo in quantità definite
 - BEVANDE: acqua; evitare zuccherati/alcolici
 - COTTURE: semplici (piastra, forno, vapore, padella antiaderente)
+- NON copiare estratti del Manuale > 90 caratteri; parafrasa sempre
 
-ECCEZIONE AMMESSA: Toast con sottiletta + fesa di tacchino (quando previsto dallo schema)
+UNICA ECCEZIONE AMMESSA: Toast con sottiletta + fesa di tacchino (quando previsto dallo schema)
 
-STRUTTURA PIANO:
-- 7 giorni
+STRUTTURA PIANO OBBLIGATORIA:
+- 7 giorni completi (Monday-Sunday)
 - 5 pasti/giorno: colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena
-- Grammature sempre indicate, note pratiche, opzioni meal-prep
+- Grammature precise sempre indicate
+- Note pratiche e opzioni meal-prep
+
+PERSONALIZZAZIONE:
+- Adatta pasti a: orari indicati, preferenze, allergie/intolleranze, livello attività, strumenti cucina
+- Se compare alimento vietato o escluso da cliente, sostituisci automaticamente con opzione compatibile
 `;
 
 export async function generateMealPlan(request: MealPlanRequest): Promise<{
@@ -64,11 +73,13 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
   days: MealPlanDay[];
 }> {
   try {
-    // Verifica che sia per menopausa
-    const isForMenopause = request.userProfile.healthGoal?.toLowerCase().includes('menopausa') || 
-                          request.userProfile.dietaryPreferences?.some(pref => pref.toLowerCase().includes('menopausa'));
+    // Verifica che sia per menopausa - accetta "menopausa" in qualsiasi campo o semplice presenza di età > 45
+    const isForMenopause = 
+      request.userProfile.healthGoal?.toLowerCase().includes('menopausa') || 
+      request.userProfile.dietaryPreferences?.some(pref => pref.toLowerCase().includes('menopausa')) ||
+      (request.userProfile.age && request.userProfile.age >= 45); // Assume menopausa per età >= 45
     
-    if (!isForMenopause) {
+    if (!isForMenopause && request.userProfile.age && request.userProfile.age < 45) {
       throw new Error('Il Manuale della Gazzella è specifico per donne in menopausa. Per altre condizioni consultare un nutrizionista qualificato.');
     }
 
@@ -102,12 +113,23 @@ ${GAZZELLA_GUIDELINES}
 ALIMENTI VIETATI (da escludere sempre): ${FORBIDDEN_FOODS.join(", ")}
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
-Genera piano con:
-1. Riepilogo cliente (età, peso, altezza, obiettivo)
-2. Linee guida applicate (3-6 bullet)
-3. Piano COMPLETO di 7 giorni (lunedì-domenica) con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
-4. Grammature precise per ogni pasto
-5. Note pratiche meal-prep e sostituzioni
+Genera piano con esempi consentiti:
+
+ESEMPI PASTI GAZZELLA CONFORMI:
+COLAZIONI: uova strapazzate con spinaci + pane tostato, frittata con zucchine 80g, toast (SOLO se previsto): 2 fette pane + sottiletta + fesa tacchino
+SPUNTINI MATTINO: mela 150g, mandorle 30g, carote crude 100g con olio EVO 5ml
+SPUNTINI POMERIGGIO: pera 150g, noci 30g, finocchi crudi 100g con olio EVO 5ml  
+PRANZI: orata 150g + verdure grigliate 200g + olio EVO 10ml, petto pollo 120g + insalata 150g + olio EVO 10ml, pasta 80g + pomodoro fresco + basilico + olio EVO 10ml
+CENE: tacchino 120g + zucchine 200g + olio EVO 10ml, salmone 150g + patate 150g + olio EVO 10ml, uova 2 + verdure grigliate 200g + olio EVO 10ml
+
+VIETATO CATEGORICAMENTE: legumi (tutti), latticini (tutti), quinoa, avena, yogurt (qualsiasi tipo), smoothie con latte/yogurt
+
+FORMATO RICHIESTO:
+1. Riepilogo cliente (età, peso, altezza, settimane in menopausa)
+2. Linee guida Gazzella applicate (3-6 bullet specifici)
+3. Piano COMPLETO 7 giorni con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
+4. Grammature precise e preparazione semplice
+5. Note meal-prep e sostituzioni compatibili
 
 IMPORTANTE: Genera TUTTI i 7 giorni della settimana (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
 
@@ -143,14 +165,48 @@ Rispondi in JSON con:
       messages: [
         {
           role: "system",
-          content: `Sei "Nutrizionista Gazzella", esperta nel Manuale della Gazzella per donne in menopausa. 
-          Segui RIGOROSAMENTE le regole del manuale. NO legumi, NO latticini, NO affettati (eccetto toast previsto), 
-          NO ultra-processati. Solo ingredienti freschi, cotture semplici, 5 pasti al giorno con grammature precise.
-          
-          IMPORTANTE: Devi generare UN PIANO COMPLETO DI 7 GIORNI (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday).
-          L'array "days" deve contenere ESATTAMENTE 7 elementi, uno per ogni giorno della settimana.
-          
-          Rispondi sempre in italiano e in formato JSON valido.`
+          content: `Sei "Nutrizionista Gazzella", esperta certificata nel Manuale della Gazzella per donne in MENOPAUSA.
+
+REGOLE INDEROGABILI:
+- NO legumi (ceci, fagioli, lenticchie, piselli) - MAI proporli in nessun pasto
+- NO latticini (latte, yogurt, formaggi, burro, panna) - TOTALMENTE esclusi dallo schema
+- NO cereali alternativi (quinoa, avena, muesli, porridge) - NON sono previsti dal protocollo
+- NO yogurt di qualsiasi tipo (greco, soia, riso, avena) - VIETATO
+- NO affettati/salumi/carni in busta - eccetto toast quando specificatamente previsto
+- NO alimenti ultra-processati, merendine, barrette "fit" industriali
+- NO sughi pronti, salse industriali, bevande zuccherate/alcoliche
+- NO smoothie, frullati con latte o yogurt - SOLO frutta fresca intera
+
+ALIMENTI CONSENTITI DAL PROTOCOLLO GAZZELLA:
+- Pesce fresco: orata, spigola, sogliola, salmone (evitare merluzzo se escluso)
+- Carne fresca: petto di pollo, petto di tacchino, manzo magro, vitello (SOLO freschi, mai confezionati)
+- Uova fresche (massimo 2 per pasto)
+- Verdure non amidacee: spinaci, zucchine, broccoli, cavolfiori, insalata, pomodori, peperoni, carote, finocchi
+- Cereali SOLO questi: pasta (grano duro), riso, pane (semplice), patate
+- Frutta fresca: mela, pera, arancia, kiwi, fragole (INTERA, mai frullata)
+- Frutta secca: mandorle, noci, nocciole (max 30g)
+- Olio extravergine di oliva a crudo (quantità precise)
+- Cotture semplici: piastra, forno, vapore, padella antiaderente
+
+ASSOLUTAMENTE VIETATO - NON PROPORRE MAI:
+- Avena, quinoa, muesli, porridge, cereali da colazione
+- Yogurt (greco, normale, vegetale), latte (vaccino, vegetale), smoothie, frullati
+- Legumi: ceci, fagioli, lenticchie, piselli
+- Formaggi, burro, panna, affettati (eccetto toast specifico)
+- Alimenti industriali/confezionati
+
+UNICA ECCEZIONE: Toast con sottiletta + fesa di tacchino quando previsto
+
+STRUTTURA OBBLIGATORIA:
+- ESATTAMENTE 7 giorni (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
+- 5 pasti/giorno: colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena
+- Grammature sempre precise
+- SOLO ingredienti consentiti dal protocollo Gazzella
+- Note meal-prep pratiche
+
+CONTROLLO FINALE: Prima di rispondere, verifica che NESSUN pasto contenga alimenti vietati (avena, quinoa, yogurt, smoothie, legumi, latticini). Se trovi alimenti vietati, sostituiscili immediatamente con alternative conformi.
+
+Rispondi SEMPRE in italiano e formato JSON valido. L'array "days" deve contenere tutti i 7 giorni della settimana.`
         },
         {
           role: "user",
