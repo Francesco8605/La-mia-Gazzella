@@ -55,7 +55,16 @@ export default function Auth() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginFormData) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore di login");
+      }
       return response.json();
     },
     onSuccess: (user) => {
@@ -63,7 +72,8 @@ export default function Auth() {
         title: "Benvenuto!",
         description: `Accesso effettuato con successo come ${user.username}`,
       });
-      setLocation("/");
+      // Controlla se l'utente ha già un profilo, altrimenti vai alla personalizzazione
+      setLocation("/personalization");
     },
     onError: (error) => {
       toast({
@@ -77,15 +87,25 @@ export default function Auth() {
   const signupMutation = useMutation({
     mutationFn: async (data: SignupFormData) => {
       const { confirmPassword, ...signupData } = data;
-      const response = await apiRequest("POST", "/api/auth/register", signupData);
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupData),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore di registrazione");
+      }
       return response.json();
     },
     onSuccess: (user) => {
       toast({
         title: "Registrazione Completata!",
-        description: `Account creato con successo per ${user.username}`,
+        description: `Account creato con successo per ${user.username}. Completa ora il tuo profilo nutrizionale.`,
       });
-      setLocation("/");
+      // Dopo la registrazione, reindirizza sempre alla personalizzazione
+      setLocation("/personalization");
     },
     onError: (error) => {
       toast({

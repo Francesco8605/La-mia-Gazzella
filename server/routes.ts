@@ -6,6 +6,13 @@ import { generateMealPlan, generateRecipe, calculateNutritionalNeeds } from "./s
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
+// Simple in-memory session storage
+const sessions = new Map<string, { userId: string, createdAt: Date }>();
+
+function generateSessionId(): string {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication Routes
@@ -38,6 +45,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("User created successfully:", user.username);
 
+      // Create session
+      const sessionId = generateSessionId();
+      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+
+      // Set session cookie
+      res.cookie('session', sessionId, { 
+        httpOnly: true, 
+        secure: false, // set to true in production with HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax'
+      });
+
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       res.status(201).json(userWithoutPassword);
@@ -63,6 +82,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
+      // Create session
+      const sessionId = generateSessionId();
+      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+
+      // Set session cookie
+      res.cookie('session', sessionId, { 
+        httpOnly: true, 
+        secure: false, // set to true in production with HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax'
+      });
+
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
       res.json(userWithoutPassword);
@@ -73,9 +104,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/auth/user", async (req, res) => {
-    // Per ora ritorniamo sempre null (non autenticato) 
-    // In futuro questo controllerà la sessione
-    res.status(401).json({ message: "Non autenticato" });
+    try {
+      const sessionId = req.cookies?.session;
+      
+      if (!sessionId || !sessions.has(sessionId)) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const session = sessions.get(sessionId);
+      if (!session) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      // Check if session is expired (24 hours)
+      const isExpired = Date.now() - session.createdAt.getTime() > 24 * 60 * 60 * 1000;
+      if (isExpired) {
+        sessions.delete(sessionId);
+        res.clearCookie('session');
+        return res.status(401).json({ message: "Sessione scaduta" });
+      }
+
+      // Get user data
+      const user = await storage.getUser(session.userId);
+      if (!user) {
+        sessions.delete(sessionId);
+        res.clearCookie('session');
+        return res.status(401).json({ message: "Utente non trovato" });
+      }
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error("Auth check error:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  app.post("/api/auth/logout", async (req, res) => {
+    try {
+      const sessionId = req.cookies?.session;
+      
+      if (sessionId) {
+        sessions.delete(sessionId);
+        res.clearCookie('session');
+      }
+
+      res.json({ message: "Logout effettuato con successo" });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ message: "Errore durante il logout" });
+    }
   });
   
   // User Profiles

@@ -42,9 +42,14 @@ export default function Navigation() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => {
-              // Per ora reindirizza semplicemente alla pagina di auth
-              window.location.href = "/auth";
+            onClick={async () => {
+              try {
+                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                window.location.href = "/auth";
+              } catch (error) {
+                console.error("Logout error:", error);
+                window.location.href = "/auth";
+              }
             }}
             className="text-slate-700 hover:text-red-600 transition-colors duration-300"
             data-testid="logout-button"
