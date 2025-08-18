@@ -9,12 +9,14 @@ import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
 import Personalization from "@/pages/personalization";
 import RecipeGenerator from "@/pages/recipe-generator";
+import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/auth" component={Auth} />
       <Route path="/personalization" component={Personalization} />
       <Route path="/recipe-generator" component={RecipeGenerator} />
       <Route path="/meal-plan/:id" component={MealPlan} />
