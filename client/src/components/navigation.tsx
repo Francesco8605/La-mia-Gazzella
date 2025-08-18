@@ -9,9 +9,9 @@ export default function Navigation() {
 
   const navItems = [
     { href: "/", label: "Dashboard" },
+    { href: "/personalization", label: "Personalizzazione" },
     { href: "/meal-plans", label: "Piani Alimentari" },
     { href: "/recipes", label: "Ricette" },
-    { href: "/profile", label: "Profilo" },
   ];
 
   return (

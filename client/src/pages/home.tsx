@@ -1,4 +1,5 @@
-import { Sparkles, Play } from "lucide-react";
+import { Sparkles, Play, User } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import UserInputForm from "@/components/user-input-form";
 import MealPlanDisplay from "@/components/meal-plan-display";
@@ -39,6 +40,16 @@ export default function Home() {
             Pianificazione alimentare alimentata dall'IA che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/personalization">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="personalization-button"
+              >
+                <User className="mr-2 h-5 w-5" />
+                Inizia Personalizzazione
+              </Button>
+            </Link>
             <Button
               size="lg"
               className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"

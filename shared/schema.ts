@@ -12,13 +12,36 @@ export const users = pgTable("users", {
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
+  // Informazioni di contatto
+  email: text("email"),
+  phone: text("phone"),
+  // Dati fisici
   age: integer("age"),
   weight: integer("weight"),
   height: integer("height"),
+  // Condizioni di salute
+  thyroidIssues: text("thyroid_issues"), // "si" | "no" | "eutirox"
+  intestinalIssues: text("intestinal_issues"), // "mai" | "qualche_volta" | "spesso"
+  // Abitudini di esercizio
+  weeklyExercise: integer("weekly_exercise"), // volte a settimana
+  // Orari dei pasti
+  breakfastTime: text("breakfast_time"),
+  lunchTime: text("lunch_time"),
+  dinnerTime: text("dinner_time"),
+  // Preferenze alimentari
+  excludedFoods: json("excluded_foods").$type<string[]>(),
+  allergies: json("allergies").$type<string[]>(),
+  // Abitudini idriche
+  dailyWaterIntake: text("daily_water_intake"), // "si" | "no"
+  // Comportamenti alimentari
+  cravingTimeFrame: text("craving_time_frame"),
+  preferredCheatFood: text("preferred_cheat_food"),
+  // Integratori
+  takingFormulaGazzella: text("taking_formula_gazzella"), // "si" | "no" | "ho_iniziato"
+  // Campi legacy per compatibilità
   dietaryPreferences: json("dietary_preferences").$type<string[]>(),
   healthGoal: text("health_goal"),
   activityLevel: text("activity_level"),
-  allergies: json("allergies").$type<string[]>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -91,13 +114,45 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   id: true,
   createdAt: true,
 }).extend({
-  age: z.number().min(13).max(120),
-  weight: z.number().min(30).max(300),
-  height: z.number().min(100).max(250).optional(),
-  dietaryPreferences: z.array(z.string()).default([]),
-  healthGoal: z.enum(["weight_loss", "weight_gain", "muscle_building", "maintenance", "general_health"]),
-  activityLevel: z.enum(["sedentary", "moderate", "active", "very_active"]),
+  userId: z.string().min(1, "User ID è obbligatorio"),
+  // Informazioni di contatto
+  email: z.string().email("Inserisci un indirizzo email valido"),
+  phone: z.string().min(10, "Inserisci un numero di telefono valido"),
+  // Dati fisici
+  age: z.number().min(13, "Età minima 13 anni").max(120, "Età massima 120 anni"),
+  weight: z.number().min(30, "Peso minimo 30 kg").max(300, "Peso massimo 300 kg"),
+  height: z.number().min(100, "Altezza minima 100 cm").max(250, "Altezza massima 250 cm"),
+  // Condizioni di salute
+  thyroidIssues: z.enum(["no", "si", "eutirox"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  intestinalIssues: z.enum(["mai", "qualche_volta", "spesso"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Abitudini di esercizio
+  weeklyExercise: z.number().min(0, "Minimo 0 volte").max(14, "Massimo 14 volte a settimana"),
+  // Orari dei pasti
+  breakfastTime: z.string().min(1, "Inserisci l'orario della colazione"),
+  lunchTime: z.string().min(1, "Inserisci l'orario del pranzo"),
+  dinnerTime: z.string().min(1, "Inserisci l'orario della cena"),
+  // Preferenze alimentari
+  excludedFoods: z.array(z.string()).default([]),
   allergies: z.array(z.string()).default([]),
+  // Abitudini idriche
+  dailyWaterIntake: z.enum(["si", "no"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Comportamenti alimentari
+  cravingTimeFrame: z.string().min(1, "Inserisci la fascia oraria"),
+  preferredCheatFood: z.string().min(1, "Inserisci il tipo di cibo sgarro"),
+  // Integratori
+  takingFormulaGazzella: z.enum(["no", "si", "ho_iniziato"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Campi legacy per compatibilità
+  dietaryPreferences: z.array(z.string()).default([]),
+  healthGoal: z.enum(["weight_loss", "weight_gain", "muscle_building", "maintenance", "general_health"]).optional(),
+  activityLevel: z.enum(["sedentary", "moderate", "active", "very_active"]).optional(),
 });
 
 export const insertMealPlanSchema = createInsertSchema(mealPlans).omit({

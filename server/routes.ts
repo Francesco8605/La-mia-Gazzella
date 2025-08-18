@@ -20,7 +20,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/profile", async (req, res) => {
+  app.post("/api/user-profiles", async (req, res) => {
     try {
       const validatedData = insertUserProfileSchema.parse(req.body);
       const profile = await storage.createUserProfile(validatedData);

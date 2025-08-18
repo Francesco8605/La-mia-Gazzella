@@ -72,9 +72,23 @@ export class MemStorage implements IStorage {
       ...insertProfile,
       id,
       createdAt: new Date(),
+      // Gestire tutti i nuovi campi con valori di default appropriati
+      email: insertProfile.email ?? null,
+      phone: insertProfile.phone ?? null,
       height: insertProfile.height ?? null,
       age: insertProfile.age ?? null,
       weight: insertProfile.weight ?? null,
+      thyroidIssues: insertProfile.thyroidIssues ?? null,
+      intestinalIssues: insertProfile.intestinalIssues ?? null,
+      weeklyExercise: insertProfile.weeklyExercise ?? null,
+      breakfastTime: insertProfile.breakfastTime ?? null,
+      lunchTime: insertProfile.lunchTime ?? null,
+      dinnerTime: insertProfile.dinnerTime ?? null,
+      excludedFoods: insertProfile.excludedFoods ?? null,
+      dailyWaterIntake: insertProfile.dailyWaterIntake ?? null,
+      cravingTimeFrame: insertProfile.cravingTimeFrame ?? null,
+      preferredCheatFood: insertProfile.preferredCheatFood ?? null,
+      takingFormulaGazzella: insertProfile.takingFormulaGazzella ?? null,
       dietaryPreferences: insertProfile.dietaryPreferences ?? null,
       healthGoal: insertProfile.healthGoal ?? null,
       activityLevel: insertProfile.activityLevel ?? null,
@@ -120,7 +134,7 @@ export class MemStorage implements IStorage {
       targetFat: insertMealPlan.targetFat ?? null,
       startDate: insertMealPlan.startDate ?? null,
       endDate: insertMealPlan.endDate ?? null,
-      days: insertMealPlan.days ? Array.from(insertMealPlan.days) : null,
+      days: insertMealPlan.days as any ?? null,
     };
     this.mealPlans.set(id, mealPlan);
     return mealPlan;
@@ -140,7 +154,7 @@ export class MemStorage implements IStorage {
       targetFat: updateData.targetFat ?? existingPlan.targetFat,
       startDate: updateData.startDate ?? existingPlan.startDate,
       endDate: updateData.endDate ?? existingPlan.endDate,
-      days: updateData.days ? Array.from(updateData.days) : existingPlan.days,
+      days: updateData.days as any ?? existingPlan.days,
     };
     this.mealPlans.set(id, updatedPlan);
     return updatedPlan;
@@ -173,8 +187,8 @@ export class MemStorage implements IStorage {
       id,
       createdAt: new Date(),
       description: insertRecipe.description ?? null,
-      ingredients: insertRecipe.ingredients ? Array.from(insertRecipe.ingredients) : null,
-      instructions: insertRecipe.instructions ? Array.from(insertRecipe.instructions) : null,
+      ingredients: insertRecipe.ingredients as any ?? null,
+      instructions: insertRecipe.instructions as any ?? null,
       calories: insertRecipe.calories ?? null,
       protein: insertRecipe.protein ?? null,
       carbs: insertRecipe.carbs ?? null,
@@ -184,7 +198,7 @@ export class MemStorage implements IStorage {
       cookTime: insertRecipe.cookTime ?? null,
       difficulty: insertRecipe.difficulty ?? null,
       cuisine: insertRecipe.cuisine ?? null,
-      dietaryTags: insertRecipe.dietaryTags ? Array.from(insertRecipe.dietaryTags) : null,
+      dietaryTags: insertRecipe.dietaryTags as any ?? null,
       imageUrl: insertRecipe.imageUrl ?? null,
       rating: insertRecipe.rating ?? null,
     };
@@ -200,8 +214,8 @@ export class MemStorage implements IStorage {
       ...existingRecipe,
       ...updateData,
       description: updateData.description ?? existingRecipe.description,
-      ingredients: updateData.ingredients ? Array.from(updateData.ingredients) : existingRecipe.ingredients,
-      instructions: updateData.instructions ? Array.from(updateData.instructions) : existingRecipe.instructions,
+      ingredients: updateData.ingredients as any ?? existingRecipe.ingredients,
+      instructions: updateData.instructions as any ?? existingRecipe.instructions,
       calories: updateData.calories ?? existingRecipe.calories,
       protein: updateData.protein ?? existingRecipe.protein,
       carbs: updateData.carbs ?? existingRecipe.carbs,
@@ -211,7 +225,7 @@ export class MemStorage implements IStorage {
       cookTime: updateData.cookTime ?? existingRecipe.cookTime,
       difficulty: updateData.difficulty ?? existingRecipe.difficulty,
       cuisine: updateData.cuisine ?? existingRecipe.cuisine,
-      dietaryTags: updateData.dietaryTags ? Array.from(updateData.dietaryTags) : existingRecipe.dietaryTags,
+      dietaryTags: updateData.dietaryTags as any ?? existingRecipe.dietaryTags,
       imageUrl: updateData.imageUrl ?? existingRecipe.imageUrl,
       rating: updateData.rating ?? existingRecipe.rating,
     };
