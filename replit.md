@@ -1,12 +1,13 @@
 # Overview
 
-This is a modern AI-powered nutrition and meal planning web application built with a full-stack TypeScript architecture. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
+"La Mia Gazzella" è una moderna applicazione web per la nutrizione e la pianificazione alimentare alimentata dall'IA, costruita con un'architettura TypeScript full-stack. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
+App name: "La Mia Gazzella" - nome ufficiale dell'applicazione web per la pianificazione nutrizionale.
 
 # System Architecture
 

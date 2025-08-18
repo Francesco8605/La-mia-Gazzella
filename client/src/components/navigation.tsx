@@ -19,7 +19,7 @@ export default function Navigation() {
       <div className="flex items-center space-x-8">
         <Link href="/" className="flex items-center space-x-2" data-testid="logo-link">
           <Leaf className="text-secondary text-xl" />
-          <span className="font-bold text-slate-800 text-lg">NutriAI</span>
+          <span className="font-bold text-slate-800 text-lg">La Mia Gazzella</span>
         </Link>
         
         {/* Desktop Navigation */}

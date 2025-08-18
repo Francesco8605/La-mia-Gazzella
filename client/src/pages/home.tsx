@@ -90,7 +90,7 @@ export default function Home() {
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center space-x-2 mb-4">
                 <Sparkles className="text-secondary text-2xl" />
-                <span className="font-bold text-2xl">NutriAI</span>
+                <span className="font-bold text-2xl">La Mia Gazzella</span>
               </div>
               <p className="text-slate-300 mb-6 max-w-md">
                 Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
@@ -119,7 +119,7 @@ export default function Home() {
           </div>
           
           <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 NutriAI. Tutti i diritti riservati. Alimentato dalla tecnologia OpenAI.</p>
+            <p>&copy; 2025 La Mia Gazzella. Tutti i diritti riservati. Alimentato dalla tecnologia OpenAI.</p>
           </div>
         </div>
       </footer>
