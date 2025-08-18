@@ -20,6 +20,40 @@ export interface RecipeRequest {
   cuisine?: string;
 }
 
+// Protocollo Nutrizionista Gazzella
+const FORBIDDEN_FOODS = [
+  'legumi', 'ceci', 'fagioli', 'lenticchie', 'piselli', 'latticini', 'latte', 'yogurt', 
+  'formaggi', 'burro', 'panna', 'affettati', 'salumi', 'wurstel', 'carni in busta',
+  'petto di pollo in busta', 'petto di tacchino in busta', 'prodotti ultra-processati',
+  'merendine', 'barrette fit industriali', 'sughi pronti', 'salse industriali',
+  'bevande zuccherate', 'alcol', 'pane industriale imbustato'
+];
+
+const GAZZELLA_GUIDELINES = `
+NOME AGENTE: "Nutrizionista Gazzella"
+SCOPO: Generare piani alimentari SOLO secondo il Manuale della Gazzella
+VALIDITÀ: Esclusivamente per donne IN MENOPAUSA
+
+REGOLE INDEROGABILI:
+- Solo per donne in MENOPAUSA (se non in menopausa: spiegare inadeguatezza e terminare)
+- NO alimenti ultra-processati, NO affettati/confezionati, NO "fit" industriali
+- NO legumi: ceci, fagioli, lenticchie, piselli (mai proporli)
+- LATTICINI esclusi dallo schema; no sostituzioni "creative" non previste
+- PESCE: se "no merluzzo", usare orata, spigola, sogliola, salmone
+- CARNE/PESCE/UOVA: ingredienti FRESCHI e semplici (no busta/pronti)
+- CEREALI/CARBOIDRATI: porzioni misurate (riso, pasta, pane, patate)
+- VERDURE: ampio uso verdure non amidacee; olio EVO a crudo quantità definite
+- BEVANDE: acqua; evitare zuccherati/alcolici
+- COTTURE: semplici (piastra, forno, vapore, padella antiaderente)
+
+ECCEZIONE AMMESSA: Toast con sottiletta + fesa di tacchino (quando previsto dallo schema)
+
+STRUTTURA PIANO:
+- 7 giorni
+- 5 pasti/giorno: colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena
+- Grammature sempre indicate, note pratiche, opzioni meal-prep
+`;
+
 export async function generateMealPlan(request: MealPlanRequest): Promise<{
   title: string;
   description: string;
@@ -30,26 +64,52 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
   days: MealPlanDay[];
 }> {
   try {
-    const prompt = `Create a personalized ${request.durationDays}-day meal plan for a user with the following profile:
+    // Verifica che sia per menopausa
+    const isForMenopause = request.userProfile.healthGoal?.toLowerCase().includes('menopausa') || 
+                          request.userProfile.dietaryPreferences?.some(pref => pref.toLowerCase().includes('menopausa'));
+    
+    if (!isForMenopause) {
+      throw new Error('Il Manuale della Gazzella è specifico per donne in menopausa. Per altre condizioni consultare un nutrizionista qualificato.');
+    }
 
-Age: ${request.userProfile.age}
-Weight: ${request.userProfile.weight}kg
-Health Goal: ${request.userProfile.healthGoal}
-Activity Level: ${request.userProfile.activityLevel}
-Dietary Preferences: ${request.userProfile.dietaryPreferences?.join(", ") || "None"}
-Allergies: ${request.userProfile.allergies?.join(", ") || "None"}
-Target Daily Calories: ${request.targetCalories}
+    const excludedFoods = request.userProfile.excludedFoods || [];
+    const allergies = request.userProfile.allergies || [];
+    const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
 
-Please generate a complete meal plan with:
-1. A descriptive title and description
-2. Daily macro targets (protein, carbs, fat)
-3. For each day, provide breakfast, lunch, dinner, and 2 snacks
-4. Each meal should include: name, estimated calories, protein, carbs, fat
-5. Ensure total daily calories are close to the target
-6. Respect dietary preferences and allergies
-7. Vary the meals across days for variety
+    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni secondo il Manuale della Gazzella per donna in MENOPAUSA.
 
-Return the response in the following JSON format:
+PROFILO CLIENTE:
+- Età: ${request.userProfile.age} anni
+- Peso: ${request.userProfile.weight}kg  
+- Altezza: ${request.userProfile.height}cm
+- Email: ${request.userProfile.email}
+- Telefono: ${request.userProfile.phone}
+- Problemi tiroide: ${request.userProfile.thyroidIssues}
+- Problemi intestinali: ${request.userProfile.intestinalIssues}
+- Esercizio settimanale: ${request.userProfile.weeklyExercise} volte
+- Orario colazione: ${request.userProfile.breakfastTime}
+- Orario pranzo: ${request.userProfile.lunchTime}  
+- Orario cena: ${request.userProfile.dinnerTime}
+- Alimenti esclusi: ${excludedFoods.join(", ") || "Nessuno"}
+- Allergie: ${allergies.join(", ") || "Nessune"}
+- Consumo acqua: ${request.userProfile.dailyWaterIntake}
+- Orario fame/sgarri: ${request.userProfile.cravingTimeFrame}
+- Cibo sgarro preferito: ${request.userProfile.preferredCheatFood}
+- Formula Gazzella: ${request.userProfile.takingFormulaGazzella}
+
+${GAZZELLA_GUIDELINES}
+
+ALIMENTI VIETATI (da escludere sempre): ${FORBIDDEN_FOODS.join(", ")}
+${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
+
+Genera piano con:
+1. Riepilogo cliente (età, peso, altezza, obiettivo)
+2. Linee guida applicate (3-6 bullet)
+3. Piano 7 giorni con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
+4. Grammature precise per ogni pasto
+5. Note pratiche meal-prep e sostituzioni
+
+Rispondi in JSON con:
 {
   "title": "string",
   "description": "string", 
@@ -79,7 +139,10 @@ Return the response in the following JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a professional nutritionist and meal planning expert. Create detailed, balanced, and practical meal plans that meet specific dietary requirements and health goals. Always respond with valid JSON in the exact format requested."
+          content: `Sei "Nutrizionista Gazzella", esperta nel Manuale della Gazzella per donne in menopausa. 
+          Segui RIGOROSAMENTE le regole del manuale. NO legumi, NO latticini, NO affettati (eccetto toast previsto), 
+          NO ultra-processati. Solo ingredienti freschi, cotture semplici, 5 pasti al giorno con grammature precise.
+          Rispondi sempre in italiano e in formato JSON valido.`
         },
         {
           role: "user",
@@ -87,7 +150,7 @@ Return the response in the following JSON format:
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.3,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -121,7 +184,19 @@ export async function generateRecipe(request: RecipeRequest): Promise<{
   dietaryTags: string[];
 }> {
   try {
-    const prompt = `Create a detailed recipe for "${request.mealName}" with the following requirements:
+    const prompt = `Sei "Nutrizionista Gazzella". Crea una ricetta dettagliata per "${request.mealName}" seguendo RIGOROSAMENTE il Manuale della Gazzella:
+
+REGOLE GAZZELLA:
+- NO legumi (ceci, fagioli, lenticchie, piselli)
+- NO latticini (latte, yogurt, formaggi, burro, panna) 
+- NO affettati/salumi (eccetto fesa tacchino per toast quando previsto)
+- NO prodotti ultra-processati o confezionati
+- Solo ingredienti FRESCHI e naturali
+- Cotture semplici: piastra, forno, vapore, padella antiaderente
+- Condimenti: olio EVO a crudo, spezie, erbe aromatiche
+- Grammature precise per ogni ingrediente
+
+REQUISITI RICETTA:
 
 Target Calories: ${request.targetCalories}
 Dietary Preferences: ${request.dietaryPreferences.join(", ") || "None"}
@@ -160,7 +235,9 @@ Return the response in the following JSON format:
       messages: [
         {
           role: "system",
-          content: "You are a professional chef and nutritionist. Create detailed, practical recipes with accurate nutritional information and clear instructions. Always respond with valid JSON in the exact format requested."
+          content: `Sei "Nutrizionista Gazzella", chef esperta del Manuale della Gazzella per menopausa. 
+          Crea ricette seguendo RIGOROSAMENTE le regole: NO legumi, NO latticini, NO affettati, NO ultra-processati.
+          Solo ingredienti freschi, cotture semplici, grammature precise. Rispondi sempre in italiano e JSON valido.`
         },
         {
           role: "user",
@@ -168,7 +245,7 @@ Return the response in the following JSON format:
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.7,
+      temperature: 0.3,
     });
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
@@ -204,7 +281,7 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
     very_active: 1.725,
   };
   
-  const multiplier = activityMultipliers[activityLevel] || 1.2;
+  const multiplier = activityMultipliers[activityLevel as keyof typeof activityMultipliers] || 1.2;
   let calories = Math.round(bmr * multiplier);
   
   // Adjust based on health goal

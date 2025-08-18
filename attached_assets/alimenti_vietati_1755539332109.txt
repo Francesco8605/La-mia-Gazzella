@@ -1,0 +1,26 @@
+legumi
+ceci
+fagioli
+lenticchie
+piselli
+latticini
+latte
+yogurt
+formaggi
+burro
+panna
+affettati
+salumi
+wurstel
+carni in busta
+petto di pollo in busta
+petto di tacchino in busta
+prodotti ultra-processati
+merendine
+barrette “fit” industriali
+sughi pronti
+salse industriali
+bevande zuccherate
+alcol
+pane industriale imbustato con zuccheri/oli aggiunti
+merluzzo (SE la cliente lo esclude espressamente)
