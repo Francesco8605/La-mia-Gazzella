@@ -13,6 +13,8 @@
 - **CRITICAL RULE IMPLEMENTED**: Every meal (breakfast, snacks, lunch, dinner) now ALWAYS contains both protein + complex carbohydrates as required by Gazzella protocol
 - **Perfect Compliance**: Eliminated all forbidden foods (legumes, dairy, quinoa, oats, yogurt, smoothies) and ensured authentic Gazzella meal combinations
 - **Balanced Meal Structure**: Snacks now properly combine ingredients like "Mela con mandorle e gallette di riso" instead of separate items
+- **USER DATA ISOLATION FIXED**: Implemented proper authentication middleware ensuring each user sees only their own data
+- **Security Enhancement**: All meal plan and profile endpoints now require authentication and validate user ownership
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 

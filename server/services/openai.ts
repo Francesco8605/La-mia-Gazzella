@@ -239,9 +239,33 @@ Rispondi SEMPRE in italiano e formato JSON valido. L'array "days" deve contenere
 
     const result = JSON.parse(response.choices[0].message.content || "{}");
     
+    // Log the AI response for debugging
+    console.log("AI Response structure:", JSON.stringify(result, null, 2));
+    
     // Validate and ensure proper structure
     if (!result.days || !Array.isArray(result.days)) {
+      console.error("Invalid AI response structure:", result);
       throw new Error("Invalid meal plan structure received from AI");
+    }
+    
+    // Check if any day has invalid meal structure
+    for (let i = 0; i < result.days.length; i++) {
+      const day = result.days[i];
+      if (!day.meals || typeof day.meals !== 'object') {
+        console.error(`Invalid meals structure in day ${i}:`, day);
+        throw new Error(`Invalid meal plan structure received from AI - day ${i} has invalid meals`);
+      }
+      
+      // Check if the AI used the wrong snack format
+      if (day.meals.morningSnack || day.meals.afternoonSnack) {
+        console.log(`Converting morningSnack/afternoonSnack format to snacks array for day ${i}`);
+        day.meals.snacks = [
+          day.meals.morningSnack || day.meals.snacks?.[0],
+          day.meals.afternoonSnack || day.meals.snacks?.[1]
+        ].filter(Boolean);
+        delete day.meals.morningSnack;
+        delete day.meals.afternoonSnack;
+      }
     }
     
     // Ensure we have all 7 days - if not, generate the missing ones

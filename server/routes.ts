@@ -13,6 +13,25 @@ function generateSessionId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
+// Simple authentication middleware
+function isAuthenticated(req: any, res: any, next: any) {
+  const sessionId = req.cookies?.session;
+  const session = sessions.get(sessionId);
+  
+  if (!session) {
+    return res.status(401).json({ message: "Non autenticato" });
+  }
+  
+  // Mock user object to match what would come from Replit Auth
+  req.user = {
+    claims: {
+      sub: session.userId
+    }
+  };
+  
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication Routes
@@ -158,10 +177,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // User Profiles
-  app.get("/api/user-profiles/current", async (req, res) => {
+  app.get("/api/user-profiles/current", isAuthenticated, async (req: any, res) => {
     try {
-      // Per ora useremo un profilo demo, in futuro useremo l'ID dalla sessione
-      const profile = await storage.getUserProfile("demo-user");
+      // Use authenticated user ID from session
+      const userId = req.user.claims.sub;
+      const profile = await storage.getUserProfile(userId);
       
       if (!profile) {
         return res.status(404).json({ message: "Profilo non trovato" });
@@ -186,9 +206,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/user-profiles", async (req, res) => {
+  app.post("/api/user-profiles", isAuthenticated, async (req: any, res) => {
     try {
       const validatedData = insertUserProfileSchema.parse(req.body);
+      // Set the userId from authenticated session
+      validatedData.userId = req.user.claims.sub;
       const profile = await storage.createUserProfile(validatedData);
       res.status(201).json(profile);
     } catch (error) {
@@ -216,12 +238,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Meal Plans
-  app.post("/api/meal-plans/generate", async (req, res) => {
+  app.post("/api/meal-plans/generate", isAuthenticated, async (req: any, res) => {
     try {
       console.log("POST /api/meal-plans/generate called");
       
-      // Per ora useremo un profilo demo, in futuro useremo l'ID dalla sessione
-      const profile = await storage.getUserProfile("demo-user");
+      // Use authenticated user ID from session
+      const userId = req.user.claims.sub;
+      const profile = await storage.getUserProfile(userId);
       
       console.log("Profile found:", !!profile);
       
@@ -274,7 +297,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Save to storage
       const mealPlan = await storage.createMealPlan({
-        userId: profile.userId,
+        userId: userId,
         title: aiMealPlan.title,
         description: aiMealPlan.description,
         targetCalories: aiMealPlan.targetCalories,
@@ -296,21 +319,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/meal-plans/:userId", async (req, res) => {
+  app.get("/api/meal-plans/:userId", isAuthenticated, async (req: any, res) => {
     try {
-      const mealPlans = await storage.getMealPlansByUser(req.params.userId);
+      // Check if requesting own data or if admin
+      const requestedUserId = req.params.userId;
+      const currentUserId = req.user.claims.sub;
+      
+      if (requestedUserId !== currentUserId) {
+        return res.status(403).json({ message: "Non autorizzato ad accedere ai dati di altri utenti" });
+      }
+      
+      const mealPlans = await storage.getMealPlansByUser(requestedUserId);
       res.json(mealPlans);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch meal plans" });
     }
   });
 
-  app.get("/api/meal-plan/:id", async (req, res) => {
+  app.get("/api/meal-plan/:id", isAuthenticated, async (req: any, res) => {
     try {
       const mealPlan = await storage.getMealPlan(req.params.id);
       if (!mealPlan) {
         return res.status(404).json({ message: "Meal plan not found" });
       }
+      
+      // Check if requesting own data
+      const currentUserId = req.user.claims.sub;
+      if (mealPlan.userId !== currentUserId) {
+        return res.status(403).json({ message: "Non autorizzato ad accedere a questo piano alimentare" });
+      }
+      
       res.json(mealPlan);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch meal plan" });
