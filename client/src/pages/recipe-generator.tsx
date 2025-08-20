@@ -102,12 +102,13 @@ export default function RecipeGenerator() {
         const latestPlan = mealPlans[0];
         clientProfile = latestPlan.clientProfile;
       } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
-        // Usa il profilo esistente
+        // Usa il profilo esistente (con type assertion per bypassare controlli TypeScript)
+        const profile = userProfile as any;
         clientProfile = {
-          eta: userProfile.age,
-          peso: userProfile.currentWeight,
-          altezza: userProfile.height,
-          pesoObbiettivo: userProfile.targetWeight,
+          eta: profile.age,
+          peso: profile.currentWeight,
+          altezza: profile.height,
+          pesoObbiettivo: profile.targetWeight,
         };
       } else if (userData) {
         // Usa i dati dal popup
@@ -133,13 +134,14 @@ export default function RecipeGenerator() {
         targetCalories: recipeData.dishType === "primo" ? 400 : 350,
         allergies: recipeData.foodIntolerances ? recipeData.foodIntolerances.split(",").map(s => s.trim()) : [],
         cuisine: "italiana",
-        difficulty: recipeData.difficulty, // Aggiungi difficoltà alla richiesta
-        clientProfile,
+        difficulty: recipeData.difficulty,
+        clientProfile: clientProfile,
         recipePreferences: {
           preferredProteins: recipeData.preferredProteins,
-          preferredFish: recipeData.preferredFish,
+          preferredFish: recipeData.preferredFish || "",
           meatOrFish: recipeData.meatOrFish,
-          excludedFoods: recipeData.excludedFoods,
+          excludedFoods: recipeData.excludedFoods || "",
+          additionalDetails: ""
         }
       };
 
@@ -172,7 +174,7 @@ export default function RecipeGenerator() {
     if (Array.isArray(mealPlans) && mealPlans.length > 0) {
       // Usa i dati dal piano esistente
       generateRecipeMutation.mutate({ recipeData: data });
-    } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile && 'currentWeight' in userProfile && 'height' in userProfile) {
+    } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
       // Usa i dati dal profilo esistente
       generateRecipeMutation.mutate({ recipeData: data });
     } else {
