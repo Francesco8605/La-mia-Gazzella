@@ -2,7 +2,7 @@ import { Sparkles, Play, User, Mail, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import WeightTracker from "@/components/weight-tracker";
+
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
@@ -87,21 +87,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Weight Tracking Section - Show only if authenticated */}
-      {isAuthenticated && (
-        <section className="container mx-auto px-4 mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-4">
-              Tracciamento Peso
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Monitora i tuoi progressi e aggiorna il tuo piano nutrizionale
-            </p>
-          </div>
-          
-          <WeightTracker />
-        </section>
-      )}
+
 
 
 
