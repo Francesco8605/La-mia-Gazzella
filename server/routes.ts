@@ -415,6 +415,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route
+  app.get("/api/meal-plans/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Fetching meal plans for current user:", userId);
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      console.log("Found meal plans:", mealPlans?.length || 0);
+      res.json(mealPlans || []);
+    } catch (error) {
+      console.error("Error fetching user meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
   app.get("/api/meal-plans/:userId", isAuthenticated, async (req: any, res) => {
     try {
       // Check if requesting own data or if admin
@@ -428,20 +442,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const mealPlans = await storage.getMealPlansByUser(requestedUserId);
       res.json(mealPlans);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch meal plans" });
-    }
-  });
-
-  // Get current user's meal plans (simplified route)
-  app.get("/api/meal-plans/user", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      console.log("Fetching meal plans for current user:", userId);
-      const mealPlans = await storage.getMealPlansByUser(userId);
-      console.log("Found meal plans:", mealPlans?.length || 0);
-      res.json(mealPlans || []);
-    } catch (error) {
-      console.error("Error fetching user meal plans:", error);
       res.status(500).json({ message: "Failed to fetch meal plans" });
     }
   });
@@ -818,20 +818,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Chat endpoint
   app.post("/api/ai-chat/message", isAuthenticated, async (req: any, res) => {
     try {
-      const { message, userProfile, mealPlans, recipes } = req.body;
+      const { message } = req.body;
       const userId = req.user.claims.sub;
 
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ message: "Messaggio richiesto" });
       }
 
+      console.log("🤖 AI Chat request from user:", userId);
+      console.log("📝 Message:", message);
+
+      // Fetch user's actual data from database
+      const userProfile = await storage.getUserProfile(userId);
+      const userMealPlans = await storage.getMealPlansByUser(userId);
+      const userRecipes = await storage.getRecipesByUser(userId);
+      
+      console.log("👤 User profile found:", !!userProfile);
+      console.log("📋 Meal plans found:", userMealPlans?.length || 0);
+      console.log("🍳 Recipes found:", userRecipes?.length || 0);
+
       // Generate AI response using OpenAI service
       const aiResponse = await generateAIChatResponse({
         userMessage: message,
         userId,
         userProfile,
-        mealPlans,
-        recipes
+        mealPlans: userMealPlans,
+        recipes: userRecipes
       });
 
       res.json({
