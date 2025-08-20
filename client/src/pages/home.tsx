@@ -1,4 +1,4 @@
-import { Sparkles, Play, User, Mail } from "lucide-react";
+import { Sparkles, Play, User, Mail, MessageCircle } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -49,6 +49,20 @@ export default function Home() {
               >
                 <User className="mr-2 h-4 w-4" />
                 I Miei Piani Personalizzati
+              </Button>
+            </Link>
+            <Link href="/ai-chat">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-blue-600 hover:from-purple-700 hover:via-pink-700 hover:to-blue-700 text-white font-bold px-6 py-6 rounded-xl shadow-xl hover:shadow-2xl transform hover:scale-110 transition-all duration-500 border-2 border-white/20 backdrop-blur-sm relative overflow-hidden group"
+                data-testid="ai-assistant-button"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 via-pink-400/20 to-blue-400/20 animate-pulse"></div>
+                <div className="relative flex items-center justify-center">
+                  <MessageCircle className="mr-3 h-6 w-6 animate-bounce" />
+                  <span className="text-lg">🤖 Assistente IA Gazzella</span>
+                  <Sparkles className="ml-3 h-5 w-5 animate-spin" />
+                </div>
               </Button>
             </Link>
             <Link href="/aggiorna-profilo">
