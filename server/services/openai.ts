@@ -33,13 +33,13 @@ export interface RecipeRequest {
 // Protocollo Nutrizionista Gazzella
 const FORBIDDEN_FOODS = [
   'legumi', 'ceci', 'fagioli', 'lenticchie', 'piselli', 'latticini', 'latte', 'yogurt', 
-  'yogurt greco', 'yogurt bianco', 'kefir', 'formaggi', 'burro', 'panna', 'affettati', 
-  'salumi', 'wurstel', 'carni in busta', 'petto di pollo in busta', 'petto di tacchino in busta', 
-  'prodotti ultra-processati', 'merendine', 'barrette fit industriali', 'sughi pronti', 
-  'salse industriali', 'bevande zuccherate', 'alcol', 'pane industriale imbustato', 'quinoa', 
-  'avena', 'fiocchi di avena', 'yogurt di soia', 'yogurt di riso', 'latte di soia', 
-  'latte di riso', 'latte di avena', 'smoothie', 'frullati con latte', 'porridge', 'muesli', 
-  'cereali', 'biscotti industriali', 'crackers industriali', 'tofu', 'seitan', 'tempeh'
+  'formaggi', 'burro', 'panna', 'affettati', 'salumi', 'wurstel', 'carni in busta',
+  'petto di pollo in busta', 'petto di tacchino in busta', 'prodotti ultra-processati',
+  'merendine', 'barrette fit industriali', 'sughi pronti', 'salse industriali',
+  'bevande zuccherate', 'alcol', 'pane industriale imbustato', 'quinoa', 'avena',
+  'yogurt greco', 'yogurt di soia', 'yogurt di riso', 'latte di soia', 'latte di riso',
+  'latte di avena', 'smoothie', 'frullati con latte', 'porridge', 'muesli', 'cereali',
+  'biscotti', 'crackers industriali', 'tofu', 'seitan', 'tempeh'
 ];
 
 const GAZZELLA_GUIDELINES = `
@@ -126,11 +126,11 @@ SEGUI ESATTAMENTE IL PIANO DELLA TABELLA GAZZELLA UFFICIALE:
 - Alterna gli ingredienti seguendo le variazioni della tabella  
 - Mantieni sempre l'equilibrio nutrizionale di ogni pasto
 
-ALIMENTI AUTENTICI MANUALE GAZZELLA (usa SOLO questi):
-Proteine: uova fresche, frittata, petto di pollo fresco, petto di tacchino fresco, carne rossa magra, pesce fresco (orata, spigola, salmone, sogliola), gamberetti freschi, bresaola senza lattosio, prosciutto cotto senza lattosio, tonno naturale in vetro
-Cereali: pane integrale, pasta integrale, riso integrale, riso basmati, patate, gallette di riso, fette biscottate integrali
-Verdure: insalata mista, verdure crude, zucchine, pomodori, spinaci, broccoli, cetrioli, carote, rucola, lattuga
-Grassi: mandorle, noci, nocciole, cioccolato fondente 85%, olio EVO a crudo
+ALIMENTI DALLA TABELLA GAZZELLA UFFICIALE (usa SOLO questi):
+Proteine: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
+Cereali: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
+Verdure: insalata, verdure crude, zucchine, pomodoro, ananas  
+Grassi: mandorle, noci, nocciole, cioccolato fondente, olio EVO
 Frutta: mela, pera, pesca, ananas
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
@@ -163,13 +163,9 @@ REGOLA FONDAMENTALE GAZZELLA - OGNI PASTO DEVE CONTENERE:
 ⚠️ REGOLA CRITICA: OGNI "name" DEVE INCLUDERE GRAMMATURE PRECISE
 ESEMPI OBBLIGATORI NEL CAMPO "name":
 
-COLAZIONI SALATE AUTENTICHE GAZZELLA (usa SOLO queste):
+COLAZIONI CON GRAMMATURE:
 "Uova 2 medie (100g) strapazzate + pane integrale 50g + spinaci 150g + olio EVO 5g"
-"Omelette 2 uova (100g) + pane tostato 45g + pomodori 120g + olio EVO 6g"
-"Bresaola 40g + pane integrale 50g + cetrioli 100g + olio EVO 5g"
-"Prosciutto cotto 40g senza lattosio + fette biscottate 30g + rucola 80g"
-"Salmone affumicato 35g + pane di segale 40g + cetrioli 80g"
-"Frittata 2 uova (100g) + gallette di riso 25g + pomodorini 100g"
+"Omelette con 2 uova (100g) + pane tostato 45g + pomodori 120g + olio EVO 6g"
 
 PRANZI CON GRAMMATURE:
 "Orata 140g al forno + riso basmati 80g + zucchine 200g + olio EVO 10g"
@@ -197,30 +193,19 @@ SPUNTINI CON GRAMMATURE (sempre combinati):
 📋 STRUTTURA SETTIMANALE ESATTA DALLA TABELLA GAZZELLA:
 Segui ESATTAMENTE questa struttura per tutti i 7 giorni con GRAMMATURE PRECISE:
 
-COLAZIONE: Proteine (uova/bresaola/prosciutto) + Cereali/Pane + Verdure + Olio EVO
-SPUNTINO: Frutta + Frutta secca + Gallette (combinazione obbligatoria)
-PRANZO: Insalata/Verdure + Cereali + Proteina + Verdure + Olio EVO
-MERENDA: Frutta + Frutta secca + eventuale cioccolato fondente (combinazione obbligatoria)
-CENA: Verdure crude + Proteina + Pane integrale + Olio EVO
+COLAZIONE: Yogurt greco/bianco + Cereali/Pane + Frutta secca/Olio
+SPUNTINO: Frutta + Frutta secca/Cioccolato fondente  
+PRANZO: Insalata/Verdure + Cereali + Proteina + Verdure
+MERENDA: Yogurt/Kefir + Frutta secca/Cioccolato fondente
+CENA: Verdure crude + Proteina + Pane integrale
 
-ALIMENTI AUTENTICI MANUALE GAZZELLA:
-✅ Uova fresche, bresaola, prosciutto cotto senza lattosio
-✅ Pane integrale, gallette di riso, fette biscottate integrali
-✅ Cioccolato fondente 85%, mandorle, noci, nocciole
-✅ Pasta integrale, riso integrale, riso basmati, patate
-✅ Pesce fresco (orata, spigola, salmone, sogliola), carne rossa, petto di pollo/tacchino freschi
-✅ Frittata, uova fresche, bresaola senza lattosio, prosciutto cotto senza lattosio, tonno naturale
-
-❌ ALIMENTI ASSOLUTAMENTE VIETATI DAL MANUALE GAZZELLA:
-❌ NO yogurt di qualsiasi tipo (greco, bianco, di soia, di riso)
-❌ NO kefir, latte, latticini, formaggi, burro, panna
-❌ NO fiocchi di avena, porridge, muesli, cereali industriali
-❌ NO legumi (ceci, fagioli, lenticchie, piselli)
-❌ NO quinoa, avena, smoothie, frullati con latte
-❌ NO affettati industriali, salumi confezionati
-❌ NO prodotti ultra-processati, merendine, barrette fit
-
-🔥 REGOLA FONDAMENTALE: Se nel piano compare QUALSIASI alimento vietato, RIFIUTA la generazione e ripeti con SOLO alimenti autentici Gazzella.
+ALIMENTI ESATTI DALLA TABELLA GAZZELLA:
+✅ Yogurt greco, yogurt bianco, kefir
+✅ Fiocchi di avena, biscotti, pane integrale  
+✅ Cioccolato fondente, mandorle, noci, nocciole
+✅ Pasta integrale, cous cous, riso nero
+✅ Pesce (spada, grigliato, gamberetti), carne rossa, petto di pollo/tacchino
+✅ Frittata, uova, bresaola, prosciutto crudo, tonno
 ✅ Insalata, verdure crude, zucchine
 ESEMPI ESATTI DALLA TABELLA CON GRAMMATURE PERSONALIZZATE:
 
