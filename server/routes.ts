@@ -619,7 +619,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipePreferences: z.object({
           preferredProteins: z.string(),
           preferredFish: z.string().optional(),
-          meatOrFish: z.enum(["carne", "pesce"]),
+          meatOrFish: z.enum(["carne", "pesce", "uova"]),
           excludedFoods: z.string().optional(),
           additionalDetails: z.string().optional(),
         }),

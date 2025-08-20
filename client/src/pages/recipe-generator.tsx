@@ -16,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 // Schema semplificato per le ricette - richiede solo il tipo di piatto
 const recipeFormSchema = z.object({
   dishType: z.enum(["primo", "secondo"], { required_error: "Seleziona tipo di piatto" }),
-  meatOrFish: z.enum(["carne", "pesce"], { required_error: "Seleziona base del piatto" }),
+  meatOrFish: z.enum(["carne", "pesce", "uova"], { required_error: "Seleziona base del piatto" }),
   difficulty: z.enum(["facile", "media", "difficile"], { required_error: "Seleziona difficoltà" }),
   preferredProteins: z.string().min(1, "Specifica le proteine preferite"),
   preferredFish: z.string().optional(),
@@ -92,63 +92,20 @@ export default function RecipeGenerator() {
   });
 
   const generateRecipeMutation = useMutation({
-    mutationFn: async (combinedData: { recipeData: RecipeFormData; userData?: QuickProfileData }) => {
-      const { recipeData, userData } = combinedData;
-      
-      // Determina i dati da usare: piani esistenti, profilo utente, o dati del popup
-      let clientProfile;
-      
-      console.log("=== DEBUGGING PROFILE SELECTION ===");
-      console.log("Available meal plans:", mealPlans);
-      console.log("Available user profile:", userProfile);
-      console.log("User data from popup:", userData);
-      console.log("Types:", {
-        mealPlansType: typeof mealPlans,
-        mealPlansIsArray: Array.isArray(mealPlans),
-        userProfileType: typeof userProfile,
-        userDataType: typeof userData
-      });
-      
-      if (Array.isArray(mealPlans) && mealPlans.length > 0) {
-        // Usa il piano più recente
-        const latestPlan = mealPlans[0];
-        clientProfile = latestPlan.clientProfile;
-        console.log("Using meal plan profile:", clientProfile);
-      } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
-        // Usa il profilo esistente (con type assertion per bypassare controlli TypeScript)
-        const profile = userProfile as any;
-        clientProfile = {
-          eta: profile.age,
-          peso: profile.currentWeight,
-          altezza: profile.height,
-          pesoObbiettivo: profile.targetWeight,
-        };
-        console.log("Using user profile:", clientProfile);
-      } else if (userData) {
-        // Usa i dati dal popup
-        clientProfile = {
-          eta: userData.age,
-          peso: userData.currentWeight,
-          altezza: userData.height,
-          pesoObbiettivo: userData.currentWeight - 5, // Default target
-        };
-        console.log("Using popup data:", clientProfile);
-      } else {
-        // Fallback: usa dati predefiniti se non ci sono dati disponibili
-        console.warn("NO PROFILE DATA AVAILABLE! Using default values");
-        clientProfile = {
-          eta: 45,
-          peso: 70,
-          altezza: 165,
-          pesoObbiettivo: 65,
-        };
-        console.log("Using fallback default profile:", clientProfile);
-        console.log("Fallback clientProfile type:", typeof clientProfile);
-        console.log("Fallback clientProfile content:", JSON.stringify(clientProfile));
-      }
+    mutationFn: async (recipeData: RecipeFormData) => {
+      // Semplice: sempre usiamo dati di default per ora
+      const clientProfile = {
+        eta: 45,
+        peso: 70,
+        altezza: 165,
+        pesoObbiettivo: 65,
+      };
+
+      const proteinType = recipeData.meatOrFish === "carne" ? "carne" : 
+                         recipeData.meatOrFish === "pesce" ? "pesce" : "uova";
 
       const recipeRequest = {
-        mealName: `${recipeData.dishType === "primo" ? "Primo piatto" : "Secondo piatto"} ${recipeData.meatOrFish === "carne" ? "a base di carne" : "a base di pesce"}`,
+        mealName: `${recipeData.dishType === "primo" ? "Primo piatto" : "Secondo piatto"} a base di ${proteinType}`,
         dietaryPreferences: [
           "menopausa",
           "no legumi",
@@ -170,14 +127,7 @@ export default function RecipeGenerator() {
         }
       };
 
-      console.log("=== DEBUG RECIPE GENERATION ===");
-      console.log("Meal plans available:", mealPlans);
-      console.log("User profile available:", userProfile);
-      console.log("User data from popup:", userData);
-      console.log("Final client profile:", clientProfile);
-      console.log("clientProfile is undefined?", clientProfile === undefined);
-      console.log("Complete recipe request:", JSON.stringify(recipeRequest, null, 2));
-
+      console.log("Sending recipe request:", JSON.stringify(recipeRequest, null, 2));
       return apiRequest("/api/recipes/generate-gazzella", recipeRequest);
     },
     onSuccess: (recipe: GeneratedRecipe) => {
@@ -203,26 +153,12 @@ export default function RecipeGenerator() {
   });
 
   const onSubmit = (data: RecipeFormData) => {
-    // Controlla se abbiamo i dati necessari
-    if (Array.isArray(mealPlans) && mealPlans.length > 0) {
-      // Usa i dati dal piano esistente
-      generateRecipeMutation.mutate({ recipeData: data });
-    } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
-      // Usa i dati dal profilo esistente
-      generateRecipeMutation.mutate({ recipeData: data });
-    } else {
-      // Mostra il popup per raccogliere i dati mancanti
-      setPendingRecipeData(data);
-      setShowQuickProfileDialog(true);
-    }
+    generateRecipeMutation.mutate(data);
   };
 
   const onQuickProfileSubmit = (userData: QuickProfileData) => {
     if (pendingRecipeData) {
-      generateRecipeMutation.mutate({ 
-        recipeData: pendingRecipeData, 
-        userData: userData 
-      });
+      generateRecipeMutation.mutate(pendingRecipeData);
     }
   };
 
@@ -313,6 +249,7 @@ export default function RecipeGenerator() {
                             <SelectContent>
                               <SelectItem value="carne">A base di Carne</SelectItem>
                               <SelectItem value="pesce">A base di Pesce</SelectItem>
+                              <SelectItem value="uova">A base di Uova</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
