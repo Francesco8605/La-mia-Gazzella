@@ -42,8 +42,8 @@ export default function Recipes() {
   const filteredRecipes = recipes?.filter(recipe => {
     const matchesSearch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          recipe.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = !difficultyFilter || recipe.difficulty === difficultyFilter;
-    const matchesCuisine = !cuisineFilter || recipe.cuisine === cuisineFilter;
+    const matchesDifficulty = !difficultyFilter || difficultyFilter === "all" || recipe.difficulty === difficultyFilter;
+    const matchesCuisine = !cuisineFilter || cuisineFilter === "all" || recipe.cuisine === cuisineFilter;
     
     return matchesSearch && matchesDifficulty && matchesCuisine;
   }) || [];
@@ -92,7 +92,7 @@ export default function Recipes() {
               <SelectValue placeholder="Difficoltà" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tutte</SelectItem>
+              <SelectItem value="all">Tutte</SelectItem>
               <SelectItem value="Facile">Facile</SelectItem>
               <SelectItem value="Media">Media</SelectItem>
               <SelectItem value="Difficile">Difficile</SelectItem>
@@ -104,7 +104,7 @@ export default function Recipes() {
               <SelectValue placeholder="Cucina" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Tutte</SelectItem>
+              <SelectItem value="all">Tutte</SelectItem>
               <SelectItem value="italiana">Italiana</SelectItem>
               <SelectItem value="mediterranea">Mediterranea</SelectItem>
             </SelectContent>
@@ -114,8 +114,8 @@ export default function Recipes() {
             variant="outline" 
             onClick={() => {
               setSearchTerm("");
-              setDifficultyFilter("");
-              setCuisineFilter("");
+              setDifficultyFilter("all");
+              setCuisineFilter("all");
             }}
             data-testid="clear-filters"
           >
