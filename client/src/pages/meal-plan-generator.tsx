@@ -34,15 +34,15 @@ export default function MealPlanGenerator() {
     onSuccess: (mealPlan) => {
       toast({
         title: "Piano Alimentare Creato! 🎉",
-        description: `Il tuo piano personalizzato "${mealPlan.name}" è pronto. Ti stiamo reindirizzando...`,
+        description: `Il tuo piano personalizzato è pronto. Ti stiamo reindirizzando alla pagina del tuo piano...`,
       });
       
       // Invalida le query per aggiornare la cache
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
       
-      // Reindirizza al piano creato dopo 2 secondi
+      // Reindirizza al piano salvato dopo 2 secondi
       setTimeout(() => {
-        window.location.href = `/meal-plan/${mealPlan.id}`;
+        window.location.href = `/piano-salvato/${mealPlan.id}`;
       }, 2000);
     },
     onError: (error) => {
