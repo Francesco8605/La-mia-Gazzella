@@ -97,10 +97,17 @@ export default function RecipeGenerator() {
       
       // Determina i dati da usare: piani esistenti, profilo utente, o dati del popup
       let clientProfile;
+      
+      console.log("=== DEBUGGING PROFILE SELECTION ===");
+      console.log("Available meal plans:", mealPlans);
+      console.log("Available user profile:", userProfile);
+      console.log("User data from popup:", userData);
+      
       if (Array.isArray(mealPlans) && mealPlans.length > 0) {
         // Usa il piano più recente
         const latestPlan = mealPlans[0];
         clientProfile = latestPlan.clientProfile;
+        console.log("Using meal plan profile:", clientProfile);
       } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
         // Usa il profilo esistente (con type assertion per bypassare controlli TypeScript)
         const profile = userProfile as any;
@@ -110,6 +117,7 @@ export default function RecipeGenerator() {
           altezza: profile.height,
           pesoObbiettivo: profile.targetWeight,
         };
+        console.log("Using user profile:", clientProfile);
       } else if (userData) {
         // Usa i dati dal popup
         clientProfile = {
@@ -118,8 +126,17 @@ export default function RecipeGenerator() {
           altezza: userData.height,
           pesoObbiettivo: userData.currentWeight - 5, // Default target
         };
+        console.log("Using popup data:", clientProfile);
       } else {
-        throw new Error("Dati profilo mancanti");
+        // Fallback: usa dati predefiniti se non ci sono dati disponibili
+        console.warn("NO PROFILE DATA AVAILABLE! Using default values");
+        clientProfile = {
+          eta: 45,
+          peso: 70,
+          altezza: 165,
+          pesoObbiettivo: 65,
+        };
+        console.log("Using fallback default profile:", clientProfile);
       }
 
       const recipeRequest = {
