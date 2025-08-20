@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Scale, TrendingUp, TrendingDown, Plus, RefreshCw } from "lucide-react";
+import { Scale, TrendingUp, TrendingDown, Plus, RefreshCw, BarChart3 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format, subDays } from "date-fns";
 import { it } from "date-fns/locale";
 import { apiRequest } from "@/lib/queryClient";
@@ -78,6 +79,15 @@ export default function WeightTracker() {
   const weightTrend = latestEntry && previousEntry 
     ? latestEntry.weight - previousEntry.weight
     : 0;
+
+  // Prepare data for chart (last 30 entries)
+  const chartData = weightEntries
+    .slice(-30) // Last 30 entries
+    .map(entry => ({
+      date: format(new Date(entry.date), 'dd/MM', { locale: it }),
+      peso: entry.weight,
+      fullDate: format(new Date(entry.date), 'dd MMM yyyy', { locale: it })
+    }));
 
   if (error) {
     return (
@@ -268,6 +278,77 @@ export default function WeightTracker() {
               <Plus className="w-4 h-4 mr-2" />
               Aggiungi Primo Peso
             </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Weight Progress Chart */}
+      {chartData.length >= 2 && (
+        <Card className="glass-morphism">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
+              <BarChart3 className="w-6 h-6 text-green-600" />
+              Andamento del Peso
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#64748b"
+                    fontSize={12}
+                  />
+                  <YAxis 
+                    stroke="#64748b"
+                    fontSize={12}
+                    domain={['dataMin - 2', 'dataMax + 2']}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
+                            <p className="font-semibold text-slate-800">{data.fullDate}</p>
+                            <p className="text-red-600 font-bold">
+                              Peso: {data.peso} kg
+                            </p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="peso" 
+                    stroke="#dc2626" 
+                    strokeWidth={3}
+                    dot={{ fill: '#dc2626', strokeWidth: 2, r: 5 }}
+                    activeDot={{ r: 7, stroke: '#dc2626', strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="mt-4 text-center">
+              <p className="text-sm text-slate-600">
+                {chartData.length > 1 && (
+                  <>
+                    Variazione totale: <span className={`font-semibold ${
+                      chartData[chartData.length - 1].peso - chartData[0].peso >= 0 
+                        ? 'text-orange-600' 
+                        : 'text-green-600'
+                    }`}>
+                      {chartData[chartData.length - 1].peso - chartData[0].peso >= 0 ? '+' : ''}
+                      {(chartData[chartData.length - 1].peso - chartData[0].peso).toFixed(1)} kg
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
           </CardContent>
         </Card>
       )}
