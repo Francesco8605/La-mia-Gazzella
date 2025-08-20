@@ -26,6 +26,11 @@
 - **SAVORY BREAKFASTS INCLUDED**: Added "Pane integrale + uova + olio EVO" (Wednesday) and "Pane integrale + prosciutto crudo + olio EVO" (Saturday)
 - **PERMITTED FOODS ONLY**: Yogurt greco, yogurt bianco, fiocchi di avena, and biscotti now allowed ONLY as specified in official table
 - **PERSONALIZED PORTIONS**: System calculates precise weights (grams) based on individual client data (weight, height, BMI, goals)
+- **BMI INTEGRATION**: Meal plans now display current BMI, target weight, and weight loss goals in personalized profile section
+- **DIET EXPLANATION SYSTEM**: Each plan includes comprehensive Gazzella method explanation with principles and expected results
+- **TIME ESTIMATION**: Realistic time predictions for reaching weight goals based on healthy 0.5-1kg/week loss rate
+- **ENHANCED VISUALIZATION**: Saved meal plan pages show complete client profile with BMI category and personalized targets
+- **AI PERSONALIZATION TESTED**: Confirmed system generates customized portion sizes for different weight categories (60kg, 60-70kg, >70kg)
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 
