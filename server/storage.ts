@@ -14,6 +14,7 @@ export interface IStorage {
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
   createUserProfile(profile: InsertUserProfile): Promise<UserProfile>;
   updateUserProfile(userId: string, profile: Partial<InsertUserProfile>): Promise<UserProfile | undefined>;
+  upsertUserProfile(userId: string, profileData: Partial<InsertUserProfile>): Promise<UserProfile>;
   
   // Meal Plans
   getMealPlan(id: string): Promise<MealPlan | undefined>;
@@ -92,7 +93,7 @@ export class MemStorage implements IStorage {
       phone: insertProfile.phone ?? null,
       height: insertProfile.height ?? null,
       age: insertProfile.age ?? null,
-      weight: insertProfile.weight ?? null,
+      weight: insertProfile.weight ? String(insertProfile.weight) : null,
       thyroidIssues: insertProfile.thyroidIssues ?? null,
       intestinalIssues: insertProfile.intestinalIssues ?? null,
       weeklyExercise: insertProfile.weeklyExercise ?? null,
@@ -120,7 +121,8 @@ export class MemStorage implements IStorage {
     const updatedProfile: UserProfile = {
       ...existingProfile,
       ...updateData,
-      // Handle array fields properly for null/undefined values
+      // Handle special fields properly
+      weight: updateData.weight !== undefined ? String(updateData.weight) : existingProfile.weight,
       excludedFoods: updateData.excludedFoods !== undefined ? updateData.excludedFoods : existingProfile.excludedFoods,
       allergies: updateData.allergies !== undefined ? updateData.allergies : existingProfile.allergies,
     };
@@ -128,6 +130,21 @@ export class MemStorage implements IStorage {
     this.userProfiles.set(existingProfile.id, updatedProfile);
     console.log("Profile updated successfully:", updatedProfile.id);
     return updatedProfile;
+  }
+
+  async upsertUserProfile(userId: string, profileData: Partial<InsertUserProfile>): Promise<UserProfile> {
+    // For MemStorage, implement basic upsert logic
+    const existingProfile = await this.getUserProfile(userId);
+    
+    if (existingProfile) {
+      // Update existing profile
+      const updatedProfile = { ...existingProfile, ...profileData };
+      this.userProfiles.set(existingProfile.id, updatedProfile);
+      return updatedProfile;
+    } else {
+      // Create new profile
+      return await this.createUserProfile({ ...profileData, userId });
+    }
   }
 
   // Meal Plans
@@ -327,6 +344,36 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userProfiles.userId, userId))
       .returning();
     return profile || undefined;
+  }
+
+  async upsertUserProfile(userId: string, profileData: Partial<InsertUserProfile>): Promise<UserProfile> {
+    // First try to update existing profile
+    const existingProfile = await this.getUserProfile(userId);
+    
+    if (existingProfile) {
+      // Update existing profile
+      const updateFields = { ...profileData };
+      if (updateFields.weight !== undefined) {
+        updateFields.weight = String(updateFields.weight);
+      }
+      const [updatedProfile] = await db
+        .update(userProfiles)
+        .set(updateFields)
+        .where(eq(userProfiles.userId, userId))
+        .returning();
+      return updatedProfile;
+    } else {
+      // Create new profile
+      const insertFields = { ...profileData, userId };
+      if (insertFields.weight !== undefined) {
+        insertFields.weight = String(insertFields.weight);
+      }
+      const [newProfile] = await db
+        .insert(userProfiles)
+        .values(insertFields)
+        .returning();
+      return newProfile;
+    }
   }
 
   // Meal Plans

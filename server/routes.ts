@@ -294,11 +294,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Updating profile for user:", userId);
       console.log("Profile data:", req.body);
       
-      const updatedProfile = await storage.updateUserProfile(userId, req.body);
-      
-      if (!updatedProfile) {
-        return res.status(404).json({ message: "Profilo non trovato" });
+      // Convert weight to string for database compatibility
+      const profileData = { ...req.body };
+      if (profileData.weight !== undefined) {
+        profileData.weight = String(profileData.weight);
       }
+      
+      // Use upsert to create profile if it doesn't exist
+      const updatedProfile = await storage.upsertUserProfile(userId, profileData);
       
       console.log("Profile updated successfully");
       res.json(updatedProfile);
@@ -337,7 +340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: profile.email || undefined,
         phone: profile.phone || undefined,
         age: profile.age,
-        weight: profile.weight,
+        weight: parseFloat(profile.weight) || 0,
         height: profile.height,
         thyroidIssues: profile.thyroidIssues as "si" | "no" | "eutirox" || "no",
         intestinalIssues: profile.intestinalIssues as "mai" | "qualche_volta" | "spesso" || "mai",
