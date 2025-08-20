@@ -12,6 +12,12 @@ export async function apiRequest(
   data?: unknown | undefined,
   method: string = "POST"
 ): Promise<any> {
+  console.log("=== API REQUEST DEBUG ===");
+  console.log("URL:", url);
+  console.log("Method:", method);
+  console.log("Data being sent:", data);
+  console.log("JSON stringified data:", JSON.stringify(data));
+  
   const res = await fetch(url, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
