@@ -22,7 +22,7 @@ export default function Home() {
               data-testid="hero-logo"
             />
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-red-600 via-green-600 to-emerald-600 bg-clip-text text-transparent mb-6 leading-tight">
+          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-red-600 via-green-600 to-emerald-600 bg-clip-text text-transparent mb-6 leading-tight">
             Il Tuo Assistente
             <br />
             Nutrizionale Personale
