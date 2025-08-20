@@ -125,28 +125,61 @@ ${GAZZELLA_GUIDELINES}
 ALIMENTI VIETATI (da escludere sempre): ${FORBIDDEN_FOODS.join(", ")}
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
-GRAMMATURE PRECISE OBBLIGATORIE:
-- OGNI ingrediente DEVE avere grammatura specifica (es: 150g, 80g, 200g)
-- MAI termini vaghi: "una porzione", "q.b.", "a piacere", "abbondante"
-- SEMPRE pesare alimenti per precisi target nutrizionali
-- Esempio CORRETTO: "Petto di pollo 150g alla griglia + riso basmati 80g + zucchine 200g + olio EVO 10g"
-- Esempio SBAGLIATO: "Petto di pollo + riso + verdure" (mancano grammature)
+GRAMMATURE PRECISE OBBLIGATORIE - FONDAMENTALE PER PERSONALIZZAZIONE:
+- OGNI ingrediente deve avere peso ESATTO in grammi (es: 150g, 80g, 200g)
+- CALCOLARE grammature variabili basate su peso, altezza, BMI, obiettivi cliente
+- PERSONALIZZAZIONE TOTALE: cliente 60kg avrà porzioni diverse da cliente 80kg
+🎯 DATI CLIENTE SPECIFICI PER CALCOLO GRAMMATURE:
+- Età: ${userProfile.age} anni | Peso: ${userProfile.weight} kg | Altezza: ${userProfile.height} cm
+- BMI: ${request.nutritionalNeeds.bmi} | Obiettivo: ${request.nutritionalNeeds.dailyCalories} kcal/giorno
+- Proteine target: ${request.nutritionalNeeds.protein}g | Carboidrati: ${request.nutritionalNeeds.carbs}g | Grassi: ${request.nutritionalNeeds.fat}g
+⚠️ USA QUESTI DATI per calcolare grammature precise e personalizzate
+- MAI termini generici: "una porzione", "q.b.", "abbondante", "a piacere"
 
-GRAMMATURE TIPICHE PER PASTO:
-- Proteine: 120-180g (carne/pesce), 2-3 uova, 150-200g legumi
-- Carboidrati: 60-100g (cereali crudi), 150-250g (patate), 40-60g (pane)
-- Verdure: 150-300g
-- Grassi: 10-15g (olio), 20-30g (frutta secca)
+FORMATO OBBLIGATORIO NEL JSON "name":
+- "Salmone 120g alla griglia + riso basmati 70g + broccoli 200g + olio EVO 8g"
+- "Petto di pollo 140g + patate 180g + zucchine 250g + olio EVO 10g"
+- "Uova 2 medie (100g) + pane integrale 50g + spinaci 150g + olio EVO 5g"
+
+GRAMMATURE PERSONALIZZATE (adatta ai dati cliente):
+- Proteine: 100-200g (pesce/carne), 80-120g (2-3 uova)
+- Carboidrati: 50-120g (cereali crudi), 120-300g (patate), 30-80g (pane)  
+- Verdure: 150-400g (varia per cliente)
+- Grassi: 5-20g (olio), 15-40g (frutta secca)
 
 REGOLA FONDAMENTALE GAZZELLA - OGNI PASTO DEVE CONTENERE:
 - 1 FONTE PROTEICA + 1 FONTE CARBOIDRATI COMPLESSI (nessuna eccezione)
 - GRAMMATURE SPECIFICHE per ogni ingrediente
 
-ESEMPI PASTI CONFORMI CON GRAMMATURE:
-COLAZIONI: Uova 2 medie (100g) strapazzate + pane integrale 40g + spinaci 100g + olio EVO 5g
-PRANZI: Orata 150g al forno + riso basmati 80g + zucchine 200g + olio EVO 10g  
-CENE: Salmone 120g + patate 180g + broccoli 200g + olio EVO 8g
-SPUNTINI: Mela 150g + mandorle 20g + gallette riso 15g
+⚠️ REGOLA CRITICA: OGNI "name" DEVE INCLUDERE GRAMMATURE PRECISE
+ESEMPI OBBLIGATORI NEL CAMPO "name":
+
+COLAZIONI CON GRAMMATURE:
+"Uova 2 medie (100g) strapazzate + pane integrale 50g + spinaci 150g + olio EVO 5g"
+"Omelette con 2 uova (100g) + pane tostato 45g + pomodori 120g + olio EVO 6g"
+
+PRANZI CON GRAMMATURE:
+"Orata 140g al forno + riso basmati 80g + zucchine 200g + olio EVO 10g"
+"Petto di pollo 150g alla griglia + pasta 70g + insalata mista 180g + olio EVO 8g"
+
+CENE CON GRAMMATURE:
+"Salmone 130g + patate 200g + broccoli 250g + olio EVO 8g"
+"Tacchino 140g al forno + pane 50g + spinaci 200g + olio EVO 10g"
+
+SPUNTINI CON GRAMMATURE (sempre combinati):
+"Mela 150g + mandorle 20g + gallette di riso 15g"
+"Pera 140g + noci 18g + crackers integrali 12g"
+
+❌ ESEMPI SBAGLIATI (MAI fare così):
+❌ "Salmone alla griglia con riso e verdure" (mancano tutte le grammature)
+❌ "Pollo con patate" (mancano grammature e verdure)
+❌ "Omelette con pane e insalata" (mancano grammature)
+❌ "Mela con mandorle" (mancano grammature)
+
+✅ ESEMPI CORRETTI (sempre così):
+✅ "Salmone 130g alla griglia + riso basmati 80g + zucchine 200g + olio EVO 10g"
+✅ "Petto di pollo 140g + patate 190g + insalata 150g + olio EVO 8g"
+✅ "Omelette 2 uova (100g) + pane integrale 50g + insalata 120g + olio EVO 5g"
 SPUNTINI MATTINO (combinare in un solo piatto): "Mela con mandorle e gallette di riso", "Tonno al naturale con crackers e carote", "Ricotta con pane e verdure crude"
 SPUNTINI POMERIGGIO (combinare in un solo piatto): "Pera con noci e gallette di mais", "Bresaola con pane e finocchi", "Uovo sodo con crackers e pomodorini"
 PRANZI: orata + riso + verdure, pollo + pasta + insalata, tonno + patate + pomodori
@@ -182,12 +215,12 @@ Rispondi in JSON con:
       "day": "Monday",
       "date": "2025-01-20",
       "meals": {
-        "breakfast": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
-        "lunch": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
-        "dinner": {"id": "uuid", "name": "string", "calories": number, "protein": number, "carbs": number, "fat": number},
+        "breakfast": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Uova 2 medie 100g + pane 50g + spinaci 150g + olio 5g')", "calories": number, "protein": number, "carbs": number, "fat": number},
+        "lunch": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Orata 140g + riso 80g + zucchine 200g + olio 10g')", "calories": number, "protein": number, "carbs": number, "fat": number},
+        "dinner": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Salmone 130g + patate 200g + broccoli 250g + olio 8g')", "calories": number, "protein": number, "carbs": number, "fat": number},
         "snacks": [
-          {"id": "uuid", "name": "Nome che include proteine + carboidrati + frutta/verdura (es: 'Mela con mandorle e gallette di riso')", "calories": number, "protein": number, "carbs": number, "fat": number},
-          {"id": "uuid", "name": "Nome che include proteine + carboidrati + frutta/verdura (es: 'Pera con noci e crackers')", "calories": number, "protein": number, "carbs": number, "fat": number}
+          {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Mela 150g + mandorle 20g + gallette riso 15g')", "calories": number, "protein": number, "carbs": number, "fat": number},
+          {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Pera 140g + noci 18g + crackers 12g')", "calories": number, "protein": number, "carbs": number, "fat": number}
         ]
       },
       "totalCalories": number
