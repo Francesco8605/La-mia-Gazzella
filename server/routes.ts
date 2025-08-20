@@ -790,10 +790,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Chat endpoint
   app.post("/api/ai-chat/message", isAuthenticated, async (req: any, res) => {
     try {
+      console.log("AI Chat request body:", req.body);
       const { message, userProfile, mealPlans, recipes } = req.body;
       const userId = req.user.claims.sub;
 
       if (!message || typeof message !== 'string') {
+        console.log("Missing or invalid message:", { message, type: typeof message });
         return res.status(400).json({ message: "Messaggio richiesto" });
       }
 
