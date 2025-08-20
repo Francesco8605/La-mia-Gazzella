@@ -1,0 +1,28 @@
+{
+  "name": "La Mia Gazzella - Pianificazione Nutrizionale",
+  "short_name": "La Mia Gazzella",
+  "description": "App per la pianificazione nutrizionale personalizzata seguendo il metodo Gazzella",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#22c55e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/src/immagini/Logo-gazzella.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/immagini/Logo-gazzella.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "lifestyle", "food"],
+  "lang": "it",
+  "scope": "/",
+  "prefer_related_applications": false
+}
