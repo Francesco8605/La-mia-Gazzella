@@ -145,6 +145,13 @@ export default function RecipeGenerator() {
         }
       };
 
+      console.log("=== DEBUG RECIPE GENERATION ===");
+      console.log("Meal plans available:", mealPlans);
+      console.log("User profile available:", userProfile);
+      console.log("User data from popup:", userData);
+      console.log("Final client profile:", clientProfile);
+      console.log("Complete recipe request:", JSON.stringify(recipeRequest, null, 2));
+
       return apiRequest("/api/recipes/generate", recipeRequest);
     },
     onSuccess: (recipe: GeneratedRecipe) => {
