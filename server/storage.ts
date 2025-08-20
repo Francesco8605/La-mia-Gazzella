@@ -439,6 +439,14 @@ export class DatabaseStorage implements IStorage {
     return await baseQuery;
   }
 
+  async getAllRecipes(): Promise<Recipe[]> {
+    return await db.select().from(recipes);
+  }
+
+  async getRecipesByUser(userId: string): Promise<Recipe[]> {
+    return await db.select().from(recipes).where(eq(recipes.userId, userId));
+  }
+
   async getRecipesByTags(tags: string[]): Promise<Recipe[]> {
     // For simplicity, we'll filter recipes that contain any of the provided tags
     const allRecipes = await db.select().from(recipes);
