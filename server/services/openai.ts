@@ -699,7 +699,7 @@ export async function generatePersonalizedRecipe(request: {
   recipePreferences: {
     preferredProteins: string;
     preferredFish?: string;
-    meatOrFish: "carne" | "pesce";
+    meatOrFish: "carne" | "pesce" | "uova";
     excludedFoods?: string;
   };
   existingRecipes?: string[]; // List of existing recipe titles to avoid duplicates
