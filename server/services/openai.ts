@@ -196,18 +196,32 @@ CONDIZIONI E PREFERENZE:
 - Cibo sgarro preferito: ${request.userProfile.preferredCheatFood}
 - Formula Gazzella: ${request.userProfile.takingFormulaGazzella}
 
-SEGUI ESATTAMENTE IL PIANO DELLA TABELLA GAZZELLA UFFICIALE:
+🎯 SEGUI ESATTAMENTE IL PIANO DELLA TABELLA GAZZELLA UFFICIALE:
 - 5 pasti al giorno: Colazione, Spuntino, Pranzo, Merenda, Cena
 - Struttura fissa per ogni pasto come mostrato nella tabella
 - Alterna gli ingredienti seguendo le variazioni della tabella  
 - Mantieni sempre l'equilibrio nutrizionale di ogni pasto
+- ⚠️ CRITICO: Usa SOLO alimenti della lista permessa sopra - MAI PATATE o altri carboidrati
 
-ALIMENTI DALLA TABELLA GAZZELLA UFFICIALE (usa SOLO questi):
-Proteine: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
-Cereali: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
-Verdure: insalata, verdure crude, zucchine, pomodoro, ananas  
-Grassi: mandorle, noci, nocciole, cioccolato fondente, olio EVO
-Frutta: mela, pera, pesca, ananas
+⛔ ALIMENTI RIGOROSAMENTE DALLA TABELLA GAZZELLA UFFICIALE - USA SOLO QUESTI ⛔:
+
+🥩 PROTEINE PERMESSE: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
+
+🌾 CARBOIDRATI PERMESSI: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
+
+🥬 VERDURE PERMESSE: insalata, verdure crude, zucchine, pomodoro (solo come base pasta)
+
+🥜 GRASSI PERMESSI: mandorle, noci, nocciole, cioccolato fondente, olio EVO
+
+🍎 FRUTTA PERMESSA: mela, pera, pesca, ananas
+
+❌ ALIMENTI VIETATI (NON USARE MAI): 
+- PATATE di qualsiasi tipo (novelle, al forno, bollite, ecc.)
+- LEGUMI (fagioli, lenticchie, ceci, piselli)
+- LATTICINI oltre yogurt greco/bianco e kefir
+- QUINOA, AVENA DIVERSA DA FIOCCHI
+- VERDURE non elencate sopra
+- FRUTTA non elencata sopra
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
 GRAMMATURE PRECISE OBBLIGATORIE - FONDAMENTALE PER PERSONALIZZAZIONE:
@@ -263,7 +277,7 @@ SPUNTINI CON GRAMMATURE (sempre combinati):
 
 ✅ ESEMPI CORRETTI (sempre così):
 ✅ "Salmone 130g alla griglia + riso basmati 80g + zucchine 200g + olio EVO 10g"
-✅ "Petto di pollo 140g + patate 190g + insalata 150g + olio EVO 8g"
+✅ "Petto di pollo 140g + pane integrale 50g + insalata 150g + olio EVO 8g"
 ✅ "Omelette 2 uova (100g) + pane integrale 50g + insalata 120g + olio EVO 5g"
 
 📋 STRUTTURA SETTIMANALE ESATTA DALLA TABELLA GAZZELLA:
@@ -397,7 +411,7 @@ Rispondi in JSON con:
       "meals": {
         "breakfast": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Uova 2 medie 100g + pane 50g + spinaci 150g + olio 5g')", "calories": number, "protein": number, "carbs": number, "fat": number},
         "lunch": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Orata 140g + riso 80g + zucchine 200g + olio 10g')", "calories": number, "protein": number, "carbs": number, "fat": number},
-        "dinner": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Salmone 130g + patate 200g + broccoli 250g + olio 8g')", "calories": number, "protein": number, "carbs": number, "fat": number},
+        "dinner": {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Salmone 130g + pane integrale 50g + verdure 200g + olio 8g')", "calories": number, "protein": number, "carbs": number, "fat": number},
         "snacks": [
           {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Mela 150g + mandorle 20g + gallette riso 15g')", "calories": number, "protein": number, "carbs": number, "fat": number},
           {"id": "uuid", "name": "DEVE contenere grammature precise (es: 'Pera 140g + noci 18g + crackers 12g')", "calories": number, "protein": number, "carbs": number, "fat": number}
@@ -434,7 +448,7 @@ ALIMENTI CONSENTITI DAL PROTOCOLLO GAZZELLA:
 - Carne fresca: petto di pollo, petto di tacchino, manzo magro, vitello (SOLO freschi, mai confezionati)
 - Uova fresche (massimo 2 per pasto)
 - Verdure non amidacee: spinaci, zucchine, broccoli, cavolfiori, insalata, pomodori, peperoni, carote, finocchi
-- Cereali SOLO questi: pasta (grano duro), riso, pane (semplice), patate
+- Cereali SOLO questi: pasta integrale, riso nero, cous cous, pane integrale, fiocchi di avena
 - Frutta fresca: mela, pera, arancia, kiwi, fragole (INTERA, mai frullata)
 - Frutta secca: mandorle, noci, nocciole (max 30g)
 - Olio extravergine di oliva a crudo (quantità precise)
@@ -582,14 +596,25 @@ export async function generateRecipe(request: RecipeRequest): Promise<{
   try {
     const prompt = `Sei "Nutrizionista Gazzella". Crea una ricetta dettagliata per "${request.mealName}" seguendo RIGOROSAMENTE il Manuale della Gazzella:
 
-REGOLE GAZZELLA:
-- NO legumi (ceci, fagioli, lenticchie, piselli)
-- NO latticini (latte, yogurt, formaggi, burro, panna) 
-- NO affettati/salumi (eccetto fesa tacchino per toast quando previsto)
-- NO prodotti ultra-processati o confezionati
-- Solo ingredienti FRESCHI e naturali
+⛔ REGOLE GAZZELLA RIGOROSE - TABELLA UFFICIALE 2025:
+
+❌ ALIMENTI TOTALMENTE VIETATI:
+- PATATE di qualsiasi tipo (novelle, al forno, bollite, purè, ecc.)
+- LEGUMI (ceci, fagioli, lenticchie, piselli)
+- LATTICINI oltre yogurt greco/bianco/kefir dalla tabella
+- QUINOA, AVENA diversa da fiocchi, CEREALI alternativi
+- VERDURE non della tabella (melanzane, carote, peperoni se non specificate)
+- FRUTTA non della tabella (diverse da mela, pera, pesca, ananas)
+
+✅ ALIMENTI PERMESSI DALLA TABELLA GAZZELLA:
+- PROTEINE: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
+- CARBOIDRATI: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
+- VERDURE: insalata, verdure crude, zucchine, pomodoro
+- GRASSI: mandorle, noci, nocciole, cioccolato fondente, olio EVO
+- FRUTTA: mela, pera, pesca, ananas
+
+🎯 OBBLIGATORIO: Usa SOLO alimenti dalla lista sopra - MAI PATATE o altri carboidrati
 - Cotture semplici: piastra, forno, vapore, padella antiaderente
-- Condimenti: olio EVO a crudo, spezie, erbe aromatiche
 - Grammature precise per ogni ingrediente
 
 REQUISITI RICETTA:
