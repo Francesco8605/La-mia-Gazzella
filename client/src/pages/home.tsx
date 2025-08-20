@@ -34,53 +34,51 @@ export default function Home() {
             <Link href="/recipe-generator">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-500 to-green-500 hover:from-red-600 hover:to-green-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-shadow-sm"
                 data-testid="genera-ricette-button"
               >
                 <Sparkles className="mr-2 h-4 w-4" />
-                Genera Ricette
+                <span className="text-white drop-shadow-lg">Genera Ricette</span>
               </Button>
             </Link>
             <Link href="/piani-personalizzati">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-500 to-green-500 hover:from-red-600 hover:to-green-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="i-miei-piani-button"
               >
-                <User className="mr-2 h-4 w-4" />
-                I Miei Piani Personalizzati
+                <User className="mr-2 h-4 w-4 text-white" />
+                <span className="text-white drop-shadow-lg font-bold">I Miei Piani</span>
               </Button>
             </Link>
             <Link href="/ai-chat">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 border border-purple-300"
+                className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="ai-assistant-button"
               >
-                <div className="flex items-center justify-center">
-                  <MessageCircle className="mr-2 h-5 w-5" />
-                  <span className="text-sm font-bold">🤖 Assistente IA</span>
-                </div>
+                <MessageCircle className="mr-2 h-5 w-5 text-white" />
+                <span className="text-white drop-shadow-lg font-bold">🤖 Assistente IA</span>
               </Button>
             </Link>
             <Link href="/aggiorna-profilo">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-500 to-green-500 hover:from-red-600 hover:to-green-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="il-mio-profilo-button"
               >
-                <User className="mr-2 h-4 w-4" />
-                Il Mio Profilo
+                <User className="mr-2 h-4 w-4 text-white" />
+                <span className="text-white drop-shadow-lg font-bold">Il Mio Profilo</span>
               </Button>
             </Link>
             <Link href="/recipes">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-500 to-green-500 hover:from-red-600 hover:to-green-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="ricette-button"
               >
-                <Sparkles className="mr-2 h-4 w-4" />
-                Ricette
+                <Sparkles className="mr-2 h-4 w-4 text-white" />
+                <span className="text-white drop-shadow-lg font-bold">Ricette</span>
               </Button>
             </Link>
           </div>
