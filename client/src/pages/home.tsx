@@ -61,7 +61,7 @@ export default function Home() {
                 Il Mio Profilo
               </Button>
             </Link>
-            <Link href="/recipe-generator">
+            <Link href="/recipes">
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
