@@ -78,6 +78,7 @@ function Router() {
         </Route>
         <Route path="/meal-plan/:id" component={MealPlan} />
         <Route path="/recipe/:id" component={RecipeDetail} />
+        <Route path="/ai-chat" component={AIChat} />
         <Route path="/assistente-ia" component={AIChat} />
         <Route component={NotFound} />
       </Switch>
