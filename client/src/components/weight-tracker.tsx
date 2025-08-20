@@ -31,9 +31,10 @@ export default function WeightTracker() {
   // Add weight entry mutation
   const addWeightMutation = useMutation({
     mutationFn: async (weight: number) => {
+      console.log("Adding weight:", weight);
       return apiRequest("/api/weight-entries", "POST", {
         weight,
-        date: new Date(),
+        date: new Date().toISOString(),
         notes: ""
       });
     },
@@ -47,9 +48,10 @@ export default function WeightTracker() {
       });
     },
     onError: (error) => {
+      console.error("Weight submission error:", error);
       toast({
         title: "Errore",
-        description: "Impossibile registrare il peso. Riprova.",
+        description: `Impossibile registrare il peso. ${error.message || "Riprova."}`,
         variant: "destructive",
       });
     },

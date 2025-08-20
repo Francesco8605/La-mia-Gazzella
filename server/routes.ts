@@ -633,6 +633,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/weight-entries", isAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
+      console.log("Creating weight entry for user:", userId);
+      console.log("Request body:", req.body);
       
       const weightEntryData = {
         ...req.body,
@@ -640,16 +642,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         date: new Date(req.body.date || new Date())
       };
 
+      console.log("Weight entry data before validation:", weightEntryData);
       const validatedData = insertWeightEntrySchema.parse(weightEntryData);
+      console.log("Validated data:", validatedData);
+      
       const entry = await storage.createWeightEntry(validatedData);
+      console.log("Created entry:", entry);
       
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error creating weight entry:", error);
       if (error instanceof z.ZodError) {
+        console.error("Validation errors:", error.errors);
         return res.status(400).json({ message: "Invalid input", errors: error.errors });
       }
-      res.status(500).json({ message: "Failed to create weight entry" });
+      res.status(500).json({ message: "Failed to create weight entry", error: error.message });
     }
   });
 
