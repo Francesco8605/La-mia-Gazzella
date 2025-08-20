@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Clock, Target, Heart, Utensils } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { MealPlanLoading } from "@/components/meal-plan-loading";
 
 export default function MealPlanGenerator() {
   const { toast } = useToast();
@@ -66,6 +67,15 @@ export default function MealPlanGenerator() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Caricamento profilo...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Mostra componente di caricamento durante la generazione
+  if (isGenerating || generateMealPlanMutation.isPending) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-4 bg-gradient-to-br from-green-50 via-blue-50 to-purple-50">
+        <MealPlanLoading />
       </div>
     );
   }
@@ -140,7 +150,7 @@ export default function MealPlanGenerator() {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-600">✓</span>
-                  <span>Protocollo nutrizionale per la menopausa</span>
+                  <span>Protocollo nutrizionale Gazzella autentico</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="text-green-600">✓</span>
