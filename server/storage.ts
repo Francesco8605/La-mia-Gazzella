@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes } from "@shared/schema";
+import { users, userProfiles, mealPlans, recipes, weightEntries } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -29,6 +29,12 @@ export interface IStorage {
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
   deleteRecipe(id: string): Promise<boolean>;
+  
+  // Weight Entries
+  getWeightEntryById(id: string): Promise<WeightEntry | undefined>;
+  getWeightEntriesByUserId(userId: string): Promise<WeightEntry[]>;
+  createWeightEntry(entry: InsertWeightEntry): Promise<WeightEntry>;
+  deleteWeightEntry(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -36,12 +42,14 @@ export class MemStorage implements IStorage {
   private userProfiles: Map<string, UserProfile>;
   private mealPlans: Map<string, MealPlan>;
   private recipes: Map<string, Recipe>;
+  private weightEntries: Map<string, WeightEntry>;
 
   constructor() {
     this.users = new Map();
     this.userProfiles = new Map();
     this.mealPlans = new Map();
     this.recipes = new Map();
+    this.weightEntries = new Map();
   }
 
   // Users
@@ -243,6 +251,33 @@ export class MemStorage implements IStorage {
   async deleteRecipe(id: string): Promise<boolean> {
     return this.recipes.delete(id);
   }
+
+  // Weight Entries
+  async getWeightEntryById(id: string): Promise<WeightEntry | undefined> {
+    return this.weightEntries.get(id);
+  }
+
+  async getWeightEntriesByUserId(userId: string): Promise<WeightEntry[]> {
+    return Array.from(this.weightEntries.values()).filter(
+      (entry) => entry.userId === userId,
+    );
+  }
+
+  async createWeightEntry(insertEntry: InsertWeightEntry): Promise<WeightEntry> {
+    const id = randomUUID();
+    const entry: WeightEntry = {
+      ...insertEntry,
+      id,
+      createdAt: new Date(),
+      notes: insertEntry.notes ?? null,
+    };
+    this.weightEntries.set(id, entry);
+    return entry;
+  }
+
+  async deleteWeightEntry(id: string): Promise<boolean> {
+    return this.weightEntries.delete(id);
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -368,6 +403,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteRecipe(id: string): Promise<boolean> {
     const result = await db.delete(recipes).where(eq(recipes.id, id));
+    return (result.rowCount || 0) > 0;
+  }
+
+  // Weight Entries  
+  async getWeightEntryById(id: string): Promise<WeightEntry | undefined> {
+    const [entry] = await db.select().from(weightEntries).where(eq(weightEntries.id, id));
+    return entry || undefined;
+  }
+
+  async getWeightEntriesByUserId(userId: string): Promise<WeightEntry[]> {
+    const entries = await db
+      .select()
+      .from(weightEntries)
+      .where(eq(weightEntries.userId, userId))
+      .orderBy(weightEntries.date);
+    return entries;
+  }
+
+  async createWeightEntry(insertEntry: InsertWeightEntry): Promise<WeightEntry> {
+    const [entry] = await db
+      .insert(weightEntries)
+      .values(insertEntry)
+      .returning();
+    return entry;
+  }
+
+  async deleteWeightEntry(id: string): Promise<boolean> {
+    const result = await db.delete(weightEntries).where(eq(weightEntries.id, id));
     return (result.rowCount || 0) > 0;
   }
 }

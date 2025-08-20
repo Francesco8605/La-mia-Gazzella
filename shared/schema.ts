@@ -66,6 +66,15 @@ export const mealPlans = pgTable("meal_plans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const weightEntries = pgTable("weight_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  weight: integer("weight").notNull(), // peso in kg
+  date: timestamp("date").notNull(),
+  notes: text("notes"), // note opzionali
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
@@ -114,6 +123,16 @@ export type Meal = {
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
+});
+
+export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  userId: z.string().min(1, "User ID è obbligatorio"),
+  weight: z.number().min(30, "Il peso deve essere almeno 30kg").max(300, "Il peso deve essere massimo 300kg"),
+  date: z.date(),
+  notes: z.string().optional(),
 });
 
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
@@ -176,6 +195,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 export type UserProfile = typeof userProfiles.$inferSelect;
+export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
+export type WeightEntry = typeof weightEntries.$inferSelect;
 export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
 export type MealPlan = typeof mealPlans.$inferSelect;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;

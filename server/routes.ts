@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds } from "./services/openai";
 import { z } from "zod";
 import bcrypt from "bcrypt";
@@ -615,6 +615,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid input", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to calculate nutritional needs" });
+    }
+  });
+
+  // Weight tracking endpoints
+  app.get("/api/weight-entries/:userId", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const currentUserId = (req as any).user.claims.sub;
+      
+      // Ensure user can only access their own weight entries
+      if (userId !== currentUserId) {
+        return res.status(403).json({ message: "Accesso negato" });
+      }
+
+      const entries = await storage.getWeightEntriesByUserId(userId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching weight entries:", error);
+      res.status(500).json({ message: "Failed to fetch weight entries" });
+    }
+  });
+
+  app.post("/api/weight-entries", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      
+      const weightEntryData = {
+        ...req.body,
+        userId,
+        date: new Date(req.body.date || new Date())
+      };
+
+      const validatedData = insertWeightEntrySchema.parse(weightEntryData);
+      const entry = await storage.createWeightEntry(validatedData);
+      
+      res.status(201).json(entry);
+    } catch (error) {
+      console.error("Error creating weight entry:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create weight entry" });
+    }
+  });
+
+  app.delete("/api/weight-entries/:id", isAuthenticated, async (req, res) => {
+    try {
+      const entryId = req.params.id;
+      const userId = (req as any).user.claims.sub;
+      
+      // Verify ownership before deletion
+      const entry = await storage.getWeightEntryById(entryId);
+      if (!entry || entry.userId !== userId) {
+        return res.status(404).json({ message: "Peso entry not found" });
+      }
+
+      await storage.deleteWeightEntry(entryId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting weight entry:", error);
+      res.status(500).json({ message: "Failed to delete weight entry" });
     }
   });
 
