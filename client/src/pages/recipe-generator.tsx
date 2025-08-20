@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Schema semplificato per le ricette - richiede solo il tipo di piatto
 const recipeFormSchema = z.object({
@@ -146,9 +146,13 @@ export default function RecipeGenerator() {
       setGeneratedRecipe(recipe);
       setShowQuickProfileDialog(false);
       setPendingRecipeData(null);
+      
+      // Invalida la cache delle ricette per aggiornare la pagina "Ricette"
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+      
       toast({
-        title: "Ricetta Generata!",
-        description: "La tua ricetta personalizzata secondo il Manuale della Gazzella è pronta.",
+        title: "Ricetta Generata e Salvata!",
+        description: "La tua ricetta personalizzata è stata salvata nella pagina Ricette.",
       });
     },
     onError: (error) => {

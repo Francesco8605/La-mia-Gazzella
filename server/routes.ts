@@ -619,8 +619,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipePreferences: requestData.recipePreferences,
       });
       
-      // Ritorna direttamente la ricetta senza salvarla automaticamente
-      res.status(200).json(aiRecipe);
+      // Salva automaticamente la ricetta nel database
+      const savedRecipe = await storage.createRecipe({
+        title: aiRecipe.title,
+        description: aiRecipe.description,
+        ingredients: aiRecipe.ingredients,
+        instructions: aiRecipe.instructions,
+        calories: aiRecipe.calories,
+        protein: aiRecipe.protein,
+        carbs: aiRecipe.carbs,
+        fat: aiRecipe.fat,
+        servings: aiRecipe.servings,
+        prepTime: aiRecipe.prepTime,
+        cookTime: aiRecipe.cookTime,
+        difficulty: aiRecipe.difficulty,
+        cuisine: aiRecipe.cuisine,
+        dietaryTags: aiRecipe.dietaryTags,
+        imageUrl: null,
+        rating: 5, // Default rating per ricette generate
+      });
+      
+      // Ritorna la ricetta salvata
+      res.status(200).json(savedRecipe);
     } catch (error) {
       console.error("Error generating Gazzella recipe:", error);
       if (error instanceof z.ZodError) {

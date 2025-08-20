@@ -11,6 +11,7 @@ import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
 
 import RecipeGenerator from "@/pages/recipe-generator";
+import Recipes from "@/pages/recipes";
 import MealPlanGenerator from "@/pages/meal-plan-generator";
 import SavedMealPlan from "@/pages/saved-meal-plan";
 import MyMealPlans from "@/pages/my-meal-plans";
@@ -56,6 +57,8 @@ function Router() {
         }} />
 
         <Route path="/recipe-generator" component={RecipeGenerator} />
+        <Route path="/recipes" component={Recipes} />
+        <Route path="/ricette" component={Recipes} />
         <Route path="/genera-piano" component={MealPlanGenerator} />
         <Route path="/meal-plan-generator" component={MealPlanGenerator} />
         <Route path="/piani-personalizzati" component={MyMealPlans} />
