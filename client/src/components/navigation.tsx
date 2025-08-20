@@ -12,6 +12,7 @@ export default function Navigation() {
     { href: "/personalization", label: "Personalizzazione" },
     { href: "/recipe-generator", label: "Genera Ricette" },
     { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
+    { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/recipes", label: "Ricette" },
   ];
 

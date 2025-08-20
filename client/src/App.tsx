@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -60,7 +61,18 @@ function Router() {
         <Route path="/meal-plan-generator" component={MealPlanGenerator} />
         <Route path="/piani-personalizzati" component={MyMealPlans} />
         <Route path="/piano-salvato/:id" component={SavedMealPlan} />
-        <Route path="/aggiorna-profilo" component={UpdateProfile} />
+        <Route path="/aggiorna-profilo">
+          {() => {
+            const AggiornaProfiloPage = React.lazy(() => import("./pages/aggiorna-profilo"));
+            return (
+              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              </div>}>
+                <AggiornaProfiloPage />
+              </React.Suspense>
+            );
+          }}
+        </Route>
         <Route path="/meal-plan/:id" component={MealPlan} />
         <Route path="/recipe/:id" component={RecipeDetail} />
         <Route component={NotFound} />

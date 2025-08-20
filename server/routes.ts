@@ -650,6 +650,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const entry = await storage.createWeightEntry(validatedData);
       console.log("Created entry:", entry);
       
+      // Update user profile with latest weight
+      try {
+        const existingProfile = await storage.getUserProfile(userId);
+        if (existingProfile) {
+          await storage.updateUserProfile(userId, {
+            weight: validatedData.weight
+          });
+          console.log("Updated profile weight to:", validatedData.weight);
+        }
+      } catch (error) {
+        console.warn("Could not update profile weight:", error);
+        // Continue even if profile update fails
+      }
+      
       res.status(201).json(entry);
     } catch (error) {
       console.error("Error creating weight entry:", error);
