@@ -287,6 +287,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update current user profile (for authenticated users)
+  app.put("/api/user-profiles/current", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      console.log("Updating profile for user:", userId);
+      console.log("Profile data:", req.body);
+      
+      const updatedProfile = await storage.updateUserProfile(userId, req.body);
+      
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Profilo non trovato" });
+      }
+      
+      console.log("Profile updated successfully");
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Error updating user profile:", error);
+      res.status(500).json({ message: "Errore nell'aggiornamento del profilo" });
+    }
+  });
+
   // Meal Plans
   app.post("/api/meal-plans/generate", isAuthenticated, async (req: any, res) => {
     try {

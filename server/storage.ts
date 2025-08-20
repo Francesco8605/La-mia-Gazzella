@@ -120,8 +120,13 @@ export class MemStorage implements IStorage {
     const updatedProfile: UserProfile = {
       ...existingProfile,
       ...updateData,
+      // Handle array fields properly for null/undefined values
+      excludedFoods: updateData.excludedFoods !== undefined ? updateData.excludedFoods : existingProfile.excludedFoods,
+      allergies: updateData.allergies !== undefined ? updateData.allergies : existingProfile.allergies,
     };
+    
     this.userProfiles.set(existingProfile.id, updatedProfile);
+    console.log("Profile updated successfully:", updatedProfile.id);
     return updatedProfile;
   }
 

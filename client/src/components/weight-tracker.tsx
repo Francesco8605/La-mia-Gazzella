@@ -24,9 +24,10 @@ export default function WeightTracker() {
   const [isAddingWeight, setIsAddingWeight] = useState(false);
 
   // Fetch weight entries
-  const { data: weightEntries = [], isLoading, error } = useQuery<WeightEntry[]>({
+  const { data: weightEntries = [], isLoading, error, refetch } = useQuery<WeightEntry[]>({
     queryKey: ["/api/weight-entries"],
     enabled: !!user?.id,
+    refetchInterval: 5000, // Refresh every 5 seconds to show updates
   });
 
   // Add weight entry mutation
@@ -40,7 +41,13 @@ export default function WeightTracker() {
       });
     },
     onSuccess: () => {
+      // Invalidate multiple related queries to ensure full refresh
       queryClient.invalidateQueries({ queryKey: ["/api/weight-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
+      
+      // Force refetch to immediately update chart
+      refetch();
+      
       setNewWeight("");
       setIsAddingWeight(false);
       toast({
