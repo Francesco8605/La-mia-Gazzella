@@ -24,7 +24,7 @@ export default function WeightTracker() {
 
   // Fetch weight entries
   const { data: weightEntries = [], isLoading, error } = useQuery<WeightEntry[]>({
-    queryKey: ["/api/weight-entries", user?.id],
+    queryKey: ["/api/weight-entries"],
     enabled: !!user?.id,
   });
 
@@ -38,7 +38,7 @@ export default function WeightTracker() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/weight-entries", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weight-entries"] });
       setNewWeight("");
       setIsAddingWeight(false);
       toast({

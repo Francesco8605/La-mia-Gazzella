@@ -619,16 +619,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Weight tracking endpoints
-  app.get("/api/weight-entries/:userId", isAuthenticated, async (req, res) => {
+  app.get("/api/weight-entries", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.params.userId;
-      const currentUserId = (req as any).user.claims.sub;
-      
-      // Ensure user can only access their own weight entries
-      if (userId !== currentUserId) {
-        return res.status(403).json({ message: "Accesso negato" });
-      }
-
+      const userId = (req as any).user.claims.sub;
       const entries = await storage.getWeightEntriesByUserId(userId);
       res.json(entries);
     } catch (error) {
