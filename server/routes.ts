@@ -254,17 +254,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate profile has required fields
-      if (!profile.email || !profile.phone || !profile.age || !profile.weight || !profile.height) {
+      if (!profile.age || !profile.weight || !profile.height) {
         return res.status(400).json({ 
-          message: "Profilo incompleto. Assicurati di aver compilato tutti i campi obbligatori." 
+          message: "Profilo incompleto. Assicurati di aver compilato età, peso e altezza." 
         });
       }
 
       // Convert database profile to API format
       const validatedProfile = {
         userId: profile.userId,
-        email: profile.email,
-        phone: profile.phone,
+        email: profile.email || undefined,
+        phone: profile.phone || undefined,
         age: profile.age,
         weight: profile.weight,
         height: profile.height,
@@ -280,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cravingTimeFrame: profile.cravingTimeFrame || "",
         preferredCheatFood: profile.preferredCheatFood || "",
         takingFormulaGazzella: profile.takingFormulaGazzella as "si" | "no" | "ho_iniziato" || "no",
-        dietaryPreferences: profile.dietaryPreferences || ["menopausa"],
+        dietaryPreferences: profile.dietaryPreferences || ["gazzella"],
         healthGoal: (profile.healthGoal as "weight_loss" | "weight_gain" | "muscle_building" | "maintenance" | "general_health") || "maintenance",
         activityLevel: (profile.activityLevel as "sedentary" | "lightly_active" | "moderately_active" | "very_active") || "lightly_active"
       };
@@ -291,6 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate meal plan using OpenAI
       const aiMealPlan = await generateMealPlan({
         userProfile: validatedProfile,
+        nutritionalNeeds: nutritionalNeeds,
         targetCalories: nutritionalNeeds.calories,
         durationDays: 7,
       });
@@ -304,6 +305,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetProtein: aiMealPlan.targetProtein,
         targetCarbs: aiMealPlan.targetCarbs,
         targetFat: aiMealPlan.targetFat,
+        bmi: nutritionalNeeds.bmi.toString(),
+        idealWeight: nutritionalNeeds.idealWeight,
+        weightGoal: nutritionalNeeds.weightGoal,
+        healthStatus: nutritionalNeeds.healthStatus,
         startDate: new Date(),
         endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         days: aiMealPlan.days,
@@ -370,6 +375,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate meal plan using OpenAI
       const aiMealPlan = await generateMealPlan({
         userProfile,
+        nutritionalNeeds: nutritionalNeeds,
         targetCalories: nutritionalNeeds.calories,
         durationDays,
       });

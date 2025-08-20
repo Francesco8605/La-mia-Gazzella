@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { type MealPlan, type MealPlanDay } from "@shared/schema";
+import { NutritionalSummary } from "./nutritional-summary";
 
 interface MealPlanDisplayProps {
   mealPlanId: string;
@@ -81,24 +82,24 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
 
       {/* Weekly Overview */}
       <div className="glass-morphism rounded-3xl p-8 mb-8 shadow-2xl" data-testid="meal-plan-overview">
-        <div className="flex flex-col lg:flex-row items-center justify-between mb-8">
-          <div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-2 flex items-center">
-              <Calendar className="mr-2 h-6 w-6 text-primary" />
-              {mealPlan.title}
-            </h3>
-            <p className="text-slate-600 mb-2">{mealPlan.description}</p>
-            <div className="flex items-center space-x-4 text-sm">
-              <Badge variant="outline" className="flex items-center">
-                <Target className="mr-1 h-3 w-3" />
-                {mealPlan.targetCalories} calorie
-              </Badge>
-              <Badge variant="outline">{mealPlan.targetProtein}g proteine</Badge>
-              <Badge variant="outline">{mealPlan.targetCarbs}g carboidrati</Badge>
-              <Badge variant="outline">{mealPlan.targetFat}g grassi</Badge>
-            </div>
-          </div>
-          <div className="flex space-x-4 mt-4 lg:mt-0">
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-slate-800 mb-2 flex items-center justify-center">
+            <Calendar className="mr-2 h-6 w-6 text-primary" />
+            {mealPlan.title}
+          </h3>
+          <p className="text-slate-600 mb-6 text-center">{mealPlan.description}</p>
+          
+          <NutritionalSummary 
+            targetCalories={mealPlan.targetCalories || 0}
+            targetProtein={mealPlan.targetProtein || 0}
+            targetCarbs={mealPlan.targetCarbs || 0}
+            targetFat={mealPlan.targetFat || 0}
+            bmi={mealPlan.bmi ? parseFloat(mealPlan.bmi) : undefined}
+            idealWeight={mealPlan.idealWeight || undefined}
+            weightGoal={mealPlan.weightGoal || undefined}
+            healthStatus={mealPlan.healthStatus || undefined}
+          />
+          <div className="flex space-x-4 justify-center mt-6">
             <Button
               variant="default"
               className="bg-primary hover:bg-primary/90"

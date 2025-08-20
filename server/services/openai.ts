@@ -8,6 +8,16 @@ const openai = new OpenAI({
 
 export interface MealPlanRequest {
   userProfile: InsertUserProfile;
+  nutritionalNeeds: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    bmi: number;
+    idealWeight: number;
+    weightGoal: number;
+    healthStatus: string;
+  };
   targetCalories: number;
   durationDays: number;
 }
@@ -84,9 +94,19 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
 
 PROFILO CLIENTE:
 - Età: ${request.userProfile.age} anni
-- Peso: ${request.userProfile.weight}kg  
+- Peso attuale: ${request.userProfile.weight}kg
 - Altezza: ${request.userProfile.height}cm
+- BMI: ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
+- Peso ideale: ${request.nutritionalNeeds.idealWeight}kg
+- Obiettivo peso: ${request.nutritionalNeeds.weightGoal}kg
 
+DATI METABOLICI:
+- Calorie giornaliere: ${request.nutritionalNeeds.calories} kcal
+- Proteine: ${request.nutritionalNeeds.protein}g
+- Carboidrati: ${request.nutritionalNeeds.carbs}g
+- Grassi: ${request.nutritionalNeeds.fat}g
+
+CONDIZIONI E ABITUDINI:
 - Problemi tiroide: ${request.userProfile.thyroidIssues}
 - Problemi intestinali: ${request.userProfile.intestinalIssues}
 - Esercizio settimanale: ${request.userProfile.weeklyExercise} volte
@@ -105,13 +125,28 @@ ${GAZZELLA_GUIDELINES}
 ALIMENTI VIETATI (da escludere sempre): ${FORBIDDEN_FOODS.join(", ")}
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
-Genera piano con esempi consentiti:
+GRAMMATURE PRECISE OBBLIGATORIE:
+- OGNI ingrediente DEVE avere grammatura specifica (es: 150g, 80g, 200g)
+- MAI termini vaghi: "una porzione", "q.b.", "a piacere", "abbondante"
+- SEMPRE pesare alimenti per precisi target nutrizionali
+- Esempio CORRETTO: "Petto di pollo 150g alla griglia + riso basmati 80g + zucchine 200g + olio EVO 10g"
+- Esempio SBAGLIATO: "Petto di pollo + riso + verdure" (mancano grammature)
+
+GRAMMATURE TIPICHE PER PASTO:
+- Proteine: 120-180g (carne/pesce), 2-3 uova, 150-200g legumi
+- Carboidrati: 60-100g (cereali crudi), 150-250g (patate), 40-60g (pane)
+- Verdure: 150-300g
+- Grassi: 10-15g (olio), 20-30g (frutta secca)
 
 REGOLA FONDAMENTALE GAZZELLA - OGNI PASTO DEVE CONTENERE:
 - 1 FONTE PROTEICA + 1 FONTE CARBOIDRATI COMPLESSI (nessuna eccezione)
+- GRAMMATURE SPECIFICHE per ogni ingrediente
 
-ESEMPI PASTI CONFORMI:
-COLAZIONI: uova strapazzate + pane tostato + spinaci, frittata zucchine + pane integrale, toast: pane + sottiletta + fesa tacchino
+ESEMPI PASTI CONFORMI CON GRAMMATURE:
+COLAZIONI: Uova 2 medie (100g) strapazzate + pane integrale 40g + spinaci 100g + olio EVO 5g
+PRANZI: Orata 150g al forno + riso basmati 80g + zucchine 200g + olio EVO 10g  
+CENE: Salmone 120g + patate 180g + broccoli 200g + olio EVO 8g
+SPUNTINI: Mela 150g + mandorle 20g + gallette riso 15g
 SPUNTINI MATTINO (combinare in un solo piatto): "Mela con mandorle e gallette di riso", "Tonno al naturale con crackers e carote", "Ricotta con pane e verdure crude"
 SPUNTINI POMERIGGIO (combinare in un solo piatto): "Pera con noci e gallette di mais", "Bresaola con pane e finocchi", "Uovo sodo con crackers e pomodorini"
 PRANZI: orata + riso + verdure, pollo + pasta + insalata, tonno + patate + pomodori
@@ -126,7 +161,7 @@ VIETATI PASTI SBILANCIATI:
 CONTROLLO OBBLIGATORIO: Prima di generare il piano, verifica che OGNI pasto contenga proteine + carboidrati. Se manca uno dei due, aggiungi automaticamente l'elemento mancante.
 
 FORMATO RICHIESTO:
-1. Riepilogo cliente (età, peso, altezza, settimane in menopausa)
+1. Riepilogo cliente (età, peso, altezza, BMI: ${request.nutritionalNeeds.bmi}, stato: ${request.nutritionalNeeds.healthStatus})
 2. Linee guida Gazzella applicate (3-6 bullet specifici)
 3. Piano COMPLETO 7 giorni con 5 pasti/giorno (colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena)
 4. Grammature precise e preparazione semplice
@@ -415,43 +450,71 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
   protein: number;
   carbs: number;
   fat: number;
+  bmi: number;
+  idealWeight: number;
+  weightGoal: number;
+  healthStatus: string;
 }> {
-  const { age, weight, activityLevel, healthGoal } = userProfile;
+  const { age, weight, height, weeklyExercise } = userProfile;
   
-  // Basic BMR calculation (Mifflin-St Jeor Equation for males - simplified)
-  let bmr = 88.362 + (13.397 * (weight || 70)) + (4.799 * 170) - (5.677 * (age || 30));
+  // BMI calculation
+  const heightInMeters = (height || 170) / 100;
+  const currentWeight = weight || 70;
+  const bmi = parseFloat((currentWeight / (heightInMeters * heightInMeters)).toFixed(1));
   
-  // Activity multipliers
-  const activityMultipliers = {
-    sedentary: 1.2,
-    moderate: 1.375,
-    active: 1.55,
-    very_active: 1.725,
-  };
+  // Ideal weight calculation (BMI 22 - optimal for women)
+  const idealWeight = Math.round(22 * heightInMeters * heightInMeters);
   
-  const multiplier = activityMultipliers[activityLevel as keyof typeof activityMultipliers] || 1.2;
-  let calories = Math.round(bmr * multiplier);
+  // Weight goal and health status based on current BMI
+  let weightGoal = currentWeight;
+  let healthStatus = "";
   
-  // Adjust based on health goal
-  switch (healthGoal) {
-    case "weight_loss":
-      calories = Math.round(calories * 0.85); // 15% deficit
-      break;
-    case "weight_gain":
-      calories = Math.round(calories * 1.15); // 15% surplus
-      break;
-    case "muscle_building":
-      calories = Math.round(calories * 1.1); // 10% surplus
-      break;
-    default:
-      // maintenance or general health - no change
-      break;
+  if (bmi < 18.5) {
+    healthStatus = "Sottopeso";
+    weightGoal = idealWeight;
+  } else if (bmi >= 18.5 && bmi < 25) {
+    healthStatus = "Peso normale";
+    weightGoal = currentWeight;
+  } else if (bmi >= 25 && bmi < 30) {
+    healthStatus = "Sovrappeso";
+    weightGoal = idealWeight;
+  } else {
+    healthStatus = "Obesità";
+    weightGoal = Math.round(currentWeight * 0.9); // 10% weight loss target
   }
   
-  // Calculate macros (rough guidelines)
-  const protein = Math.round((calories * 0.25) / 4); // 25% of calories, 4 cal/g
-  const fat = Math.round((calories * 0.30) / 9); // 30% of calories, 9 cal/g
-  const carbs = Math.round((calories * 0.45) / 4); // 45% of calories, 4 cal/g
+  // BMR calculation using Mifflin-St Jeor equation for women
+  const bmr = 10 * currentWeight + 6.25 * (height || 170) - 5 * (age || 30) - 161;
   
-  return { calories, protein, carbs, fat };
+  // Activity factor based on weekly exercise
+  let activityFactor = 1.2; // sedentary
+  const exerciseFreq = weeklyExercise || 0;
+  if (exerciseFreq >= 5) activityFactor = 1.725; // very active
+  else if (exerciseFreq >= 3) activityFactor = 1.55; // moderately active
+  else if (exerciseFreq >= 1) activityFactor = 1.375; // lightly active
+  
+  let calories = Math.round(bmr * activityFactor);
+  
+  // Adjust calories for weight goal
+  if (weightGoal < currentWeight) {
+    calories = calories - 300; // Deficit for weight loss
+  } else if (weightGoal > currentWeight) {
+    calories = calories + 200; // Surplus for weight gain
+  }
+  
+  // Macro distribution for Gazzella protocol
+  const protein = Math.round((calories * 0.25) / 4); // 25% protein
+  const carbs = Math.round((calories * 0.45) / 4);   // 45% carbs
+  const fat = Math.round((calories * 0.30) / 9);     // 30% fat
+  
+  return { 
+    calories, 
+    protein, 
+    carbs, 
+    fat, 
+    bmi, 
+    idealWeight, 
+    weightGoal, 
+    healthStatus 
+  };
 }
