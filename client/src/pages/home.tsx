@@ -92,44 +92,23 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-slate-900 text-white">
         <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <Sparkles className="text-secondary text-2xl" />
-                <span className="font-bold text-2xl">La Mia Gazzella</span>
-              </div>
-              <p className="text-slate-300 mb-6 max-w-md">
-                Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
-              </p>
+          <div className="text-center space-y-6">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Sparkles className="text-secondary text-2xl" />
+              <span className="font-bold text-2xl">La Mia Gazzella</span>
             </div>
-            
-            <div>
-              <h4 className="font-semibold text-lg mb-4">Prodotto</h4>
-              <ul className="space-y-2 text-slate-300">
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Pianificazione Alimentare</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Generatore di Ricette</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Monitoraggio Nutrizionale</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Funzionalità Premium</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold text-lg mb-4">Supporto</h4>
-              <ul className="space-y-2 text-slate-300">
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Centro Assistenza</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Guide Alimentari</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Community</a></li>
-              </ul>
-              <div className="mt-4">
-                <Button
-                  onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
-                  className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                  data-testid="contact-support-button"
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Contatta Supporto
-                </Button>
-              </div>
+            <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
+              Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
+            </p>
+            <div className="flex justify-center">
+              <Button
+                onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
+                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="contact-support-button"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Contatta Supporto
+              </Button>
             </div>
           </div>
           
