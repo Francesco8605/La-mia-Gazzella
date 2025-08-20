@@ -701,6 +701,8 @@ export async function generatePersonalizedRecipe(request: {
     meatOrFish: "carne" | "pesce";
     excludedFoods?: string;
   };
+  existingRecipes?: string[]; // List of existing recipe titles to avoid duplicates
+  requireUnique?: boolean; // Force unique generation
 }): Promise<any> {
   try {
     const { clientProfile, recipePreferences } = request;
@@ -714,7 +716,15 @@ export async function generatePersonalizedRecipe(request: {
 
     const dishType = request.mealName.includes("Primo piatto") ? "PRIMO PIATTO" : "SECONDO PIATTO";
     
+    // Build unique recipe requirements
+    const uniqueRequirement = request.existingRecipes && request.existingRecipes.length > 0 ? 
+      `\n🚫 IMPORTANTE - EVITA DUPLICATI: NON generare ricette simili a queste già esistenti:\n${request.existingRecipes.map(title => `- ${title}`).join('\n')}\n\n✅ OBBLIGATORIO: Crea una ricetta COMPLETAMENTE DIVERSA e UNICA.` : '';
+    
+    const forceUniqueText = request.requireUnique ? 
+      '\n⚠️ CRITICO: Questa ricetta deve essere ASSOLUTAMENTE UNICA e diversa da tutte quelle già generate. Usa ingredienti, combinazioni e tecniche di cottura completamente diverse.' : '';
+
     const prompt = `Sei "Nutrizionista Gazzella". Crea una ricetta dettagliata per "${request.mealName}" seguendo RIGOROSAMENTE il Manuale della Gazzella.
+${uniqueRequirement}${forceUniqueText}
 
 ⚠️ ATTENZIONE TIPO PIATTO: Questa deve essere una ricetta per ${dishType}.
 ${dishType === "PRIMO PIATTO" ? "🍝 PRIMO PIATTO = CARBOIDRATI come base principale (pasta, riso, farro) con proteina integrata" : "🐟 SECONDO PIATTO = PROTEINA come elemento principale con verdure di contorno"}
@@ -733,19 +743,31 @@ PREFERENZE RICETTA:
 ${recipePreferences.preferredFish ? `- Pesci preferiti: ${recipePreferences.preferredFish}` : ''}
 ${recipePreferences.excludedFoods ? `- Cibi da evitare: ${recipePreferences.excludedFoods}` : ''}
 
-REGOLE GAZZELLA ASSOLUTE:
-- NO legumi (ceci, fagioli, lenticchie, piselli)
-- NO latticini (latte, yogurt, formaggi, burro, panna)
-- NO affettati/salumi (eccetto fesa tacchino quando specificato)
-- NO prodotti ultra-processati o confezionati
-- Solo ingredienti FRESCHI e naturali
+⛔ REGOLE GAZZELLA ASSOLUTE - TABELLA UFFICIALE 2025:
+
+❌ ALIMENTI TOTALMENTE VIETATI:
+- PATATE di qualsiasi tipo (novelle, al forno, bollite, purè, ecc.)
+- LEGUMI (ceci, fagioli, lenticchie, piselli)
+- LATTICINI oltre yogurt greco/bianco/kefir dalla tabella
+- QUINOA, AVENA diversa da fiocchi, CEREALI alternativi
+- VERDURE non della tabella (melanzane, carote, peperoni se non specificate)
+- FRUTTA non della tabella (diverse da mela, pera, pesca, ananas)
+
+✅ ALIMENTI PERMESSI DALLA TABELLA GAZZELLA:
+- PROTEINE: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
+- CARBOIDRATI: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
+- VERDURE: insalata, verdure crude, zucchine, pomodoro
+- GRASSI: mandorle, noci, nocciole, cioccolato fondente, olio EVO
+- FRUTTA: mela, pera, pesca, ananas
+
+🎯 OBBLIGATORIO: Usa SOLO alimenti dalla lista sopra - MAI PATATE o altri carboidrati
 - Cotture semplici: piastra, forno, vapore, padella antiaderente
-- Condimenti: olio EVO a crudo, spezie, erbe aromatiche
+- Grammature precise per ogni ingrediente
 
 SPECIFICHE OBBLIGATORIE PER TIPO PIATTO:
 ${dishType === "PRIMO PIATTO" ? `
 - PRIMO PIATTO OBBLIGATORIO: Il piatto DEVE essere basato su CARBOIDRATI COMPLESSI come ingrediente principale
-- CARBOIDRATI AMMESSI: riso integrale, pasta integrale, farro, orzo, grano saraceno, quinoa rossa
+- CARBOIDRATI AMMESSI GAZZELLA: pasta integrale, riso nero, cous cous, pane integrale, fiocchi di avena (SOLO questi dalla tabella)
 - STRUTTURA OBBLIGATORIA: Cereale/Pasta + Proteina + Verdure tutto insieme in un unico piatto
 - La proteina è un ACCOMPAGNAMENTO, NON l'elemento principale
 - ESEMPI CORRETTI: "Risotto integrale con salmone e zucchine", "Pasta integrale ai frutti di mare", "Farro con pollo e verdure"

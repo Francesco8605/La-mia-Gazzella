@@ -26,6 +26,8 @@ export interface IStorage {
   // Recipes
   getRecipe(id: string): Promise<Recipe | undefined>;
   getRecipes(limit?: number, offset?: number): Promise<Recipe[]>;
+  getAllRecipes(): Promise<Recipe[]>;
+  getRecipesByUser(userId: string): Promise<Recipe[]>;
   getRecipesByTags(tags: string[]): Promise<Recipe[]>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
@@ -211,6 +213,14 @@ export class MemStorage implements IStorage {
     return allRecipes.slice(offset, offset + limit);
   }
 
+  async getAllRecipes(): Promise<Recipe[]> {
+    return Array.from(this.recipes.values());
+  }
+
+  async getRecipesByUser(userId: string): Promise<Recipe[]> {
+    return Array.from(this.recipes.values()).filter(recipe => recipe.userId === userId);
+  }
+
   async getRecipesByTags(tags: string[]): Promise<Recipe[]> {
     return Array.from(this.recipes.values()).filter((recipe) =>
       recipe.dietaryTags?.some((tag) => tags.includes(tag)),
@@ -223,6 +233,7 @@ export class MemStorage implements IStorage {
       ...insertRecipe,
       id,
       createdAt: new Date(),
+      userId: insertRecipe.userId ?? null, // Support userId for recipe ownership
       description: insertRecipe.description ?? null,
       ingredients: insertRecipe.ingredients as any ?? null,
       instructions: insertRecipe.instructions as any ?? null,

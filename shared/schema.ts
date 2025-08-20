@@ -90,6 +90,7 @@ export const weightEntries = pgTable("weight_entries", {
 
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Associate recipes with users - nullable for migration
   title: text("title").notNull(),
   description: text("description"),
   ingredients: json("ingredients").$type<string[]>(),

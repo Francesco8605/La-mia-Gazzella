@@ -583,7 +583,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint specifico per il generatore ricette Gazzella
-  app.post("/api/recipes/generate", async (req, res) => {
+  app.post("/api/recipes/generate", isAuthenticated, async (req: any, res) => {
     try {
       const schema = z.object({
         mealName: z.string().min(1),
@@ -607,6 +607,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const requestData = schema.parse(req.body);
+      const userId = req.user.claims.sub;
+      
+      // Get existing recipes for this user to ensure uniqueness
+      const userRecipes = await storage.getRecipesByUser(userId);
+      const existingTitles = userRecipes.map(recipe => recipe.title.toLowerCase());
       
       // Generate recipe using OpenAI with Gazzella protocol and client profile
       const aiRecipe = await generatePersonalizedRecipe({
@@ -617,9 +622,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cuisine: requestData.cuisine || "italiana",
         clientProfile: requestData.clientProfile,
         recipePreferences: requestData.recipePreferences,
+        existingRecipes: existingTitles, // Pass existing recipes to avoid duplicates
       });
       
-      // Salva automaticamente la ricetta nel database
+      // Check if generated recipe is too similar to existing ones
+      const isUnique = !existingTitles.some(existingTitle => 
+        existingTitle.includes(aiRecipe.title.toLowerCase()) || 
+        aiRecipe.title.toLowerCase().includes(existingTitle)
+      );
+      
+      if (!isUnique) {
+        console.log(`Recipe "${aiRecipe.title}" too similar to existing, regenerating...`);
+        // Retry with explicit uniqueness requirement
+        const uniqueRecipe = await generatePersonalizedRecipe({
+          ...requestData,
+          clientProfile: requestData.clientProfile,
+          recipePreferences: requestData.recipePreferences,
+          cuisine: requestData.cuisine || "italiana",
+          existingRecipes: existingTitles,
+          requireUnique: true,
+        });
+        
+        // Use the unique recipe
+        Object.assign(aiRecipe, uniqueRecipe);
+      }
+      
+      // Salva automaticamente la ricetta nel database con userId
       const savedRecipe = await storage.createRecipe({
         title: aiRecipe.title,
         description: aiRecipe.description,
@@ -637,6 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         dietaryTags: aiRecipe.dietaryTags,
         imageUrl: null,
         rating: 5, // Default rating per ricette generate
+        userId: userId, // Associate recipe with authenticated user
       });
       
       // Ritorna la ricetta salvata
