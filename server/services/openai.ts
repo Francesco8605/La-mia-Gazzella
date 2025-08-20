@@ -73,21 +73,14 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
   days: MealPlanDay[];
 }> {
   try {
-    // Verifica che sia per menopausa - accetta "menopausa" in qualsiasi campo o semplice presenza di età > 45
-    const isForMenopause = 
-      request.userProfile.healthGoal?.toLowerCase().includes('menopausa') || 
-      request.userProfile.dietaryPreferences?.some(pref => pref.toLowerCase().includes('menopausa')) ||
-      (request.userProfile.age && request.userProfile.age >= 45); // Assume menopausa per età >= 45
-    
-    if (!isForMenopause && request.userProfile.age && request.userProfile.age < 45) {
-      throw new Error('Il Manuale della Gazzella è specifico per donne in menopausa. Per altre condizioni consultare un nutrizionista qualificato.');
-    }
+    // Il protocollo Gazzella è applicabile a tutte le donne
+    // Rimuoviamo la restrizione di età per rendere l'app più accessibile
 
     const excludedFoods = request.userProfile.excludedFoods || [];
     const allergies = request.userProfile.allergies || [];
     const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
 
-    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni secondo il Manuale della Gazzella per donna in MENOPAUSA.
+    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni secondo il Manuale della Gazzella personalizzato per questa donna.
 
 PROFILO CLIENTE:
 - Età: ${request.userProfile.age} anni
