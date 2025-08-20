@@ -687,7 +687,12 @@ export async function generatePersonalizedRecipe(request: {
       clientProfile.peso < 60 ? "leggera" :
       clientProfile.peso <= 70 ? "media" : "robusta";
 
+    const dishType = request.mealName.includes("Primo piatto") ? "PRIMO PIATTO" : "SECONDO PIATTO";
+    
     const prompt = `Sei "Nutrizionista Gazzella". Crea una ricetta dettagliata per "${request.mealName}" seguendo RIGOROSAMENTE il Manuale della Gazzella.
+
+⚠️ ATTENZIONE TIPO PIATTO: Questa deve essere una ricetta per ${dishType}.
+${dishType === "PRIMO PIATTO" ? "🍝 PRIMO PIATTO = CARBOIDRATI come base principale (pasta, riso, farro) con proteina integrata" : "🐟 SECONDO PIATTO = PROTEINA come elemento principale con verdure di contorno"}
 
 DATI CLIENTE:
 - Età: ${clientProfile.eta} anni
@@ -712,9 +717,29 @@ REGOLE GAZZELLA ASSOLUTE:
 - Cotture semplici: piastra, forno, vapore, padella antiaderente
 - Condimenti: olio EVO a crudo, spezie, erbe aromatiche
 
+SPECIFICHE OBBLIGATORIE PER TIPO PIATTO:
+${dishType === "PRIMO PIATTO" ? `
+- PRIMO PIATTO OBBLIGATORIO: Il piatto DEVE essere basato su CARBOIDRATI COMPLESSI come ingrediente principale
+- CARBOIDRATI AMMESSI: riso integrale, pasta integrale, farro, orzo, grano saraceno, quinoa rossa
+- STRUTTURA OBBLIGATORIA: Cereale/Pasta + Proteina + Verdure tutto insieme in un unico piatto
+- La proteina è un ACCOMPAGNAMENTO, NON l'elemento principale
+- ESEMPI CORRETTI: "Risotto integrale con salmone e zucchine", "Pasta integrale ai frutti di mare", "Farro con pollo e verdure"
+- NON fare secondi piatti di pesce/carne con contorno!
+` : `
+- SECONDO PIATTO: La proteina (pesce, carne, uova) è l'elemento PRINCIPALE del piatto
+- Contorno di verdure cotte o crude
+- Eventuale piccola porzione di carboidrati come accompagnamento
+- Esempi: Salmone grigliato con verdure, Petto di pollo alle erbe, Merluzzo al cartoccio
+`}
+
 PERSONALIZZAZIONE GRAMMATURE per peso ${clientProfile.peso}kg:
-- Proteine: ${clientProfile.peso < 60 ? '120-140g' : clientProfile.peso <= 70 ? '140-160g' : '160-180g'}
-- Carboidrati complessi: ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
+${dishType === "PRIMO PIATTO" ? `
+- Carboidrati complessi (base): ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
+- Proteine (accompagnamento): ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
+` : `
+- Proteine (principale): ${clientProfile.peso < 60 ? '120-140g' : clientProfile.peso <= 70 ? '140-160g' : '160-180g'}
+- Carboidrati complessi (contorno): ${clientProfile.peso < 60 ? '40-60g' : clientProfile.peso <= 70 ? '60-80g' : '80-100g'}
+`}
 - Verdure: sempre abbondanti (200-300g)
 - Olio EVO: ${clientProfile.peso < 60 ? '15-20ml' : clientProfile.peso <= 70 ? '20-25ml' : '25-30ml'}
 
@@ -757,6 +782,8 @@ Risposta in formato JSON:
           content: `Sei "Nutrizionista Gazzella", esperta del Manuale della Gazzella per menopausa. 
           Crea ricette personalizzate con grammature precise basate sul peso del cliente.
           RISPETTA SEMPRE: NO legumi, NO latticini, NO affettati, NO ultra-processati.
+          IMPORTANTE: Se richiesto PRIMO PIATTO, la base DEVE essere pasta/riso/cereali con proteina integrata.
+          Se richiesto SECONDO PIATTO, la base è proteina con contorno verdure.
           Solo ingredienti freschi, cotture semplici. Rispondi SOLO in JSON valido italiano.`
         },
         {
