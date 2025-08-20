@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, real, json, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, json, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -19,7 +19,7 @@ export const userProfiles = pgTable("user_profiles", {
   phone: text("phone"),
   // Dati fisici
   age: integer("age"),
-  weight: integer("weight"),
+  weight: numeric("weight", { precision: 5, scale: 1 }),
   height: integer("height"),
   // Condizioni di salute
   thyroidIssues: text("thyroid_issues"), // "si" | "no" | "eutirox"
