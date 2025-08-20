@@ -28,6 +28,7 @@ export interface IStorage {
   getRecipes(limit?: number, offset?: number): Promise<Recipe[]>;
   getAllRecipes(): Promise<Recipe[]>;
   getRecipesByUser(userId: string): Promise<Recipe[]>;
+  getRecipesByUserId(userId: string): Promise<Recipe[]>;
   getRecipesByTags(tags: string[]): Promise<Recipe[]>;
   createRecipe(recipe: InsertRecipe): Promise<Recipe>;
   updateRecipe(id: string, recipe: Partial<InsertRecipe>): Promise<Recipe | undefined>;
@@ -219,6 +220,10 @@ export class MemStorage implements IStorage {
 
   async getRecipesByUser(userId: string): Promise<Recipe[]> {
     return Array.from(this.recipes.values()).filter(recipe => recipe.userId === userId);
+  }
+
+  async getRecipesByUserId(userId: string): Promise<Recipe[]> {
+    return this.getRecipesByUser(userId);
   }
 
   async getRecipesByTags(tags: string[]): Promise<Recipe[]> {
@@ -445,6 +450,10 @@ export class DatabaseStorage implements IStorage {
 
   async getRecipesByUser(userId: string): Promise<Recipe[]> {
     return await db.select().from(recipes).where(eq(recipes.userId, userId));
+  }
+
+  async getRecipesByUserId(userId: string): Promise<Recipe[]> {
+    return this.getRecipesByUser(userId);
   }
 
   async getRecipesByTags(tags: string[]): Promise<Recipe[]> {

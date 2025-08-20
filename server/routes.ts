@@ -432,6 +432,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's meal plans (simplified route)
+  app.get("/api/meal-plans/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Fetching meal plans for current user:", userId);
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      console.log("Found meal plans:", mealPlans?.length || 0);
+      res.json(mealPlans || []);
+    } catch (error) {
+      console.error("Error fetching user meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
   app.get("/api/meal-plan/:id", isAuthenticated, async (req: any, res) => {
     try {
       const mealPlan = await storage.getMealPlan(req.params.id);
@@ -681,6 +695,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Failed to generate recipe",
         error: error instanceof Error ? error.message : "Unknown error"
       });
+    }
+  });
+
+  // Get current user's recipes (simplified route)
+  app.get("/api/recipes/user", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      console.log("Fetching recipes for current user:", userId);
+      const recipes = await storage.getRecipesByUser(userId);
+      console.log("Found recipes:", recipes?.length || 0);
+      res.json(recipes || []);
+    } catch (error) {
+      console.error("Error fetching user recipes:", error);
+      res.status(500).json({ message: "Failed to fetch recipes" });
     }
   });
 
