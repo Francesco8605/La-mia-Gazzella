@@ -118,6 +118,99 @@ export default function SavedMealPlan() {
           </div>
         </div>
 
+        {/* Client Profile & Diet Info */}
+        {(mealPlan.currentWeight || mealPlan.currentBmi || mealPlan.dietMethod) && (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Client Profile */}
+            {(mealPlan.currentWeight || mealPlan.currentBmi) && (
+              <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                    <Target className="w-5 h-5 mr-2 text-green-600" />
+                    Profilo Personalizzato
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {mealPlan.currentWeight && (
+                      <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Peso Attuale</p>
+                        <p className="text-xl font-bold text-green-600">{mealPlan.currentWeight}kg</p>
+                      </div>
+                    )}
+                    {mealPlan.targetWeight && (
+                      <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Obiettivo</p>
+                        <p className="text-xl font-bold text-blue-600">{mealPlan.targetWeight}kg</p>
+                      </div>
+                    )}
+                    {mealPlan.currentBmi && (
+                      <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">BMI Attuale</p>
+                        <p className="text-xl font-bold text-purple-600">{mealPlan.currentBmi}</p>
+                      </div>
+                    )}
+                    {mealPlan.weightToLose && (
+                      <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Da Perdere</p>
+                        <p className="text-xl font-bold text-orange-600">{mealPlan.weightToLose}kg</p>
+                      </div>
+                    )}
+                  </div>
+                  {mealPlan.bmiCategory && (
+                    <div className="text-center">
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                        {mealPlan.bmiCategory}
+                      </Badge>
+                    </div>
+                  )}
+                  {mealPlan.timeToGoal && (
+                    <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200">⏱️ {mealPlan.timeToGoal}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* Diet Explanation */}
+            {(mealPlan.dietMethod || mealPlan.expectedResults) && (
+              <Card className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                    <Scale className="w-5 h-5 mr-2 text-amber-600" />
+                    Metodo Gazzella
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {mealPlan.dietMethod && (
+                    <p className="text-gray-700 dark:text-gray-300 font-medium">{mealPlan.dietMethod}</p>
+                  )}
+                  {mealPlan.dietPrinciples && Array.isArray(mealPlan.dietPrinciples) && mealPlan.dietPrinciples.length > 0 && (
+                    <div>
+                      <p className="font-medium text-gray-800 dark:text-gray-200 mb-2">Principi:</p>
+                      <ul className="space-y-1">
+                        {mealPlan.dietPrinciples.slice(0, 3).map((principle, index) => (
+                          <li key={index} className="text-sm text-gray-600 dark:text-gray-400 flex items-start">
+                            <span className="w-2 h-2 bg-amber-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                            {principle}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {mealPlan.expectedResults && (
+                    <div className="bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
+                      <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Risultati Attesi:</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{mealPlan.expectedResults}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
         {/* Plan Summary */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-0 shadow-xl">

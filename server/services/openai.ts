@@ -148,19 +148,34 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
 TABELLA UFFICIALE DA RISPETTARE:
 ${JSON.stringify(GAZZELLA_WEEKLY_STRUCTURE, null, 2)}
 
-PROFILO CLIENTE:
+PROFILO CLIENTE PER CALCOLO GRAMMATURE PERSONALIZZATE:
 - Età: ${request.userProfile.age} anni
 - Peso attuale: ${request.userProfile.weight}kg
 - Altezza: ${request.userProfile.height}cm
-- BMI: ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
-- Peso ideale: ${request.nutritionalNeeds.idealWeight}kg
-- Obiettivo peso: ${request.nutritionalNeeds.weightGoal}kg
+- BMI ATTUALE: ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
+- Peso ideale calcolato: ${request.nutritionalNeeds.idealWeight}kg
+- OBIETTIVO PESO CLIENTE: ${request.nutritionalNeeds.weightGoal}kg
+- Differenza da perdere: ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
 
-DATI METABOLICI TARGET:
-- Calorie giornaliere: ${request.nutritionalNeeds.calories} kcal
-- Proteine: ${request.nutritionalNeeds.protein}g
-- Carboidrati: ${request.nutritionalNeeds.carbs}g
-- Grassi: ${request.nutritionalNeeds.fat}g
+DATI METABOLICI TARGET PERSONALIZZATI:
+- Calorie giornaliere personalizzate: ${request.nutritionalNeeds.calories} kcal
+- Proteine target: ${request.nutritionalNeeds.protein}g
+- Carboidrati target: ${request.nutritionalNeeds.carbs}g
+- Grassi target: ${request.nutritionalNeeds.fat}g
+
+CALCOLO GRAMMATURE PERSONALIZZATE OBBLIGATORIO:
+🎯 PESO ${request.userProfile.weight}kg → OBIETTIVO ${request.nutritionalNeeds.weightGoal}kg
+📊 BMI ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
+⚖️ Da perdere: ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
+
+FORMULA PERSONALIZZAZIONE GRAMMATURE:
+- Donna <60kg: Proteine 100-120g, Carboidrati 50-70g, Verdure 150-200g
+- Donna 60-70kg: Proteine 120-150g, Carboidrati 60-80g, Verdure 200-250g  
+- Donna >70kg: Proteine 140-180g, Carboidrati 70-100g, Verdure 250-300g
+- Se BMI >25: Ridurre carboidrati del 10-15%
+- Se molto attiva: Aumentare proteine del 10%
+
+APPLICA QUESTE GRAMMATURE PRECISE alla cliente di ${request.userProfile.weight}kg con BMI ${request.nutritionalNeeds.bmi}
 
 CONDIZIONI E PREFERENZE:
 - Problemi tiroide: ${request.userProfile.thyroidIssues}
@@ -298,14 +313,41 @@ FORMATO RICHIESTO:
 
 IMPORTANTE: Genera TUTTI i 7 giorni della settimana (Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday)
 
+INCLUDI SEMPRE NEL PIANO:
+1. BMI attuale e classificazione
+2. Obiettivo di peso della cliente  
+3. Spiegazione della dieta Gazzella
+4. Previsione tempo per raggiungere l'obiettivo
+5. Benefici specifici per questa cliente
+
 Rispondi in JSON con:
 {
-  "title": "string",
-  "description": "string", 
-  "targetCalories": number,
-  "targetProtein": number,
-  "targetCarbs": number,
-  "targetFat": number,
+  "title": "Piano Gazzella Personalizzato per [peso]kg → [obiettivo]kg",
+  "description": "Piano basato sulla tabella ufficiale 2025 del Manuale della Gazzella con grammature calcolate per BMI [bmi] e obiettivo peso [goal]kg", 
+  "clientProfile": {
+    "currentWeight": ${request.userProfile.weight},
+    "targetWeight": ${request.nutritionalNeeds.weightGoal},
+    "currentBMI": ${request.nutritionalNeeds.bmi},
+    "bmiCategory": "${request.nutritionalNeeds.healthStatus}",
+    "weightToLose": ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)},
+    "estimatedTimeWeeks": "CALCOLA in base a peso da perdere (0.5-1kg/settimana)"
+  },
+  "dietExplanation": {
+    "method": "Protocollo Gazzella basato sulla tabella ufficiale 2025",
+    "principles": [
+      "Ogni pasto contiene sempre proteine + carboidrati complessi",
+      "Colazioni salate incluse (mercoledì e sabato) come da tabella",
+      "Grammature personalizzate per BMI [bmi] e peso [currentWeight]kg",
+      "Eliminazione totale di legumi, latticini non previsti, alimenti processati",
+      "Cotture semplici e naturali per massima digeribilità"
+    ],
+    "expectedResults": "PERSONALIZZA benefici per questa cliente specifica",
+    "timeToGoal": "STIMA realistica basata su peso da perdere e metabolismo"
+  },
+  "targetCalories": ${request.nutritionalNeeds.calories},
+  "targetProtein": ${request.nutritionalNeeds.protein},
+  "targetCarbs": ${request.nutritionalNeeds.carbs},
+  "targetFat": ${request.nutritionalNeeds.fat},
   "days": [
     {
       "day": "Monday",

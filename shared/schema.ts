@@ -56,6 +56,19 @@ export const mealPlans = pgTable("meal_plans", {
   targetProtein: integer("target_protein"),
   targetCarbs: integer("target_carbs"),
   targetFat: integer("target_fat"),
+  // Client profile data for personalization
+  currentWeight: numeric("current_weight", { precision: 5, scale: 1 }),
+  targetWeight: numeric("target_weight", { precision: 5, scale: 1 }),
+  currentBMI: numeric("current_bmi", { precision: 4, scale: 1 }),
+  bmiCategory: varchar("bmi_category"),
+  weightToLose: numeric("weight_to_lose", { precision: 4, scale: 1 }),
+  estimatedTimeWeeks: integer("estimated_time_weeks"),
+  // Diet explanation and methodology
+  dietMethod: text("diet_method"),
+  dietPrinciples: json("diet_principles").$type<string[]>(),
+  expectedResults: text("expected_results"),
+  timeToGoal: varchar("time_to_goal"),
+  // Legacy fields for backward compatibility
   bmi: text("bmi"),
   idealWeight: integer("ideal_weight"),
   weightGoal: integer("weight_goal"),
