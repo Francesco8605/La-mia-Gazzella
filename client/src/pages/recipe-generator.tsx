@@ -102,6 +102,12 @@ export default function RecipeGenerator() {
       console.log("Available meal plans:", mealPlans);
       console.log("Available user profile:", userProfile);
       console.log("User data from popup:", userData);
+      console.log("Types:", {
+        mealPlansType: typeof mealPlans,
+        mealPlansIsArray: Array.isArray(mealPlans),
+        userProfileType: typeof userProfile,
+        userDataType: typeof userData
+      });
       
       if (Array.isArray(mealPlans) && mealPlans.length > 0) {
         // Usa il piano più recente
@@ -137,6 +143,8 @@ export default function RecipeGenerator() {
           pesoObbiettivo: 65,
         };
         console.log("Using fallback default profile:", clientProfile);
+        console.log("Fallback clientProfile type:", typeof clientProfile);
+        console.log("Fallback clientProfile content:", JSON.stringify(clientProfile));
       }
 
       const recipeRequest = {
@@ -167,6 +175,7 @@ export default function RecipeGenerator() {
       console.log("User profile available:", userProfile);
       console.log("User data from popup:", userData);
       console.log("Final client profile:", clientProfile);
+      console.log("clientProfile is undefined?", clientProfile === undefined);
       console.log("Complete recipe request:", JSON.stringify(recipeRequest, null, 2));
 
       return apiRequest("/api/recipes/generate-gazzella", recipeRequest);
