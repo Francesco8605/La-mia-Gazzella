@@ -9,7 +9,7 @@ import Navigation from "@/components/navigation";
 import Home from "@/pages/home";
 import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
-import Personalization from "@/pages/personalization";
+
 import RecipeGenerator from "@/pages/recipe-generator";
 import MealPlanGenerator from "@/pages/meal-plan-generator";
 import SavedMealPlan from "@/pages/saved-meal-plan";
@@ -54,8 +54,7 @@ function Router() {
           window.location.href = "/";
           return null;
         }} />
-        <Route path="/personalization" component={Personalization} />
-        <Route path="/profilo" component={Personalization} />
+
         <Route path="/recipe-generator" component={RecipeGenerator} />
         <Route path="/genera-piano" component={MealPlanGenerator} />
         <Route path="/meal-plan-generator" component={MealPlanGenerator} />
