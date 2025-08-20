@@ -901,7 +901,15 @@ DATI CLIENTE ATTUALI:
 - Piani nutrizionali salvati: ${mealPlans?.length || 0}
 - Ricette personali: ${recipes?.length || 0}
 ` : `
-DATI CLIENTE: Profilo non ancora completato
+DATI CLIENTE: 
+⚠️ PROFILO NON COMPLETATO - La cliente ha ${mealPlans?.length || 0} piani nutrizionali e ${recipes?.length || 0} ricette generate ma manca il profilo personale (peso, altezza, età).
+IMPORTANTE: Deve completare il profilo in "Il Mio Profilo" per ricevere consigli personalizzati sulle grammature e proporzioni.
+
+ISTRUZIONI SPECIFICHE PER PROFILO MANCANTE:
+- Se la cliente chiede dei suoi piani o ricette, rispondi che li vedi (indica quanti) ma serve il profilo per personalizzare
+- Invitala a completare "Il Mio Profilo" con peso, altezza, età per calcoli BMI e grammature precise
+- Puoi fornire informazioni generali sui principi Gazzella ma non consigli specifici senza dati antropometrici
+- Sii empatica e spiega l'importanza del profilo per l'efficacia del metodo
 `;
 
     // Detect health-related concerns that require medical consultation
