@@ -35,8 +35,6 @@ export default function Personalization() {
     resolver: zodResolver(insertUserProfileSchema),
     defaultValues: {
       userId: "demo-user", // Temporary user ID for demo
-      email: "",
-      phone: "",
       age: 25,
       weight: 70,
       height: 170,
@@ -65,6 +63,8 @@ export default function Personalization() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
+          email: "",
+          phone: "",
           excludedFoods: excludedFoodsList,
           allergies: allergiesList,
         }),
@@ -130,55 +130,7 @@ export default function Personalization() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                 
-                {/* Informazioni di Contatto */}
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-2">
-                    <User className="text-green-600 h-6 w-6" />
-                    <h3 className="text-2xl font-semibold text-slate-800">Informazioni di Contatto</h3>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Indirizzo Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="email" 
-                              placeholder="la.tua.email@esempio.com" 
-                              {...field} 
-                              data-testid="input-email"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Numero di Telefono</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="tel" 
-                              placeholder="+39 123 456 7890" 
-                              {...field} 
-                              data-testid="input-phone"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
 
-                <Separator />
 
                 {/* Dati Fisici */}
                 <div className="space-y-6">
