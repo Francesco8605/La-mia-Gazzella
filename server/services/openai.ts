@@ -120,9 +120,18 @@ CONDIZIONI E ABITUDINI:
 - Cibo sgarro preferito: ${request.userProfile.preferredCheatFood}
 - Formula Gazzella: ${request.userProfile.takingFormulaGazzella}
 
-${GAZZELLA_GUIDELINES}
+SEGUI ESATTAMENTE IL PIANO DELLA TABELLA GAZZELLA UFFICIALE:
+- 5 pasti al giorno: Colazione, Spuntino, Pranzo, Merenda, Cena
+- Struttura fissa per ogni pasto come mostrato nella tabella
+- Alterna gli ingredienti seguendo le variazioni della tabella  
+- Mantieni sempre l'equilibrio nutrizionale di ogni pasto
 
-ALIMENTI VIETATI (da escludere sempre): ${FORBIDDEN_FOODS.join(", ")}
+ALIMENTI DALLA TABELLA GAZZELLA UFFICIALE (usa SOLO questi):
+Proteine: yogurt greco, yogurt bianco, kefir, uova, frittata, petto di pollo, petto di tacchino, carne rossa, pesce spada, pesce grigliato, gamberetti, bresaola, prosciutto crudo, tonno in vetro
+Cereali: fiocchi di avena, biscotti, pane integrale, pasta integrale, cous cous, riso nero
+Verdure: insalata, verdure crude, zucchine, pomodoro, ananas  
+Grassi: mandorle, noci, nocciole, cioccolato fondente, olio EVO
+Frutta: mela, pera, pesca, ananas
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
 GRAMMATURE PRECISE OBBLIGATORIE - FONDAMENTALE PER PERSONALIZZAZIONE:
@@ -181,36 +190,40 @@ SPUNTINI CON GRAMMATURE (sempre combinati):
 ✅ "Petto di pollo 140g + patate 190g + insalata 150g + olio EVO 8g"
 ✅ "Omelette 2 uova (100g) + pane integrale 50g + insalata 120g + olio EVO 5g"
 
-📋 STRUTTURA SETTIMANALE OBBLIGATORIA (ISPIRATA ALLA TABELLA GAZZELLA):
-Genera 7 giorni seguendo questa struttura, usando SOLO alimenti consentiti Gazzella:
+📋 STRUTTURA SETTIMANALE ESATTA DALLA TABELLA GAZZELLA:
+Segui ESATTAMENTE questa struttura per tutti i 7 giorni con GRAMMATURE PRECISE:
 
-COLAZIONE: Uova/Frittata + Pane + Verdure + Olio (mai yogurt/avena)
-SPUNTINO MATTINO: Frutta + Frutta secca + Cereali semplici (mai cioccolato)
-PRANZO: Proteina + Cereali/Pasta + Verdure + Olio  
-MERENDA: Frutta + Frutta secca + Cereali (combinazione bilanciata)
-CENA: Proteina + Pane/Patate + Verdure + Olio
+COLAZIONE: Yogurt greco/bianco + Cereali/Pane + Frutta secca/Olio
+SPUNTINO: Frutta + Frutta secca/Cioccolato fondente  
+PRANZO: Insalata/Verdure + Cereali + Proteina + Verdure
+MERENDA: Yogurt/Kefir + Frutta secca/Cioccolato fondente
+CENA: Verdure crude + Proteina + Pane integrale
 
-SOSTITUZIONI ALIMENTI VIETATI DALLA TABELLA:
-❌ Yogurt → ✅ Uova strapazzate/frittata
-❌ Avena → ✅ Pane integrale  
-❌ Cioccolato fondente → ✅ Frutta secca (mandorle/noci)
-❌ Kefir → ✅ Spuntino con frutta fresca
-❌ Cous cous → ✅ Riso basmati/pasta
-❌ Riso nero → ✅ Riso bianco/basmati
-ESEMPI SETTIMANALI CON GRAMMATURE SPECIFICHE (segui questa struttura):
+ALIMENTI ESATTI DALLA TABELLA GAZZELLA:
+✅ Yogurt greco, yogurt bianco, kefir
+✅ Fiocchi di avena, biscotti, pane integrale  
+✅ Cioccolato fondente, mandorle, noci, nocciole
+✅ Pasta integrale, cous cous, riso nero
+✅ Pesce (spada, grigliato, gamberetti), carne rossa, petto di pollo/tacchino
+✅ Frittata, uova, bresaola, prosciutto crudo, tonno
+✅ Insalata, verdure crude, zucchine
+ESEMPI ESATTI DALLA TABELLA CON GRAMMATURE PERSONALIZZATE:
 
-LUNEDÌ:
-- COLAZIONE: "Uova 2 medie (100g) strapazzate + pane integrale 50g + spinaci 150g + olio EVO 5g"  
-- SPUNTINO: "Mela 150g + mandorle 20g + gallette riso 15g"
-- PRANZO: "Petto di pollo 140g + pasta integrale 70g + insalata 180g + olio EVO 10g"
-- MERENDA: "Pera 140g + noci 18g + crackers integrali 12g"
-- CENA: "Orata 130g + pane integrale 50g + zucchine 200g + olio EVO 8g"
+LUNEDÌ (Esempio tabella):
+- COLAZIONE: "Yogurt greco 150g + fiocchi di avena 40g + mandorle 15g"  
+- SPUNTINO: "Mela 150g + cioccolato fondente 10g"
+- PRANZO: "Insalata mista 120g + pasta integrale 70g + petto di pollo 140g + pomodoro 80g"
+- MERENDA: "Yogurt bianco 125g + mandorle 15g"  
+- CENA: "Verdure crude 150g + frittata 2 uova (100g) + pane integrale 50g"
 
-VARIAZIONI ALTRI GIORNI: 
-- Alterna proteine: salmone, tacchino, manzo, spigola, sogliola
-- Alterna cereali: riso, pasta, pane, patate  
-- Varia verdure: broccoli, cavolfiori, peperoni, carote, finocchi
-- Varia frutta: kiwi, arancia, fragole con mandorle/noci/nocciole
+MARTEDÌ (Esempio tabella):
+- COLAZIONE: "Yogurt bianco 150g + biscotti integrali 30g"
+- SPUNTINO: "Pera 140g + noci 15g"  
+- PRANZO: "Verdure crude 120g + cous cous 70g + pesce spada 140g + zucchine 150g"
+- MERENDA: "Yogurt greco 125g + cioccolato fondente 10g"
+- CENA: "Verdure crude 150g + carne rossa 140g + pane integrale 50g"
+
+CONTINUA per tutti i 7 giorni variando gli alimenti della tabella con GRAMMATURE PRECISE
 
 VIETATI PASTI SBILANCIATI:
 - Solo frutta (mela da sola)
