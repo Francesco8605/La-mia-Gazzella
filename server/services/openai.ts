@@ -873,6 +873,147 @@ Risposta in formato JSON:
   }
 }
 
+// AI Chat Response Interface
+export interface AIChatRequest {
+  userMessage: string;
+  userId: string;
+  userProfile?: any;
+  mealPlans?: any[];
+  recipes?: any[];
+}
+
+export interface AIChatResponse {
+  response: string;
+  containsHealthWarning: boolean;
+}
+
+export async function generateAIChatResponse(request: AIChatRequest): Promise<AIChatResponse> {
+  try {
+    const { userMessage, userId, userProfile, mealPlans, recipes } = request;
+    
+    // Build context about user's data
+    const userContext = userProfile ? `
+DATI CLIENTE ATTUALI:
+- Peso: ${userProfile.weight}kg
+- Altezza: ${userProfile.height}cm  
+- Età: ${userProfile.age} anni
+- BMI: ${userProfile.height ? ((userProfile.weight / ((userProfile.height/100) ** 2)).toFixed(1)) : 'non calcolabile'}
+- Piani nutrizionali salvati: ${mealPlans?.length || 0}
+- Ricette personali: ${recipes?.length || 0}
+` : `
+DATI CLIENTE: Profilo non ancora completato
+`;
+
+    // Detect health-related concerns that require medical consultation
+    const healthKeywords = [
+      'diabete', 'ipertensione', 'tiroide', 'celiachia', 'allergie gravi', 'malattie cardiache', 
+      'problemi renali', 'problemi epatici', 'disturbi alimentari', 'gravidanza', 'allattamento',
+      'chemioterapia', 'farmaci', 'sangue', 'pressione alta', 'colesterolo alto', 'anemia',
+      'gastrite', 'reflusso', 'colon irritabile', 'morbo', 'sindrome', 'patologia', 'malattia',
+      'dolore cronico', 'infiammazione cronica', 'artrite', 'fibromialgia', 'depressione grave'
+    ];
+    
+    const containsHealthConcern = healthKeywords.some(keyword => 
+      userMessage.toLowerCase().includes(keyword)
+    );
+
+    const prompt = `Sei "Assistente Gazzella", esperta nutrizionista specializzata nel Manuale della Gazzella per donne in menopausa.
+
+${userContext}
+
+DOMANDA CLIENTE: "${userMessage}"
+
+🏥 IMPORTANTE CONTROLLO MEDICO:
+${containsHealthConcern ? `
+⚠️ ATTENZIONE: La domanda menziona possibili problemi di salute.
+DEVI includere questo avvertimento nella risposta:
+"Per problemi di salute specifici come quelli che menzioni, è fondamentale consultare un medico di persona. Il mio supporto è limitato agli aspetti nutrizionali generali del Manuale della Gazzella."
+` : ''}
+
+MANUALE DELLA GAZZELLA - CONOSCENZA COMPLETA:
+
+📋 TABELLA UFFICIALE 2025 (da seguire RIGOROSAMENTE):
+${JSON.stringify(GAZZELLA_WEEKLY_STRUCTURE, null, 2)}
+
+❌ ALIMENTI COMPLETAMENTE VIETATI:
+${FORBIDDEN_FOODS.join(', ')}
+
+✅ REGOLE FONDAMENTALI:
+1. OGNI pasto deve contenere PROTEINE + CARBOIDRATI COMPLESSI (regola assoluta)
+2. Colazioni salate incluse: mercoledì (pane + uova + olio) e sabato (pane + prosciutto + olio)
+3. Solo ingredienti dalla tabella ufficiale - MAI patate, legumi, latticini non previsti
+4. Grammature personalizzate in base al peso della cliente
+5. Cotture semplici: griglia, vapore, forno, padella antiaderente
+6. 5 pasti al giorno: colazione, spuntino mattino, pranzo, spuntino pomeriggio, cena
+7. Eliminazione totale di alimenti ultra-processati, affettati (eccetto prosciutto crudo dalla tabella)
+
+🎯 PRINCIPI NUTRIZIONALI GAZZELLA:
+- Supporto specifico per menopausa con equilibrio ormonale
+- Perdita peso graduale e sostenibile (0.5-1kg/settimana)
+- Controllo glicemico attraverso combinazioni protein+carboidrati
+- Anti-infiammazione naturale con ingredienti freschi
+- Digestione ottimizzata con cotture semplici
+
+💡 COME RISPONDERE:
+- Fornisci consigli pratici basati SOLO sulla tabella Gazzella 2025
+- Spiega sempre il "perché" dietro ogni consiglio
+- Suggerisci modifiche ai piani esistenti se necessario
+- Offri alternative per esigenze specifiche (sempre dentro i limiti Gazzella)
+- Calcola grammature personalizzate se richiesto
+- Proponi sostituzioni SOLO con alimenti dalla tabella ufficiale
+
+🚫 NON FARE MAI:
+- Suggerire alimenti non nella tabella (patate, quinoa, avena diversa da fiocchi, yogurt non previsti)
+- Consigli medici o diagnosi
+- Modifiche radicali senza spiegazione del protocollo Gazzella
+- Suggerimenti che violano le regole fondamentali
+
+RISPONDI in italiano in modo:
+- Professionale ma caloroso
+- Specifico con riferimenti alla tabella
+- Pratico con esempi concreti
+- Motivante per il percorso della cliente`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: `Sei "Assistente Gazzella", nutrizionista esperta del Manuale della Gazzella per menopausa.
+          
+          REGOLE ASSOLUTE:
+          - Rispondi SOLO basandoti sulla tabella ufficiale Gazzella 2025
+          - Se la domanda riguarda problemi di salute, includi sempre l'avviso di consultare un medico
+          - Personalizza i consigli sui dati specifici della cliente
+          - Mantieni sempre il focus sui principi Gazzella: proteine+carboidrati in ogni pasto
+          - Rispondi in italiano con tono professionale ma accogliente`
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 1000,
+    });
+
+    const aiResponse = response.choices[0].message.content || "Mi dispiace, non sono riuscita a processare la tua domanda. Riprova tra poco.";
+
+    return {
+      response: aiResponse,
+      containsHealthWarning: containsHealthConcern
+    };
+
+  } catch (error) {
+    console.error("Error generating AI chat response:", error);
+    
+    return {
+      response: "Mi dispiace, sto avendo difficoltà tecniche. Riprova tra qualche minuto. Se il problema persiste, contatta il supporto.",
+      containsHealthWarning: false
+    };
+  }
+}
+
 export async function calculateNutritionalNeeds(userProfile: InsertUserProfile): Promise<{
   calories: number;
   protein: number;

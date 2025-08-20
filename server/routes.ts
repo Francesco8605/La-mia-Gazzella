@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
-import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe } from "./services/openai";
+import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -784,6 +784,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting weight entry:", error);
       res.status(500).json({ message: "Failed to delete weight entry" });
+    }
+  });
+
+  // AI Chat endpoint
+  app.post("/api/ai-chat/message", isAuthenticated, async (req: any, res) => {
+    try {
+      const { message, userProfile, mealPlans, recipes } = req.body;
+      const userId = req.user.claims.sub;
+
+      if (!message || typeof message !== 'string') {
+        return res.status(400).json({ message: "Messaggio richiesto" });
+      }
+
+      // Generate AI response using OpenAI service
+      const aiResponse = await generateAIChatResponse({
+        userMessage: message,
+        userId,
+        userProfile,
+        mealPlans,
+        recipes
+      });
+
+      res.json({
+        message: aiResponse.response,
+        containsHealthWarning: aiResponse.containsHealthWarning
+      });
+    } catch (error) {
+      console.error("Error in AI chat:", error);
+      res.status(500).json({ 
+        message: "Errore del server. Riprova tra poco.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     }
   });
 

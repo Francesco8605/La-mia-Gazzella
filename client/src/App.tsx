@@ -18,6 +18,7 @@ import MyMealPlans from "@/pages/my-meal-plans";
 import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
+import AIChat from "@/pages/ai-chat";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -77,6 +78,7 @@ function Router() {
         </Route>
         <Route path="/meal-plan/:id" component={MealPlan} />
         <Route path="/recipe/:id" component={RecipeDetail} />
+        <Route path="/assistente-ia" component={AIChat} />
         <Route component={NotFound} />
       </Switch>
     </div>

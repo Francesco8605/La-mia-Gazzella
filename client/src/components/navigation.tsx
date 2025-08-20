@@ -13,6 +13,7 @@ export default function Navigation() {
     { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/recipes", label: "Ricette" },
+    { href: "/assistente-ia", label: "Assistente IA" },
   ];
 
   return (
