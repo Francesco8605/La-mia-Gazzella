@@ -82,11 +82,6 @@ export default function Home() {
         </section>
       )}
 
-      {/* Featured Recipes */}
-      <section className="container mx-auto px-4 mb-16">
-        <RecipeCards />
-      </section>
-
       {/* Loading States Demo */}
       <section className="container mx-auto px-4 mb-16">
         <LoadingStates />

@@ -360,28 +360,7 @@ export default function WeightTracker() {
         </Card>
       )}
 
-      {/* Plan Regeneration CTA */}
-      {latestEntry && (
-        <Card className="glass-morphism bg-gradient-to-r from-red-50 to-green-50">
-          <CardContent className="pt-6 text-center">
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">
-              Aggiorna il Tuo Piano Nutrizionale
-            </h3>
-            <p className="text-slate-600 mb-4">
-              Con i nuovi dati del peso, possiamo rigenerare un piano ancora più personalizzato
-            </p>
-            <Link href="/genera-piano">
-              <Button 
-                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white"
-                data-testid="regenerate-plan-button"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Rigenera Piano Alimentare
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      )}
+
     </div>
   );
 }
