@@ -1,10 +1,8 @@
-import { Sparkles, Play, User } from "lucide-react";
+import { Sparkles, Play, User, Mail } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import WeightTracker from "@/components/weight-tracker";
-import RecipeCards from "@/components/recipe-cards";
-import LoadingStates from "@/components/loading-states";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
@@ -82,10 +80,7 @@ export default function Home() {
         </section>
       )}
 
-      {/* Loading States Demo */}
-      <section className="container mx-auto px-4 mb-16">
-        <LoadingStates />
-      </section>
+
 
       {/* Footer */}
       <footer className="bg-slate-900 text-white">
@@ -115,10 +110,19 @@ export default function Home() {
               <h4 className="font-semibold text-lg mb-4">Supporto</h4>
               <ul className="space-y-2 text-slate-300">
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Centro Assistenza</a></li>
-                <li><a href="#" className="hover:text-white transition-colors duration-300">Contattaci</a></li>
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Guide Alimentari</a></li>
                 <li><a href="#" className="hover:text-white transition-colors duration-300">Community</a></li>
               </ul>
+              <div className="mt-4">
+                <Button
+                  onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
+                  className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-4 py-2 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  data-testid="contact-support-button"
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Contatta Supporto
+                </Button>
+              </div>
             </div>
           </div>
           

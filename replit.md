@@ -22,6 +22,8 @@
 - **NAVIGATION SIMPLIFIED**: Removed Personalizzazione page as requested - users manage profiles via "Il Mio Profilo" only
 - **PWA ICON CONFIGURATION**: Added Logo-gazzella.jpg as app icon for mobile home screen installation with complete PWA meta tags and manifest.json
 - **NAVIGATION STYLING**: Enhanced navigation bar with professional background and glassmorphism effects
+- **UI CLEANUP**: Removed unwanted sections "Processo di Generazione IA", "Creating Custom Recipes", "Service Temporarily Unavailable", "Ricette in Evidenza", and "Aggiorna il Tuo Piano Nutrizionale"
+- **SUPPORT CONTACT**: Added "Contatta Supporto" button in footer that opens email to ilmanualedellagazzella@gmail.com with pre-filled subject
 - **OFFICIAL GAZZELLA TABLE 2025**: Implemented exact weekly structure from official PDF including savory breakfasts
 - **AUTHENTIC MEAL COMBINATIONS**: System now follows precisely the 7-day table structure from Manuale della Gazzella
 - **SAVORY BREAKFASTS INCLUDED**: Added "Pane integrale + uova + olio EVO" (Wednesday) and "Pane integrale + prosciutto crudo + olio EVO" (Saturday)
