@@ -95,11 +95,11 @@ export default function RecipeGenerator() {
       
       // Determina i dati da usare: piani esistenti, profilo utente, o dati del popup
       let clientProfile;
-      if (mealPlans && mealPlans.length > 0) {
+      if (Array.isArray(mealPlans) && mealPlans.length > 0) {
         // Usa il piano più recente
         const latestPlan = mealPlans[0];
         clientProfile = latestPlan.clientProfile;
-      } else if (userProfile) {
+      } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile) {
         // Usa il profilo esistente
         clientProfile = {
           eta: userProfile.age,
@@ -162,10 +162,10 @@ export default function RecipeGenerator() {
 
   const onSubmit = (data: RecipeFormData) => {
     // Controlla se abbiamo i dati necessari
-    if (mealPlans && mealPlans.length > 0) {
+    if (Array.isArray(mealPlans) && mealPlans.length > 0) {
       // Usa i dati dal piano esistente
       generateRecipeMutation.mutate({ recipeData: data });
-    } else if (userProfile && userProfile.age && userProfile.currentWeight && userProfile.height) {
+    } else if (userProfile && typeof userProfile === 'object' && 'age' in userProfile && 'currentWeight' in userProfile && 'height' in userProfile) {
       // Usa i dati dal profilo esistente
       generateRecipeMutation.mutate({ recipeData: data });
     } else {
@@ -219,9 +219,9 @@ export default function RecipeGenerator() {
                 Informazioni per la Ricetta
               </CardTitle>
               <CardDescription>
-                {mealPlans && mealPlans.length > 0 
+                {Array.isArray(mealPlans) && mealPlans.length > 0 
                   ? "Genereremo una ricetta usando i dati del tuo piano personalizzato esistente"
-                  : userProfile?.age && userProfile?.currentWeight && userProfile?.height
+                  : userProfile && typeof userProfile === 'object' && 'age' in userProfile && 'currentWeight' in userProfile && 'height' in userProfile
                   ? "Genereremo una ricetta usando i dati del tuo profilo"
                   : "Ti chiederemo peso, altezza ed età per personalizzare le grammature"
                 }
