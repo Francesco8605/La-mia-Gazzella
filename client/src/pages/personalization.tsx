@@ -94,6 +94,8 @@ export default function Personalization() {
   });
 
   const onSubmit = (data: InsertUserProfile) => {
+    console.log("Form data:", data);
+    console.log("Form errors:", form.formState.errors);
     createProfileMutation.mutate(data);
   };
 

@@ -117,9 +117,9 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   createdAt: true,
 }).extend({
   userId: z.string().min(1, "User ID è obbligatorio"),
-  // Informazioni di contatto
-  email: z.string().email("Inserisci un indirizzo email valido"),
-  phone: z.string().min(10, "Inserisci un numero di telefono valido"),
+  // Informazioni di contatto (opzionali)
+  email: z.string().optional(),
+  phone: z.string().optional(),
   // Dati fisici
   age: z.number().min(13, "Età minima 13 anni").max(120, "Età massima 120 anni"),
   weight: z.number().min(30, "Peso minimo 30 kg").max(300, "Peso massimo 300 kg"),
