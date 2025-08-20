@@ -17,6 +17,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 const recipeFormSchema = z.object({
   dishType: z.enum(["primo", "secondo"], { required_error: "Seleziona tipo di piatto" }),
   meatOrFish: z.enum(["carne", "pesce"], { required_error: "Seleziona base del piatto" }),
+  difficulty: z.enum(["facile", "media", "difficile"], { required_error: "Seleziona difficoltà" }),
   preferredProteins: z.string().min(1, "Specifica le proteine preferite"),
   preferredFish: z.string().optional(),
   foodIntolerances: z.string().optional(),
@@ -72,9 +73,10 @@ export default function RecipeGenerator() {
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
       dishType: "secondo",
+      meatOrFish: "pesce",
+      difficulty: "facile",
       preferredProteins: "",
       preferredFish: "",
-      meatOrFish: "pesce",
       foodIntolerances: "",
       excludedFoods: "",
     },
@@ -131,6 +133,7 @@ export default function RecipeGenerator() {
         targetCalories: recipeData.dishType === "primo" ? 400 : 350,
         allergies: recipeData.foodIntolerances ? recipeData.foodIntolerances.split(",").map(s => s.trim()) : [],
         cuisine: "italiana",
+        difficulty: recipeData.difficulty, // Aggiungi difficoltà alla richiesta
         clientProfile,
         recipePreferences: {
           preferredProteins: recipeData.preferredProteins,
@@ -275,6 +278,29 @@ export default function RecipeGenerator() {
                             <SelectContent>
                               <SelectItem value="carne">A base di Carne</SelectItem>
                               <SelectItem value="pesce">A base di Pesce</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="difficulty"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Difficoltà</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-difficulty">
+                                <SelectValue placeholder="Seleziona difficoltà" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="facile">Facile</SelectItem>
+                              <SelectItem value="media">Media</SelectItem>
+                              <SelectItem value="difficile">Difficile</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

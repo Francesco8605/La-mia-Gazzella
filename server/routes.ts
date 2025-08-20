@@ -591,6 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetCalories: z.number().min(50).max(2000),
         allergies: z.array(z.string()).optional(),
         cuisine: z.string().optional(),
+        difficulty: z.enum(["facile", "media", "difficile"]).optional(),
         clientProfile: z.object({
           eta: z.number(),
           peso: z.number(),
@@ -620,6 +621,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetCalories: requestData.targetCalories,
         allergies: requestData.allergies,
         cuisine: requestData.cuisine || "italiana",
+        difficulty: requestData.difficulty || "facile",
         clientProfile: requestData.clientProfile,
         recipePreferences: requestData.recipePreferences,
         existingRecipes: existingTitles, // Pass existing recipes to avoid duplicates

@@ -689,6 +689,7 @@ export async function generatePersonalizedRecipe(request: {
   targetCalories: number;
   allergies?: string[];
   cuisine?: string;
+  difficulty?: "facile" | "media" | "difficile";
   clientProfile: {
     eta: number;
     peso: number;
@@ -740,6 +741,7 @@ DATI CLIENTE:
 PREFERENZE RICETTA:
 - Proteine preferite: ${recipePreferences.preferredProteins}
 - Base: ${recipePreferences.meatOrFish}
+- Livello difficoltà richiesto: ${request.difficulty || "facile"}
 ${recipePreferences.preferredFish ? `- Pesci preferiti: ${recipePreferences.preferredFish}` : ''}
 ${recipePreferences.excludedFoods ? `- Cibi da evitare: ${recipePreferences.excludedFoods}` : ''}
 
@@ -795,13 +797,28 @@ OBIETTIVI:
 - Supporto obiettivo peso: ${clientProfile.pesoObbiettivo}kg
 - Allergie da evitare: ${request.allergies?.join(", ") || "nessuna"}
 
+🎯 LIVELLO DIFFICOLTÀ RICHIESTO: ${request.difficulty || "facile"}
+${request.difficulty === "facile" ? `
+- FACILE: Cotture semplici (griglia, vapore, padella), max 15-20 minuti, pochi ingredienti
+- Tecniche: saltare in padella, grigliare, cuocere al vapore, bollire
+- Massimo 6-8 ingredienti principali
+` : request.difficulty === "media" ? `
+- MEDIA: Cotture diverse, 20-30 minuti, ingredienti variati
+- Tecniche: brasare, cuocere al forno, marinare, ridurre salse
+- Massimo 10-12 ingredienti principali
+` : `
+- DIFFICILE: Tecniche elaborate, 30-45 minuti, preparazione complessa
+- Tecniche: cotture multiple, preparazioni preliminari, tecniche avanzate
+- Fino a 15 ingredienti con preparazioni articolate
+`}
+
 Crea una ricetta completa con:
 1. Titolo appetitoso e descrizione
 2. Lista ingredienti con grammature PRECISE personalizzate per il peso del cliente
-3. Istruzioni passo-passo dettagliate
+3. Istruzioni passo-passo dettagliate appropriate al livello di difficoltà
 4. Informazioni nutrizionali accurate per porzione
-5. Tempi di preparazione e cottura
-6. Livello di difficoltà
+5. Tempi di preparazione e cottura realistici per la difficoltà scelta
+6. Livello di difficoltà corrispondente alla richiesta
 
 Risposta in formato JSON:
 {
