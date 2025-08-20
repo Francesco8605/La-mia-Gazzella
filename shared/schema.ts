@@ -132,7 +132,7 @@ export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({
   userId: z.string().min(1, "User ID è obbligatorio"),
   weight: z.number().min(30, "Il peso deve essere almeno 30kg").max(300, "Il peso deve essere massimo 300kg"),
   date: z.date(),
-  notes: z.string().optional(),
+  notes: z.string().nullable().optional(),
 });
 
 export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
