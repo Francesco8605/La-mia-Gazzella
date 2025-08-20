@@ -332,7 +332,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         takingFormulaGazzella: profile.takingFormulaGazzella as "si" | "no" | "ho_iniziato" || "no",
         dietaryPreferences: profile.dietaryPreferences || ["gazzella"],
         healthGoal: (profile.healthGoal as "weight_loss" | "weight_gain" | "muscle_building" | "maintenance" | "general_health") || "maintenance",
-        activityLevel: (profile.activityLevel as "sedentary" | "lightly_active" | "moderately_active" | "very_active") || "lightly_active"
+        activityLevel: (profile.activityLevel as "sedentary" | "moderate" | "active" | "very_active") || "moderate"
       };
 
       // Calculate nutritional needs

@@ -2,7 +2,7 @@
 
 "La Mia Gazzella" è una moderna applicazione web per la nutrizione e la pianificazione alimentare alimentata dall'IA, costruita con un'architettura TypeScript full-stack. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
 
-## Recent Major Updates (August 18, 2025)
+## Recent Major Updates (August 20, 2025)
 - **Database Storage Fixed**: Successfully migrated from MemStorage to PostgreSQL DatabaseStorage using Drizzle ORM
 - **AI Meal Plan Generation**: Fully functional OpenAI integration generating personalized 7-day meal plans following Gazzella protocol
 - **Authentication System**: Complete user registration and login with session management working with PostgreSQL
@@ -15,6 +15,10 @@
 - **Balanced Meal Structure**: Snacks now properly combine ingredients like "Mela con mandorle e gallette di riso" instead of separate items
 - **USER DATA ISOLATION FIXED**: Implemented proper authentication middleware ensuring each user sees only their own data
 - **Security Enhancement**: All meal plan and profile endpoints now require authentication and validate user ownership
+- **DASHBOARD INTEGRATION**: Added saved meal plans section to home dashboard with direct access to user's personalized plans
+- **COMPLETE PROFILE UPDATE FLOW**: Implemented /aggiorna-profilo page with weight and data update capabilities
+- **SAVED PLAN VISUALIZATION**: Created /piano-salvato/:id page showing full 7-day meal plan with all nutritional details
+- **SEAMLESS USER FLOW**: Automatic redirect from plan generation to saved plan page for immediate access
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 
