@@ -11,6 +11,8 @@ import RecipeDetail from "@/pages/recipe-detail";
 import Personalization from "@/pages/personalization";
 import RecipeGenerator from "@/pages/recipe-generator";
 import MealPlanGenerator from "@/pages/meal-plan-generator";
+import SavedMealPlan from "@/pages/saved-meal-plan";
+import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 
@@ -51,8 +53,12 @@ function Router() {
           return null;
         }} />
         <Route path="/personalization" component={Personalization} />
+        <Route path="/profilo" component={Personalization} />
         <Route path="/recipe-generator" component={RecipeGenerator} />
+        <Route path="/genera-piano" component={MealPlanGenerator} />
         <Route path="/meal-plan-generator" component={MealPlanGenerator} />
+        <Route path="/piano-salvato/:id" component={SavedMealPlan} />
+        <Route path="/aggiorna-profilo" component={UpdateProfile} />
         <Route path="/meal-plan/:id" component={MealPlan} />
         <Route path="/recipe/:id" component={RecipeDetail} />
         <Route component={NotFound} />

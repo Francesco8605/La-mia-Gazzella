@@ -221,6 +221,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile (PATCH)
+  app.patch("/api/user-profile", async (req, res) => {
+    try {
+      const sessionId = req.cookies?.session;
+      const session = sessions.get(sessionId);
+      
+      if (!session) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const userId = session.userId;
+      const updateData = req.body;
+      
+      const updatedProfile = await storage.updateUserProfile(userId, updateData);
+      
+      if (!updatedProfile) {
+        return res.status(404).json({ message: "Profilo non trovato" });
+      }
+      
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Errore nell'aggiornamento del profilo:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
+  // Get current user profile (API for frontend)
+  app.get("/api/user-profile", async (req, res) => {
+    try {
+      const sessionId = req.cookies?.session;
+      const session = sessions.get(sessionId);
+      
+      if (!session) {
+        return res.status(401).json({ message: "Non autenticato" });
+      }
+
+      const userId = session.userId;
+      const profile = await storage.getUserProfile(userId);
+      
+      if (!profile) {
+        return res.status(404).json({ message: "Profilo non trovato" });
+      }
+      
+      res.json(profile);
+    } catch (error) {
+      console.error("Errore nel recupero del profilo:", error);
+      res.status(500).json({ message: "Errore interno del server" });
+    }
+  });
+
   app.put("/api/profile/:userId", async (req, res) => {
     try {
       const validatedData = insertUserProfileSchema.partial().parse(req.body);
