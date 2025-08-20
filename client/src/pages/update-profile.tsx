@@ -51,9 +51,9 @@ export default function UpdateProfile() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateWeightForm) => {
-      return await apiRequest(`/api/user-profile`, "PATCH", {
+      return await apiRequest(`/api/user-profile`, {
         weight: data.weight,
-      });
+      }, "PATCH");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });

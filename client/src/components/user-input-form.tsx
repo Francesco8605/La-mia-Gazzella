@@ -81,11 +81,10 @@ export default function UserInputForm({ onMealPlanGenerated }: UserInputFormProp
 
   const generateMealPlanMutation = useMutation({
     mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/generate-meal-plan", {
+      return await apiRequest("/api/generate-meal-plan", {
         userProfile: data,
         durationDays: 7,
-      });
-      return response.json();
+      }, "POST");
     },
     onSuccess: (mealPlan) => {
       toast({

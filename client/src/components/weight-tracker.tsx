@@ -34,11 +34,11 @@ export default function WeightTracker() {
   const addWeightMutation = useMutation({
     mutationFn: async (weight: number) => {
       console.log("Adding weight:", weight);
-      return apiRequest("POST", "/api/weight-entries", {
+      return apiRequest("/api/weight-entries", {
         weight,
         date: new Date().toISOString(),
         notes: ""
-      });
+      }, "POST");
     },
     onSuccess: () => {
       // Invalidate multiple related queries to ensure full refresh
