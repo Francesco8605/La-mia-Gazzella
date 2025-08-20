@@ -76,9 +76,9 @@ export default function Auth() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Breve delay per assicurarsi che la cache sia aggiornata
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla dashboard
       setTimeout(() => {
-        setLocation("/personalization");
+        setLocation("/");
       }, 100);
     },
     onError: (error) => {
@@ -115,7 +115,7 @@ export default function Auth() {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Breve delay per assicurarsi che la cache sia aggiornata
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla personalizzazione
       setTimeout(() => {
         setLocation("/personalization");
       }, 100);
