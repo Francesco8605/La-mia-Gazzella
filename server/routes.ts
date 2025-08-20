@@ -637,9 +637,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Request body:", req.body);
       
       const weightEntryData = {
-        ...req.body,
         userId,
-        date: new Date(req.body.date || new Date())
+        weight: parseFloat(req.body.weight),
+        date: new Date(req.body.date || new Date()),
+        notes: req.body.notes || null
       };
 
       console.log("Weight entry data before validation:", weightEntryData);
