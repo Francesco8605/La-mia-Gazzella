@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
-import { generateMealPlan, generateRecipe, calculateNutritionalNeeds } from "./services/openai";
+import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe } from "./services/openai";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 
@@ -591,14 +591,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetCalories: z.number().min(50).max(2000),
         allergies: z.array(z.string()).optional(),
         cuisine: z.string().optional(),
-        userProfile: z.object({
-          email: z.string().email(),
-          fullName: z.string().min(1),
-          phone: z.string().min(1),
-          age: z.number(),
-          currentWeight: z.number(),
-          height: z.number(),
-          targetWeight: z.number(),
+        clientProfile: z.object({
+          eta: z.number(),
+          peso: z.number(),
+          altezza: z.number(),
+          pesoObbiettivo: z.number(),
+        }),
+        recipePreferences: z.object({
           preferredProteins: z.string(),
           preferredFish: z.string().optional(),
           meatOrFish: z.enum(["carne", "pesce"]),
@@ -609,13 +608,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const requestData = schema.parse(req.body);
       
-      // Generate recipe using OpenAI with Gazzella protocol
-      const aiRecipe = await generateRecipe({
+      // Generate recipe using OpenAI with Gazzella protocol and client profile
+      const aiRecipe = await generatePersonalizedRecipe({
         mealName: requestData.mealName,
         dietaryPreferences: requestData.dietaryPreferences,
         targetCalories: requestData.targetCalories,
         allergies: requestData.allergies,
         cuisine: requestData.cuisine || "italiana",
+        clientProfile: requestData.clientProfile,
+        recipePreferences: requestData.recipePreferences,
       });
       
       // Ritorna direttamente la ricetta senza salvarla automaticamente

@@ -658,6 +658,130 @@ Return the response in the following JSON format:
   }
 }
 
+export async function generatePersonalizedRecipe(request: {
+  mealName: string;
+  dietaryPreferences: string[];
+  targetCalories: number;
+  allergies?: string[];
+  cuisine?: string;
+  clientProfile: {
+    eta: number;
+    peso: number;
+    altezza: number;
+    pesoObbiettivo: number;
+  };
+  recipePreferences: {
+    preferredProteins: string;
+    preferredFish?: string;
+    meatOrFish: "carne" | "pesce";
+    excludedFoods?: string;
+  };
+}): Promise<any> {
+  try {
+    const { clientProfile, recipePreferences } = request;
+    
+    // Calcola BMI e categoria peso per personalizzare le grammature
+    const heightInM = clientProfile.altezza / 100;
+    const bmi = clientProfile.peso / (heightInM * heightInM);
+    const weightCategory = 
+      clientProfile.peso < 60 ? "leggera" :
+      clientProfile.peso <= 70 ? "media" : "robusta";
+
+    const prompt = `Sei "Nutrizionista Gazzella". Crea una ricetta dettagliata per "${request.mealName}" seguendo RIGOROSAMENTE il Manuale della Gazzella.
+
+DATI CLIENTE:
+- Età: ${clientProfile.eta} anni
+- Peso attuale: ${clientProfile.peso}kg  
+- Altezza: ${clientProfile.altezza}cm
+- Peso obiettivo: ${clientProfile.pesoObbiettivo}kg
+- BMI: ${bmi.toFixed(1)}
+- Categoria peso: ${weightCategory}
+
+PREFERENZE RICETTA:
+- Proteine preferite: ${recipePreferences.preferredProteins}
+- Base: ${recipePreferences.meatOrFish}
+${recipePreferences.preferredFish ? `- Pesci preferiti: ${recipePreferences.preferredFish}` : ''}
+${recipePreferences.excludedFoods ? `- Cibi da evitare: ${recipePreferences.excludedFoods}` : ''}
+
+REGOLE GAZZELLA ASSOLUTE:
+- NO legumi (ceci, fagioli, lenticchie, piselli)
+- NO latticini (latte, yogurt, formaggi, burro, panna)
+- NO affettati/salumi (eccetto fesa tacchino quando specificato)
+- NO prodotti ultra-processati o confezionati
+- Solo ingredienti FRESCHI e naturali
+- Cotture semplici: piastra, forno, vapore, padella antiaderente
+- Condimenti: olio EVO a crudo, spezie, erbe aromatiche
+
+PERSONALIZZAZIONE GRAMMATURE per peso ${clientProfile.peso}kg:
+- Proteine: ${clientProfile.peso < 60 ? '120-140g' : clientProfile.peso <= 70 ? '140-160g' : '160-180g'}
+- Carboidrati complessi: ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
+- Verdure: sempre abbondanti (200-300g)
+- Olio EVO: ${clientProfile.peso < 60 ? '15-20ml' : clientProfile.peso <= 70 ? '20-25ml' : '25-30ml'}
+
+OBIETTIVI:
+- Calorie target: ${request.targetCalories}
+- Supporto obiettivo peso: ${clientProfile.pesoObbiettivo}kg
+- Allergie da evitare: ${request.allergies?.join(", ") || "nessuna"}
+
+Crea una ricetta completa con:
+1. Titolo appetitoso e descrizione
+2. Lista ingredienti con grammature PRECISE personalizzate per il peso del cliente
+3. Istruzioni passo-passo dettagliate
+4. Informazioni nutrizionali accurate per porzione
+5. Tempi di preparazione e cottura
+6. Livello di difficoltà
+
+Risposta in formato JSON:
+{
+  "title": "string",
+  "description": "string", 
+  "ingredients": ["ingrediente con grammatura precisa"],
+  "instructions": ["istruzione dettagliata passo-passo"],
+  "calories": number,
+  "protein": number,
+  "carbs": number,
+  "fat": number,
+  "servings": 1,
+  "prepTime": number,
+  "cookTime": number,
+  "difficulty": "Facile|Media|Difficile",
+  "cuisine": "italiana",
+  "dietaryTags": ["per menopausa", "senza legumi", "senza latticini", "gazzella"]
+}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      messages: [
+        {
+          role: "system",
+          content: `Sei "Nutrizionista Gazzella", esperta del Manuale della Gazzella per menopausa. 
+          Crea ricette personalizzate con grammature precise basate sul peso del cliente.
+          RISPETTA SEMPRE: NO legumi, NO latticini, NO affettati, NO ultra-processati.
+          Solo ingredienti freschi, cotture semplici. Rispondi SOLO in JSON valido italiano.`
+        },
+        {
+          role: "user", 
+          content: prompt
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.3,
+    });
+
+    const result = JSON.parse(response.choices[0].message.content || "{}");
+    
+    // Validate structure
+    if (!result.title || !result.ingredients || !result.instructions) {
+      throw new Error("Invalid recipe structure received from AI");
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Error generating personalized recipe:", error);
+    throw new Error(`Failed to generate personalized recipe: ${error instanceof Error ? error.message : "Unknown error"}`);
+  }
+}
+
 export async function calculateNutritionalNeeds(userProfile: InsertUserProfile): Promise<{
   calories: number;
   protein: number;
