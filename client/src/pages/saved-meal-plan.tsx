@@ -67,6 +67,13 @@ export default function SavedMealPlan() {
   }
 
   const dayNames = {
+    Monday: "Lunedì",
+    Tuesday: "Martedì", 
+    Wednesday: "Mercoledì",
+    Thursday: "Giovedì",
+    Friday: "Venerdì",
+    Saturday: "Sabato",
+    Sunday: "Domenica",
     monday: "Lunedì",
     tuesday: "Martedì", 
     wednesday: "Mercoledì",
@@ -119,10 +126,10 @@ export default function SavedMealPlan() {
         </div>
 
         {/* Client Profile & Diet Info */}
-        {(mealPlan.currentWeight || mealPlan.currentBmi || mealPlan.dietMethod) && (
+        {(mealPlan.currentWeight || mealPlan.currentBMI || mealPlan.dietMethod) && (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* Client Profile */}
-            {(mealPlan.currentWeight || mealPlan.currentBmi) && (
+            {(mealPlan.currentWeight || mealPlan.currentBMI) && (
               <Card className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border-0 shadow-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center text-gray-900 dark:text-white">
@@ -144,10 +151,10 @@ export default function SavedMealPlan() {
                         <p className="text-xl font-bold text-blue-600">{mealPlan.targetWeight}kg</p>
                       </div>
                     )}
-                    {mealPlan.currentBmi && (
+                    {mealPlan.currentBMI && (
                       <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300">BMI Attuale</p>
-                        <p className="text-xl font-bold text-purple-600">{mealPlan.currentBmi}</p>
+                        <p className="text-xl font-bold text-purple-600">{mealPlan.currentBMI}</p>
                       </div>
                     )}
                     {mealPlan.weightToLose && (
@@ -203,6 +210,48 @@ export default function SavedMealPlan() {
                     <div className="bg-white/70 dark:bg-gray-800/70 rounded-lg p-3">
                       <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mb-1">Risultati Attesi:</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400">{mealPlan.expectedResults}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Diet Explanation */}
+            {(mealPlan.dietMethod || mealPlan.dietPrinciples || mealPlan.expectedResults) && (
+              <Card className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                    <Scale className="w-5 h-5 mr-2 text-purple-600" />
+                    Metodo Gazzella
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {mealPlan.dietMethod && (
+                    <div className="p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                      <p className="font-semibold text-purple-800 dark:text-purple-200">{mealPlan.dietMethod}</p>
+                    </div>
+                  )}
+                  
+                  {mealPlan.dietPrinciples && Array.isArray(mealPlan.dietPrinciples) && mealPlan.dietPrinciples.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Principi Fondamentali:</h4>
+                      <ul className="space-y-1">
+                        {mealPlan.dietPrinciples.map((principle, index) => (
+                          <li key={index} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
+                            <span className="text-purple-500 mr-2">•</span>
+                            {principle}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {mealPlan.expectedResults && (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">Risultati Attesi:</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
+                        {mealPlan.expectedResults}
+                      </p>
                     </div>
                   )}
                 </CardContent>

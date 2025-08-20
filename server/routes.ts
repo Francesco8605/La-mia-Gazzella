@@ -370,7 +370,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         durationDays: 7,
       });
       
-      // Save to storage
+      // Parse AI response to extract client profile and diet explanation
+      const aiResponse = typeof aiMealPlan === 'string' ? JSON.parse(aiMealPlan) : aiMealPlan;
+      
+      // Save to storage with client profile and diet explanation
       const mealPlan = await storage.createMealPlan({
         userId: userId,
         title: aiMealPlan.title,
@@ -379,6 +382,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetProtein: aiMealPlan.targetProtein,
         targetCarbs: aiMealPlan.targetCarbs,
         targetFat: aiMealPlan.targetFat,
+        // Save client profile data for display
+        currentWeight: aiResponse.clientProfile?.currentWeight ? String(aiResponse.clientProfile.currentWeight) : String(validatedProfile.weight),
+        targetWeight: aiResponse.clientProfile?.targetWeight ? String(aiResponse.clientProfile.targetWeight) : String(nutritionalNeeds.weightGoal),
+        currentBMI: aiResponse.clientProfile?.currentBMI ? String(aiResponse.clientProfile.currentBMI) : String(nutritionalNeeds.bmi),
+        bmiCategory: aiResponse.clientProfile?.bmiCategory || nutritionalNeeds.healthStatus,
+        weightToLose: aiResponse.clientProfile?.weightToLose ? String(aiResponse.clientProfile.weightToLose) : String((validatedProfile.weight - nutritionalNeeds.weightGoal).toFixed(1)),
+        timeToGoal: aiResponse.dietExplanation?.timeToGoal,
+        // Save diet explanation
+        dietMethod: aiResponse.dietExplanation?.method || "Metodo Gazzella - Tabella Ufficiale 2025",
+        dietPrinciples: aiResponse.dietExplanation?.principles || [],
+        expectedResults: Array.isArray(aiResponse.dietExplanation?.expectedResults) ? 
+          aiResponse.dietExplanation.expectedResults.join(', ') : 
+          aiResponse.dietExplanation?.expectedResults || "Perdita peso graduale e sostenibile",
+        // Legacy fields for backward compatibility
         bmi: nutritionalNeeds.bmi.toString(),
         idealWeight: nutritionalNeeds.idealWeight,
         weightGoal: nutritionalNeeds.weightGoal,

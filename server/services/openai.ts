@@ -121,8 +121,13 @@ STRUTTURA PIANO OBBLIGATORIA:
 - Grammature precise sempre indicate
 - Note pratiche e opzioni meal-prep
 
-PERSONALIZZAZIONE:
-- Adatta pasti a: orari indicati, preferenze, allergie/intolleranze, livello attività, strumenti cucina
+PERSONALIZZAZIONE OBBLIGATORIA:
+- Calcola BMI: peso(kg) / (altezza(m))²
+- Peso ideale: (altezza(cm) - 100) * 0.9 per donne  
+- Adatta grammature in base a peso attuale vs obiettivo
+- Stima tempo: (peso attuale - peso obiettivo) / 0.75kg/settimana per perdita sana
+- Includi spiegazione completa metodo Gazzella con principi e benefici
+- Mostra profilo personalizzato con BMI attuale, categoria, obiettivo peso
 - Se compare alimento vietato o escluso da cliente, sostituisci automaticamente con opzione compatibile
 `;
 
@@ -268,6 +273,43 @@ COLAZIONE: Yogurt greco/bianco + Cereali/Pane + Frutta secca/Olio
 SPUNTINO: Frutta + Frutta secca/Cioccolato fondente  
 PRANZO: Insalata/Verdure + Cereali + Proteina + Verdure
 MERENDA: Yogurt/Kefir + Frutta secca/Cioccolato fondente
+CENA: Insalata/Verdure + Proteina + Pane + Olio EVO
+
+OBBLIGATORIO INCLUDERE NEL JSON FINALE:
+{
+  "title": "Piano Gazzella Personalizzato per ${request.userProfile.weight}kg → ${request.nutritionalNeeds.weightGoal}kg",
+  "clientProfile": {
+    "name": "Cliente Gazzella",
+    "age": ${request.userProfile.age},
+    "currentWeight": ${request.userProfile.weight},
+    "height": ${request.userProfile.height},
+    "currentBMI": ${request.nutritionalNeeds.bmi},
+    "bmiCategory": "${request.nutritionalNeeds.healthStatus}",
+    "idealWeight": ${request.nutritionalNeeds.idealWeight},
+    "targetWeight": ${request.nutritionalNeeds.weightGoal},
+    "weightToLose": ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)},
+    "estimatedTimeWeeks": ${Math.ceil((parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal) / 0.75)}
+  },
+  "dietExplanation": {
+    "method": "Metodo Gazzella - Tabella Ufficiale 2025",
+    "principles": [
+      "Proteine + carboidrati complessi in ogni pasto principale",
+      "Colazioni salate mercoledì e sabato con pane integrale",
+      "5 pasti al giorno con grammature personalizzate",
+      "Combinazioni alimentari specifiche della tabella ufficiale",
+      "Cotture semplici e alimenti non processati"
+    ],
+    "expectedResults": [
+      "Perdita di peso graduale e sostenibile (0.5-1kg/settimana)",
+      "Miglioramento della composizione corporea",
+      "Stabilizzazione dell'energia durante la giornata",
+      "Riduzione delle voglie e degli attacchi di fame",
+      "Ottimizzazione del metabolismo"
+    ],
+    "timeToGoal": "${Math.ceil((parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal) / 0.75)} settimane per raggiungere ${request.nutritionalNeeds.weightGoal}kg (perdita sana 0.75kg/settimana)"
+  },
+  "days": [...]
+}
 CENA: Verdure crude + Proteina + Pane integrale
 
 ALIMENTI ESATTI DALLA TABELLA GAZZELLA:
