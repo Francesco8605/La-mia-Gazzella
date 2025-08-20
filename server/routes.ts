@@ -596,8 +596,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Endpoint specifico per il generatore ricette Gazzella
-  app.post("/api/recipes/generate", isAuthenticated, async (req: any, res) => {
+  // Endpoint specifico per il generatore ricette Gazzella  
+  app.post("/api/recipes/generate-gazzella", isAuthenticated, async (req: any, res) => {
     try {
       console.log("=== SERVER DEBUG RECIPE GENERATION ===");
       console.log("Raw request body:", JSON.stringify(req.body, null, 2));

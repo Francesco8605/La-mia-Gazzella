@@ -169,7 +169,7 @@ export default function RecipeGenerator() {
       console.log("Final client profile:", clientProfile);
       console.log("Complete recipe request:", JSON.stringify(recipeRequest, null, 2));
 
-      return apiRequest("/api/recipes/generate", recipeRequest);
+      return apiRequest("/api/recipes/generate-gazzella", recipeRequest);
     },
     onSuccess: (recipe: GeneratedRecipe) => {
       setGeneratedRecipe(recipe);
