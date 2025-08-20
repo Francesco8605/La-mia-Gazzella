@@ -153,7 +153,7 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   id: true,
   createdAt: true,
 }).extend({
-  userId: z.string().min(1, "User ID è obbligatorio"),
+  userId: z.string().min(1, "User ID è obbligatorio").optional(),
   // Informazioni di contatto (opzionali)
   email: z.string().optional(),
   phone: z.string().optional(),
