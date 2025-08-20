@@ -100,13 +100,13 @@ export default function AggiornaProfiloPage() {
   // Update profile mutation
   const updateProfileMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return apiRequest("PUT", "/api/user-profiles/current", {
+      return apiRequest("/api/user-profiles/current", {
         ...data,
         age: data.age ? parseInt(data.age) : null,
         weight: data.weight ? parseFloat(data.weight) : null,
         height: data.height ? parseInt(data.height) : null,
         weeklyExercise: data.weeklyExercise ? parseInt(data.weeklyExercise) : null,
-      });
+      }, "PUT");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
