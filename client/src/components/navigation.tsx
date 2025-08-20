@@ -16,7 +16,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 glass-morphism rounded-full px-6 py-3 animate-fade-in" data-testid="main-navigation">
+    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-lg shadow-lg border border-white/20 rounded-full px-6 py-3 animate-fade-in" data-testid="main-navigation">
       <div className="flex items-center space-x-8">
         <Link href="/" className="flex items-center space-x-2" data-testid="logo-link">
           <Leaf className="text-secondary text-xl" />
@@ -76,7 +76,7 @@ export default function Navigation() {
       
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 mt-2 glass-morphism rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
+        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
           <div className="flex flex-col space-y-3">
             {navItems.map((item) => (
               <Link
