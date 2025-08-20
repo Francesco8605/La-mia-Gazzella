@@ -130,8 +130,8 @@ GRAMMATURE PRECISE OBBLIGATORIE - FONDAMENTALE PER PERSONALIZZAZIONE:
 - CALCOLARE grammature variabili basate su peso, altezza, BMI, obiettivi cliente
 - PERSONALIZZAZIONE TOTALE: cliente 60kg avrà porzioni diverse da cliente 80kg
 🎯 DATI CLIENTE SPECIFICI PER CALCOLO GRAMMATURE:
-- Età: ${userProfile.age} anni | Peso: ${userProfile.weight} kg | Altezza: ${userProfile.height} cm
-- BMI: ${request.nutritionalNeeds.bmi} | Obiettivo: ${request.nutritionalNeeds.dailyCalories} kcal/giorno
+- Età: ${request.userProfile.age} anni | Peso: ${request.userProfile.weight} kg | Altezza: ${request.userProfile.height} cm
+- BMI: ${request.nutritionalNeeds.bmi} | Obiettivo: ${request.nutritionalNeeds.calories} kcal/giorno
 - Proteine target: ${request.nutritionalNeeds.protein}g | Carboidrati: ${request.nutritionalNeeds.carbs}g | Grassi: ${request.nutritionalNeeds.fat}g
 ⚠️ USA QUESTI DATI per calcolare grammature precise e personalizzate
 - MAI termini generici: "una porzione", "q.b.", "abbondante", "a piacere"
@@ -180,10 +180,37 @@ SPUNTINI CON GRAMMATURE (sempre combinati):
 ✅ "Salmone 130g alla griglia + riso basmati 80g + zucchine 200g + olio EVO 10g"
 ✅ "Petto di pollo 140g + patate 190g + insalata 150g + olio EVO 8g"
 ✅ "Omelette 2 uova (100g) + pane integrale 50g + insalata 120g + olio EVO 5g"
-SPUNTINI MATTINO (combinare in un solo piatto): "Mela con mandorle e gallette di riso", "Tonno al naturale con crackers e carote", "Ricotta con pane e verdure crude"
-SPUNTINI POMERIGGIO (combinare in un solo piatto): "Pera con noci e gallette di mais", "Bresaola con pane e finocchi", "Uovo sodo con crackers e pomodorini"
-PRANZI: orata + riso + verdure, pollo + pasta + insalata, tonno + patate + pomodori
-CENE: tacchino + pane + zucchine, salmone + riso + broccoli, uova + patate + spinaci
+
+📋 STRUTTURA SETTIMANALE OBBLIGATORIA (ISPIRATA ALLA TABELLA GAZZELLA):
+Genera 7 giorni seguendo questa struttura, usando SOLO alimenti consentiti Gazzella:
+
+COLAZIONE: Uova/Frittata + Pane + Verdure + Olio (mai yogurt/avena)
+SPUNTINO MATTINO: Frutta + Frutta secca + Cereali semplici (mai cioccolato)
+PRANZO: Proteina + Cereali/Pasta + Verdure + Olio  
+MERENDA: Frutta + Frutta secca + Cereali (combinazione bilanciata)
+CENA: Proteina + Pane/Patate + Verdure + Olio
+
+SOSTITUZIONI ALIMENTI VIETATI DALLA TABELLA:
+❌ Yogurt → ✅ Uova strapazzate/frittata
+❌ Avena → ✅ Pane integrale  
+❌ Cioccolato fondente → ✅ Frutta secca (mandorle/noci)
+❌ Kefir → ✅ Spuntino con frutta fresca
+❌ Cous cous → ✅ Riso basmati/pasta
+❌ Riso nero → ✅ Riso bianco/basmati
+ESEMPI SETTIMANALI CON GRAMMATURE SPECIFICHE (segui questa struttura):
+
+LUNEDÌ:
+- COLAZIONE: "Uova 2 medie (100g) strapazzate + pane integrale 50g + spinaci 150g + olio EVO 5g"  
+- SPUNTINO: "Mela 150g + mandorle 20g + gallette riso 15g"
+- PRANZO: "Petto di pollo 140g + pasta integrale 70g + insalata 180g + olio EVO 10g"
+- MERENDA: "Pera 140g + noci 18g + crackers integrali 12g"
+- CENA: "Orata 130g + pane integrale 50g + zucchine 200g + olio EVO 8g"
+
+VARIAZIONI ALTRI GIORNI: 
+- Alterna proteine: salmone, tacchino, manzo, spigola, sogliola
+- Alterna cereali: riso, pasta, pane, patate  
+- Varia verdure: broccoli, cavolfiori, peperoni, carote, finocchi
+- Varia frutta: kiwi, arancia, fragole con mandorle/noci/nocciole
 
 VIETATI PASTI SBILANCIATI:
 - Solo frutta (mela da sola)
