@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import { useLocation } from "wouter";
+import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
@@ -138,14 +139,14 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full mb-4">
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="w-20 h-20 mb-4 mx-auto">
+            <img src={logoGazzella} alt="Logo Gazzella" className="w-full h-full object-contain rounded-full" />
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-2">
             La Mia Gazzella
           </h1>
           <p className="text-slate-600">

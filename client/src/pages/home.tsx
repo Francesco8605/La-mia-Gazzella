@@ -48,7 +48,7 @@ export default function Home() {
             <Link href="/personalization">
               <Button
                 size="lg"
-                className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="personalization-button"
               >
                 <User className="mr-2 h-5 w-5" />
@@ -114,10 +114,10 @@ export default function Home() {
                 >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg font-bold text-slate-800 group-hover:text-green-600 transition-colors">
+                      <CardTitle className="text-lg font-bold text-slate-800 group-hover:text-red-600 transition-colors">
                         {mealPlan.title || "Piano Personalizzato"}
                       </CardTitle>
-                      <Badge variant="secondary" className="bg-green-100 text-green-700">
+                      <Badge variant="secondary" className="bg-red-100 text-red-700">
                         {mealPlan.targetCalories} kcal
                       </Badge>
                     </div>
@@ -131,7 +131,7 @@ export default function Home() {
                         <Calendar className="w-4 h-4 mr-1" />
                         {format(new Date(mealPlan.startDate || new Date()), 'dd MMM yyyy', { locale: it })}
                       </div>
-                      <div className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                      <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                         7 giorni
                       </div>
                     </div>
@@ -142,7 +142,7 @@ export default function Home() {
                         <div className="text-slate-600">Proteine</div>
                       </div>
                       <div className="text-center p-2 bg-white/50 rounded">
-                        <div className="font-semibold text-yellow-600">{mealPlan.targetCarbs}g</div>
+                        <div className="font-semibold text-green-600">{mealPlan.targetCarbs}g</div>
                         <div className="text-slate-600">Carboidrati</div>
                       </div>
                       <div className="text-center p-2 bg-white/50 rounded">
@@ -153,7 +153,7 @@ export default function Home() {
                     
                     <Link href={`/piano-salvato/${mealPlan.id}`}>
                       <Button 
-                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                        className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white"
                         data-testid={`view-meal-plan-${mealPlan.id}`}
                       >
                         <Eye className="w-4 h-4 mr-2" />
@@ -175,7 +175,7 @@ export default function Home() {
                   Crea il tuo primo piano alimentare personalizzato per iniziare
                 </p>
                 <Link href="/genera-piano">
-                  <Button className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white">
+                  <Button className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white">
                     <Plus className="w-4 h-4 mr-2" />
                     Crea Primo Piano
                   </Button>
