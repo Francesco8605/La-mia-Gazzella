@@ -30,36 +30,47 @@ export default function Home() {
           <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto">
             Pianificazione alimentare alimentata dall'IA che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/personalization">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                data-testid="personalization-button"
-              >
-                <User className="mr-2 h-5 w-5" />
-                Inizia Personalizzazione
-              </Button>
-            </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 justify-center items-center max-w-4xl mx-auto">
             <Link href="/recipe-generator">
               <Button
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                data-testid="create-meal-plan-button"
+                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="genera-ricette-button"
               >
-                <Sparkles className="mr-2 h-5 w-5" />
+                <Sparkles className="mr-2 h-4 w-4" />
                 Genera Ricette
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              size="lg"
-              className="glass-morphism hover:bg-white/20 text-slate-700 font-semibold px-8 py-4 rounded-xl border border-white/30 hover:border-white/50 transition-all duration-300"
-              data-testid="how-it-works-button"
-            >
-              <Play className="mr-2 h-5 w-5" />
-              Scopri Come Funziona
-            </Button>
+            <Link href="/my-meal-plans">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="i-miei-piani-button"
+              >
+                <User className="mr-2 h-4 w-4" />
+                I Miei Piani Personalizzati
+              </Button>
+            </Link>
+            <Link href="/profile">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="il-mio-profilo-button"
+              >
+                <User className="mr-2 h-4 w-4" />
+                Il Mio Profilo
+              </Button>
+            </Link>
+            <Link href="/recipes">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="ricette-button"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Ricette
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
