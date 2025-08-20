@@ -30,37 +30,90 @@ export interface RecipeRequest {
   cuisine?: string;
 }
 
-// Protocollo Nutrizionista Gazzella
+// TABELLA UFFICIALE MANUALE DELLA GAZZELLA 2025
+const GAZZELLA_WEEKLY_STRUCTURE = {
+  LUNEDI: {
+    colazione: "Yogurt greco + fiocchi di avena + mandorle",
+    spuntino: "1 mela + cioccolato fondente", 
+    pranzo: "Insalata + pasta integrale al pomodoro + petto di pollo",
+    merenda: "Yogurt bianco intero + mandorle",
+    cena: "Verdure crude + frittata + pane integrale"
+  },
+  MARTEDI: {
+    colazione: "Yogurt bianco + biscotti",
+    spuntino: "1 Pera + noci",
+    pranzo: "Verdure crude + cous cous + pesce spada + zucchine", 
+    merenda: "1 Yogurt greco + cioccolato fondente",
+    cena: "Verdure crude + carne rossa + pane integrale"
+  },
+  MERCOLEDI: {
+    colazione: "Pane integrale + uova + olio EVO",
+    spuntino: "1 Mela + nocciole",
+    pranzo: "Insalata + pasta integrale + tonno in vetro + verdure",
+    merenda: "Kefir + cioccolato fondente", 
+    cena: "Verdure crude + petto di tacchino + pane integrale"
+  },
+  GIOVEDI: {
+    colazione: "Yogurt greco + fiocchi di avena + cioccolato fondente",
+    spuntino: "1 Mela + cioccolato fondente",
+    pranzo: "Verdure crude + cous cous + pasta al pomodoro + bresaola",
+    merenda: "1 Yogurt bianco + mandorle",
+    cena: "Verdure crude + pesce grigliato + pane integrale"
+  },
+  VENERDI: {
+    colazione: "Yogurt bianco + biscotti", 
+    spuntino: "1 Pesca + cioccolato fondente",
+    pranzo: "Verdure crude + riso nero + gamberetti + zucchine",
+    merenda: "Kefir + noci",
+    cena: "Verdure crude + frittata + pane integrale"
+  },
+  SABATO: {
+    colazione: "Pane integrale + prosciutto crudo + olio EVO",
+    spuntino: "Ananas + mandorle", 
+    pranzo: "Verdure crude + riso nero + gamberetti + zucchine",
+    merenda: "1 Yogurt greco + cioccolato fondente",
+    cena: "Verdure crude + carne rossa + pane integrale"
+  },
+  DOMENICA: {
+    colazione: "1 Yogurt greco + fiocchi di avena + nocciole",
+    spuntino: "1 Mela + cioccolato fondente",
+    pranzo: "Verdure crude + pasta al pomodoro + prosciutto crudo", 
+    merenda: "1 Yogurt bianco + mandorle",
+    cena: "Verdure crude + pesce al vapore + pane integrale"
+  }
+};
+
+// Protocollo Nutrizionista Gazzella - Alimenti da evitare
 const FORBIDDEN_FOODS = [
-  'legumi', 'ceci', 'fagioli', 'lenticchie', 'piselli', 'latticini', 'latte', 'yogurt', 
-  'formaggi', 'burro', 'panna', 'affettati', 'salumi', 'wurstel', 'carni in busta',
-  'petto di pollo in busta', 'petto di tacchino in busta', 'prodotti ultra-processati',
+  'legumi', 'ceci', 'fagioli', 'lenticchie', 'piselli', 'latticini esclusi dalla tabella', 
+  'latte', 'formaggi', 'burro', 'panna', 'affettati confezionati', 'salumi', 'wurstel', 
+  'carni in busta', 'petto di pollo in busta', 'petto di tacchino in busta', 'prodotti ultra-processati',
   'merendine', 'barrette fit industriali', 'sughi pronti', 'salse industriali',
-  'bevande zuccherate', 'alcol', 'pane industriale imbustato', 'quinoa', 'avena',
-  'yogurt greco', 'yogurt di soia', 'yogurt di riso', 'latte di soia', 'latte di riso',
-  'latte di avena', 'smoothie', 'frullati con latte', 'porridge', 'muesli', 'cereali',
-  'biscotti', 'crackers industriali', 'tofu', 'seitan', 'tempeh'
+  'bevande zuccherate', 'alcol', 'pane industriale imbustato', 'quinoa', 'avena in fiocchi non prevista',
+  'yogurt di soia', 'yogurt di riso', 'latte di soia', 'latte di riso',
+  'latte di avena', 'smoothie', 'frullati con latte', 'porridge', 'muesli', 'cereali industriali',
+  'crackers industriali', 'tofu', 'seitan', 'tempeh'
 ];
 
 const GAZZELLA_GUIDELINES = `
 NOME AGENTE: "Nutrizionista Gazzella"
-SCOPO: Generare piani alimentari SOLO secondo il Manuale della Gazzella
+SCOPO: Generare piani alimentari seguendo ESATTAMENTE la tabella del Manuale della Gazzella 2025
 VALIDITÀ: Per tutte le donne che vogliono seguire il protocollo Gazzella
 
-REGOLE INDEROGABILI DAL MANUALE:
-- Protocollo adatto a tutte le donne che vogliono seguire il metodo Gazzella
-- NO alimenti ultra-processati, NO affettati/confezionati, NO "fit" industriali
-- NO legumi: ceci, fagioli, lenticchie, piselli (non proporli mai)
-- LATTICINI esclusi dallo schema; non proporre sostituzioni "creative" non previste
-- PESCE: se cliente indica "no merluzzo", usare alternative: orata, spigola, sogliola, salmone
-- CARNE/PESCE/UOVA: preferire ingredienti FRESCHI e semplici (no busta/pronti)
-- CEREALI/CARBOIDRATI: prevedere porzioni misurate (riso, pasta, pane, patate)
-- VERDURE: ampio uso di verdure non amidacee; condire con olio EVO a crudo in quantità definite
-- BEVANDE: acqua; evitare zuccherati/alcolici
-- COTTURE: semplici (piastra, forno, vapore, padella antiaderente)
-- NON copiare estratti del Manuale > 90 caratteri; parafrasa sempre
+TABELLA UFFICIALE DA SEGUIRE ALLA LETTERA:
+${JSON.stringify(GAZZELLA_WEEKLY_STRUCTURE, null, 2)}
 
-UNICA ECCEZIONE AMMESSA: Toast con sottiletta + fesa di tacchino (quando previsto dallo schema)
+REGOLE INDEROGABILI:
+- Seguire ESATTAMENTE la struttura della tabella sopra come base
+- COLAZIONI SALATE incluse: "Pane integrale + uova + olio EVO" (mercoledì), "Pane integrale + prosciutto crudo + olio EVO" (sabato)
+- Yogurt greco e yogurt bianco AMMESSI solo come specificato nella tabella ufficiale
+- Fiocchi di avena AMMESSI solo nelle combinazioni specificate nella tabella
+- Biscotti AMMESSI solo come specificato per martedì e venerdì
+- Personalizzare le porzioni in base al peso e obiettivi della cliente
+- Mantenere le combinazioni proteina + carboidrato complesso in ogni pasto principale
+- Variare gli ingredienti rispettando le combinazioni della tabella
+- NO legumi, NO latticini non previsti, NO alimenti ultra-processati
+- Cotture semplici: griglia, forno, vapore, padella antiaderente
 
 STRUTTURA PIANO OBBLIGATORIA:
 - 7 giorni completi (Monday-Sunday)
@@ -90,7 +143,10 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
     const allergies = request.userProfile.allergies || [];
     const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
 
-    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni secondo il Manuale della Gazzella personalizzato per questa donna.
+    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni seguendo ESATTAMENTE la tabella del Manuale della Gazzella 2025 allegata, personalizzando solo le porzioni per questa cliente.
+
+TABELLA UFFICIALE DA RISPETTARE:
+${JSON.stringify(GAZZELLA_WEEKLY_STRUCTURE, null, 2)}
 
 PROFILO CLIENTE:
 - Età: ${request.userProfile.age} anni
@@ -100,13 +156,13 @@ PROFILO CLIENTE:
 - Peso ideale: ${request.nutritionalNeeds.idealWeight}kg
 - Obiettivo peso: ${request.nutritionalNeeds.weightGoal}kg
 
-DATI METABOLICI:
+DATI METABOLICI TARGET:
 - Calorie giornaliere: ${request.nutritionalNeeds.calories} kcal
 - Proteine: ${request.nutritionalNeeds.protein}g
 - Carboidrati: ${request.nutritionalNeeds.carbs}g
 - Grassi: ${request.nutritionalNeeds.fat}g
 
-CONDIZIONI E ABITUDINI:
+CONDIZIONI E PREFERENZE:
 - Problemi tiroide: ${request.userProfile.thyroidIssues}
 - Problemi intestinali: ${request.userProfile.intestinalIssues}
 - Esercizio settimanale: ${request.userProfile.weeklyExercise} volte

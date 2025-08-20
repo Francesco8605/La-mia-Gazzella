@@ -19,6 +19,13 @@
 - **COMPLETE PROFILE UPDATE FLOW**: Implemented /aggiorna-profilo page with weight and data update capabilities
 - **SAVED PLAN VISUALIZATION**: Created /piano-salvato/:id page showing full 7-day meal plan with all nutritional details
 - **SEAMLESS USER FLOW**: Automatic redirect from plan generation to saved plan page for immediate access
+- **NAVIGATION SIMPLIFIED**: Removed Personalizzazione page as requested - users manage profiles via "Il Mio Profilo" only
+- **NAVIGATION STYLING**: Enhanced navigation bar with professional background and glassmorphism effects
+- **OFFICIAL GAZZELLA TABLE 2025**: Implemented exact weekly structure from official PDF including savory breakfasts
+- **AUTHENTIC MEAL COMBINATIONS**: System now follows precisely the 7-day table structure from Manuale della Gazzella
+- **SAVORY BREAKFASTS INCLUDED**: Added "Pane integrale + uova + olio EVO" (Wednesday) and "Pane integrale + prosciutto crudo + olio EVO" (Saturday)
+- **PERMITTED FOODS ONLY**: Yogurt greco, yogurt bianco, fiocchi di avena, and biscotti now allowed ONLY as specified in official table
+- **PERSONALIZED PORTIONS**: System calculates precise weights (grams) based on individual client data (weight, height, BMI, goals)
 
 The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
 
