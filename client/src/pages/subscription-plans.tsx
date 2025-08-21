@@ -67,11 +67,11 @@ export default function SubscriptionPlans() {
         return;
       }
       
-      // Check for trial already used error (403)
+      // Check for trial already used error (403) - this should not happen anymore
       if (error.status === 403) {
         toast({
-          title: "Prova gratuita già utilizzata",
-          description: "Hai già utilizzato la prova gratuita in passato. Scegli un piano a pagamento per continuare.",
+          title: "Errore inaspettato",
+          description: "Si è verificato un errore. Riprova o contatta il supporto.",
           variant: "destructive",
         });
         return;

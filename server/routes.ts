@@ -1010,12 +1010,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Piano di abbonamento non trovato" });
       }
 
-      // Check if user has already used trial and prevent trial access
-      if (user.hasUsedTrial === 'yes' && (selectedPlan.trialDays || 0) > 0) {
-        return res.status(403).json({ 
-          message: "Hai già utilizzato la prova gratuita in passato. Scegli un piano a pagamento per continuare." 
-        });
-      }
+      // If user has already used trial, remove trial period from this plan
+      let sessionParams: Stripe.Checkout.SessionCreateParams;
+      const hasUsedTrial = user.hasUsedTrial === 'yes';
+      const planHasTrial = (selectedPlan.trialDays || 0) > 0;
 
       // Create or get Stripe customer
       let customerId = user.stripeCustomerId;
@@ -1033,8 +1031,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserStripeInfo(userId, { stripeCustomerId: customerId });
       }
 
-      // Create Stripe checkout session  
-      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+      // Create Stripe checkout session (with or without trial based on user history)
+      sessionParams = {
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [
@@ -1064,7 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           planId: planId,
         },
         subscription_data: {
-          trial_period_days: selectedPlan.trialDays || undefined,
+          trial_period_days: (hasUsedTrial || !planHasTrial) ? undefined : (selectedPlan.trialDays || undefined),
           metadata: {
             userId: userId,
             planId: planId,
