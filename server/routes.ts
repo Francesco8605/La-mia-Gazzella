@@ -51,16 +51,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
-    // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing) - CONTROLLO DIRETTO
-    console.log("🔍 Middleware debug user:", user.username, "| Email:", user.email, "| ID:", userId);
-    
-    // Controllo diretto per Francesco - più specifico 
-    if (userId === '458ce208-3e1b-4316-b28b-b0547ccd785c' || 
-        (user.username && user.username.toLowerCase() === 'francesco') ||
-        (user.email && user.email.toLowerCase().includes('fresco8605'))) {
-      console.log("🔓 FRANCESCO IDENTIFICATO - Middleware: Accesso completo garantito!");
-      return next();
-    }
+
 
     // Check if user has active subscription
     const now = new Date();
@@ -1148,12 +1139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Prevent Francesco (test user) from canceling
-      if (user.email === "fresco8605@gmail.com") {
-        return res.status(400).json({
-          message: "Account di test - cancellazione non disponibile"
-        });
-      }
+
 
       // Cancel the subscription in Stripe
       const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
@@ -1172,7 +1158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscription: {
           id: subscription.id,
           status: subscription.status,
-          endDate: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null
+          endDate: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null
         }
       });
     } catch (error: any) {

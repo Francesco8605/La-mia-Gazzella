@@ -105,24 +105,13 @@ export function SubscriptionSettings() {
                 </Button>
               </Link>
               
-              {/* Solo se non è Francesco (utente test) */}
-              {!subscription?.isTestUser && (
-                <Link href="/cancella-abbonamento" className="flex-1">
-                  <Button variant="destructive" className="w-full">
-                    <AlertTriangle className="h-4 w-4 mr-2" />
-                    Cancella Abbonamento
-                  </Button>
-                </Link>
-              )}
+              <Link href="/cancella-abbonamento" className="flex-1">
+                <Button variant="destructive" className="w-full">
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Cancella Abbonamento
+                </Button>
+              </Link>
             </div>
-
-            {subscription?.isTestUser && (
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Account di Test</strong> - Hai accesso completo per testing e sviluppo.
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </CardContent>
