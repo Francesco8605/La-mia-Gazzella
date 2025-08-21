@@ -938,7 +938,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
               unit_amount: Math.round(parseFloat(selectedPlan.priceEur) * 100), // Convert to cents
               recurring: {
-                interval: selectedPlan.duration === 'quarterly' ? 'month' : selectedPlan.duration,
+                interval: selectedPlan.duration === 'quarterly' ? 'month' : 
+                         selectedPlan.duration === 'monthly' ? 'month' :
+                         selectedPlan.duration === 'annual' ? 'year' : 'month',
                 interval_count: selectedPlan.duration === 'quarterly' ? 3 : 1,
               },
             },
