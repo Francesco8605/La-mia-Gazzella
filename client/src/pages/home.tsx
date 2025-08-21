@@ -1,4 +1,4 @@
-import { Sparkles, Play, User, Mail, MessageCircle } from "lucide-react";
+import { Sparkles, Play, User, Mail, MessageCircle, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -100,7 +100,7 @@ export default function Home() {
             <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
               Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
             </p>
-            <div className="flex justify-center">
+            <div className="flex justify-center gap-4">
               <Button
                 onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
                 className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -109,6 +109,17 @@ export default function Home() {
                 <Mail className="mr-2 h-4 w-4" />
                 Contatta Supporto
               </Button>
+              
+              <Link href="/aggiorna-profilo">
+                <Button
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  data-testid="manage-subscription-button"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Gestisci Abbonamento
+                </Button>
+              </Link>
             </div>
           </div>
           
