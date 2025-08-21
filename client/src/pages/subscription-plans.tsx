@@ -46,7 +46,7 @@ export default function SubscriptionPlans() {
   const createCheckoutMutation = useMutation({
     mutationFn: async (planId: string) => {
       const response = await apiRequest("/api/create-checkout-session", { planId }, "POST");
-      return response.json();
+      return response;
     },
     onSuccess: (data) => {
       // Redirect to Stripe checkout
