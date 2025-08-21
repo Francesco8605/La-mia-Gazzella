@@ -117,50 +117,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const hashedPassword = await bcrypt.hash(password, 10);
       console.log("🔐 Password hashed successfully");
 
-      // Generate email verification token
-      const verificationToken = generateSecureToken();
-      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-
-      // Create user with email verification fields - NO SESSION YET!
+      // Create user directly - no email verification required
       const user = await storage.createUser({
         username,
         email,
         password: hashedPassword,
-        emailVerified: "no",
-        emailVerificationToken: verificationToken,
-        emailVerificationExpiry: verificationExpiry,
+        emailVerified: "yes", // Direct verification
+        emailVerificationToken: null,
+        emailVerificationExpiry: null,
       });
-      console.log("👤 User created (NOT LOGGED IN):", user.id);
+      console.log("👤 User created successfully:", user.id);
 
-      // Send verification email
-      const baseUrl = getBaseUrl();
-      const verificationUrl = `${baseUrl}/verifica-email/${verificationToken}`;
-      const emailContent = generateEmailVerificationEmail(user.username, verificationUrl);
+      // Create session immediately
+      const sessionId = generateSessionId();
+      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+
+      // Set session cookie
+      res.cookie('session', sessionId, { 
+        httpOnly: true, 
+        secure: false,
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax'
+      });
+
+      // Give new users automatic 3-day trial
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 3);
       
-      const emailSent = await sendEmail({
-        to: user.email,
-        from: "La Mia Gazzella <onboarding@resend.dev>", // Dominio Resend verificato
-        subject: emailContent.subject,
-        html: emailContent.html,
-        text: emailContent.text
+      await storage.updateUserStripeInfo(user.id, {
+        subscriptionStatus: 'trialing',
+        subscriptionPlan: 'trial',
+        subscriptionStartDate: new Date(),
+        trialEndDate: trialEndDate,
+        hasUsedTrial: 'yes'
       });
+      console.log("🎁 Trial activated for new user:", username);
 
-      if (emailSent) {
-        console.log("📧 Verification email sent to:", user.email);
-      } else {
-        console.warn("⚠️ Failed to send verification email");
-      }
-
-      // CRITICAL: DO NOT CREATE SESSION HERE - User must verify email first
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
       res.status(201).json({ 
-        message: "Registrazione completata! Controlla la tua email per verificare l'account prima di poter accedere.",
-        emailSent: emailSent,
-        user: {
-          id: user.id, 
-          username: user.username, 
-          email: user.email,
-          emailVerified: false
-        }
+        message: "Registrazione completata! Benvenuto in La Mia Gazzella.",
+        user: userWithoutPassword
       });
     } catch (error) {
       console.error("❌ Registration error:", error);
@@ -187,16 +184,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
-      // CRITICAL: Check email verification
-      if (user.emailVerified === "no") {
-        console.log("❌ Email not verified for:", username);
-        return res.status(403).json({ 
-          message: "Devi verificare la tua email prima di poter accedere. Controlla la tua casella di posta.",
-          emailNotVerified: true 
-        });
-      }
-
-      console.log("✅ Email verified, proceeding with login for:", username);
+      // Email verification removed - direct access allowed
+      console.log("✅ Direct access allowed for:", username);
 
       // Create session only after email verification
       const sessionId = generateSessionId();
@@ -1302,135 +1291,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Email verification endpoint
-  app.post("/api/auth/verify-email", async (req, res) => {
-    try {
-      const { token } = req.body;
-      
-      if (!token) {
-        return res.status(400).json({ message: "Token di verifica richiesto" });
-      }
+  // Email verification endpoint removed
 
-      // Find user by verification token
-      const users = await storage.getAllUsers(); // This method needs to exist
-      const user = users.find(u => 
-        u.emailVerificationToken === token && 
-        u.emailVerificationExpiry && 
-        new Date(u.emailVerificationExpiry) > new Date()
-      );
+  // Forgot password endpoint removed - no email verification needed
 
-      if (!user) {
-        return res.status(410).json({ message: "Token di verifica scaduto o non valido" });
-      }
-
-      if (user.emailVerified === "yes") {
-        return res.status(409).json({ message: "Email già verificata" });
-      }
-
-      // Mark email as verified and clear verification fields
-      await storage.updateUser(user.id, {
-        emailVerified: "yes",
-        emailVerificationToken: null,
-        emailVerificationExpiry: null
-      });
-
-      console.log("✅ Email verified for user:", user.username);
-      res.json({ message: "Email verificata con successo!" });
-    } catch (error) {
-      console.error("Email verification error:", error);
-      res.status(500).json({ message: "Errore durante la verifica dell'email" });
-    }
-  });
-
-  // Forgot password endpoint
-  app.post("/api/auth/forgot-password", async (req, res) => {
-    try {
-      const { email } = req.body;
-      
-      if (!email) {
-        return res.status(400).json({ message: "Email richiesta" });
-      }
-
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.json({ message: "Se l'email esiste, riceverai le istruzioni per il reset" });
-      }
-
-      // Generate reset token
-      const resetToken = generateSecureToken();
-      const resetExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-
-      // Update user with reset token
-      await storage.updateUser(user.id, {
-        passwordResetToken: resetToken,
-        passwordResetExpiry: resetExpiry
-      });
-
-      // Send reset email
-      const baseUrl = getBaseUrl();
-      const resetUrl = `${baseUrl}/reset-password/${resetToken}`;
-      const emailContent = generatePasswordResetEmail(user.username, resetUrl);
-      
-      const emailSent = await sendEmail({
-        to: user.email,
-        from: "La Mia Gazzella <onboarding@resend.dev>", // Dominio Resend verificato
-        subject: emailContent.subject,
-        html: emailContent.html,
-        text: emailContent.text
-      });
-
-      if (emailSent) {
-        console.log("📧 Password reset email sent to:", user.email);
-      }
-
-      res.json({ message: "Se l'email esiste, riceverai le istruzioni per il reset" });
-    } catch (error) {
-      console.error("Forgot password error:", error);
-      res.status(500).json({ message: "Errore durante l'invio dell'email" });
-    }
-  });
-
-  // Reset password endpoint
-  app.post("/api/auth/reset-password", async (req, res) => {
-    try {
-      const { token, password } = req.body;
-      
-      if (!token || !password) {
-        return res.status(400).json({ message: "Token e password richiesti" });
-      }
-
-      if (password.length < 6) {
-        return res.status(400).json({ message: "La password deve essere di almeno 6 caratteri" });
-      }
-
-      // Find user by reset token
-      const users = await storage.getAllUsers();
-      const user = users.find(u => 
-        u.passwordResetToken === token && 
-        u.passwordResetExpiry && 
-        new Date(u.passwordResetExpiry) > new Date()
-      );
-
-      if (!user) {
-        return res.status(410).json({ message: "Token di reset scaduto o non valido" });
-      }
-
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Update password and clear reset fields
-      await storage.updateUser(user.id, {
-        password: hashedPassword,
-        passwordResetToken: null,
-        passwordResetExpiry: null
-      });
-
-      console.log("✅ Password reset completed for user:", user.username);
-      res.json({ message: "Password reimpostata con successo!" });
-    } catch (error) {
-      console.error("Reset password error:", error);
-      res.status(500).json({ message: "Errore durante il reset della password" });
-    }
-  });
+  // Reset password endpoint removed - no email verification needed
 
   const httpServer = createServer(app);
   return httpServer;
