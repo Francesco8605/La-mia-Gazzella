@@ -8,6 +8,11 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  emailVerified: text("email_verified").default("no"), // "yes" | "no"
+  emailVerificationToken: varchar("email_verification_token"),
+  emailVerificationExpiry: timestamp("email_verification_expiry"),
+  passwordResetToken: varchar("password_reset_token"),
+  passwordResetExpiry: timestamp("password_reset_expiry"),
   // Stripe subscription fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
