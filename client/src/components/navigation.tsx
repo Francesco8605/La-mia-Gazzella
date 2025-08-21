@@ -108,6 +108,32 @@ export default function Navigation() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
           <div className="flex flex-col space-y-3">
+            {/* Subscription Status in Mobile */}
+            <div className="py-2 border-b border-slate-200">
+              {hasActiveSubscription ? (
+                <div className="flex items-center space-x-2 text-emerald-700">
+                  {isInTrial ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Prova Gratuita Attiva</span>
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      <span className="text-sm font-medium">Abbonamento Premium</span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <Link href="/piani-abbonamento" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="flex items-center space-x-2 text-orange-700 hover:text-orange-800 transition-colors">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Riattiva Abbonamento</span>
+                  </div>
+                </Link>
+              )}
+            </div>
+            
             {navItems.map((item) => (
               <Link
                 key={item.href}
@@ -121,6 +147,29 @@ export default function Navigation() {
                 {item.label}
               </Link>
             ))}
+            
+            {/* Mobile Logout Button */}
+            <div className="pt-2 border-t border-slate-200">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  setIsMobileMenuOpen(false);
+                  try {
+                    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("Logout error:", error);
+                    window.location.reload();
+                  }
+                }}
+                className="text-slate-700 hover:text-red-600 transition-colors duration-300 w-full justify-start"
+                data-testid="mobile-logout-button"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Esci
+              </Button>
+            </div>
           </div>
         </div>
       )}
