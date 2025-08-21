@@ -3,15 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 export function useAuth() {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
-    queryFn: async () => {
-      const response = await fetch("/api/auth/user", {
-        credentials: "include", // Include cookies
-      });
-      if (!response.ok) {
-        return null;
-      }
-      return response.json();
-    },
     retry: false,
   });
 

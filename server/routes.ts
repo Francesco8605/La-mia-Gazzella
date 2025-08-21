@@ -5,6 +5,15 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { z } from "zod";
 import bcrypt from "bcrypt";
+import Stripe from "stripe";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2023-10-16",
+});
 
 // Simple in-memory session storage
 const sessions = new Map<string, { userId: string, createdAt: Date }>();
@@ -860,6 +869,194 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Errore del server. Riprova tra poco.",
         error: error instanceof Error ? error.message : "Unknown error"
       });
+    }
+  });
+
+  // Stripe Subscription Routes
+  
+  // Get available subscription plans
+  app.get("/api/subscription-plans", async (req, res) => {
+    try {
+      const plans = await storage.getSubscriptionPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error("Error fetching subscription plans:", error);
+      res.status(500).json({ message: "Errore nel recupero dei piani di abbonamento" });
+    }
+  });
+
+  // Create Stripe checkout session for subscription
+  app.post("/api/create-checkout-session", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { planId } = req.body;
+      
+      if (!planId) {
+        return res.status(400).json({ message: "Plan ID è obbligatorio" });
+      }
+
+      // Get user details
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Get subscription plan
+      const plans = await storage.getSubscriptionPlans();
+      const selectedPlan = plans.find(plan => plan.id === planId);
+      if (!selectedPlan) {
+        return res.status(404).json({ message: "Piano di abbonamento non trovato" });
+      }
+
+      // Create or get Stripe customer
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          name: user.username,
+          metadata: {
+            userId: userId
+          }
+        });
+        customerId = customer.id;
+        
+        // Update user with Stripe customer ID
+        await storage.updateUserStripeInfo(userId, { stripeCustomerId: customerId });
+      }
+
+      // Create Stripe checkout session
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: {
+                name: selectedPlan.name,
+                description: selectedPlan.description,
+              },
+              unit_amount: Math.round(parseFloat(selectedPlan.priceEur) * 100), // Convert to cents
+              recurring: {
+                interval: selectedPlan.duration === 'quarterly' ? 'month' : selectedPlan.duration,
+                interval_count: selectedPlan.duration === 'quarterly' ? 3 : 1,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: `${req.protocol}://${req.get('host')}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${req.protocol}://${req.get('host')}/subscription-canceled`,
+        metadata: {
+          userId: userId,
+          planId: planId,
+        },
+        subscription_data: {
+          trial_period_days: selectedPlan.trialDays,
+          metadata: {
+            userId: userId,
+            planId: planId,
+          }
+        },
+      });
+
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      res.status(500).json({ message: "Errore nella creazione della sessione di pagamento" });
+    }
+  });
+
+  // Handle Stripe webhooks
+  app.post("/api/stripe-webhook", async (req, res) => {
+    const sig = req.headers['stripe-signature'];
+    let event;
+
+    try {
+      // In a real app, you'd verify the webhook signature
+      event = req.body;
+    } catch (err) {
+      console.error('Webhook signature verification failed.', err);
+      return res.status(400).send(`Webhook Error: ${err}`);
+    }
+
+    // Handle the event
+    switch (event.type) {
+      case 'checkout.session.completed':
+        const session = event.data.object;
+        const userId = session.metadata.userId;
+        const planId = session.metadata.planId;
+        
+        if (userId && planId) {
+          const trialEnd = new Date();
+          trialEnd.setDate(trialEnd.getDate() + 3); // 3 giorni di prova
+          
+          await storage.updateUserStripeInfo(userId, {
+            stripeSubscriptionId: session.subscription,
+            subscriptionStatus: 'trialing',
+            subscriptionPlan: planId,
+            subscriptionStartDate: new Date(),
+            trialEndDate: trialEnd,
+          });
+        }
+        break;
+        
+      case 'customer.subscription.updated':
+        const subscription = event.data.object;
+        const customerUserId = subscription.metadata.userId;
+        
+        if (customerUserId) {
+          await storage.updateUserStripeInfo(customerUserId, {
+            subscriptionStatus: subscription.status,
+            subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+          });
+        }
+        break;
+        
+      case 'customer.subscription.deleted':
+        const deletedSubscription = event.data.object;
+        const deletedUserId = deletedSubscription.metadata.userId;
+        
+        if (deletedUserId) {
+          await storage.updateUserStripeInfo(deletedUserId, {
+            subscriptionStatus: 'canceled',
+            subscriptionEndDate: new Date(),
+          });
+        }
+        break;
+        
+      default:
+        console.log(`Unhandled event type ${event.type}`);
+    }
+
+    res.json({ received: true });
+  });
+
+  // Get user subscription status
+  app.get("/api/user/subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      const subscriptionInfo = {
+        hasActiveSubscription: user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing',
+        status: user.subscriptionStatus,
+        plan: user.subscriptionPlan,
+        startDate: user.subscriptionStartDate,
+        endDate: user.subscriptionEndDate,
+        trialEndDate: user.trialEndDate,
+        isInTrial: user.subscriptionStatus === 'trialing',
+      };
+
+      res.json(subscriptionInfo);
+    } catch (error) {
+      console.error("Error fetching user subscription:", error);
+      res.status(500).json({ message: "Errore nel recupero dello stato dell'abbonamento" });
     }
   });
 

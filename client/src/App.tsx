@@ -80,6 +80,47 @@ function Router() {
         <Route path="/recipe/:id" component={RecipeDetail} />
         <Route path="/ai-chat" component={AIChat} />
         <Route path="/assistente-ia" component={AIChat} />
+        
+        {/* Subscription Pages */}
+        <Route path="/piani-abbonamento">
+          {() => {
+            const SubscriptionPlansPage = React.lazy(() => import("./pages/subscription-plans"));
+            return (
+              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>}>
+                <SubscriptionPlansPage />
+              </React.Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/subscription-success">
+          {() => {
+            const SubscriptionSuccessPage = React.lazy(() => import("./pages/subscription-success"));
+            return (
+              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>}>
+                <SubscriptionSuccessPage />
+              </React.Suspense>
+            );
+          }}
+        </Route>
+        
+        <Route path="/subscription-canceled">
+          {() => {
+            const SubscriptionCanceledPage = React.lazy(() => import("./pages/subscription-canceled"));
+            return (
+              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>}>
+                <SubscriptionCanceledPage />
+              </React.Suspense>
+            );
+          }}
+        </Route>
+        
         <Route component={NotFound} />
       </Switch>
     </div>

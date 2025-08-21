@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries } from "@shared/schema";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 export interface IStorage {
@@ -39,6 +39,11 @@ export interface IStorage {
   getWeightEntriesByUserId(userId: string): Promise<WeightEntry[]>;
   createWeightEntry(entry: InsertWeightEntry): Promise<WeightEntry>;
   deleteWeightEntry(id: string): Promise<boolean>;
+  
+  // Stripe Subscription Methods
+  updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date }): Promise<User | undefined>;
+  getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
+  createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
 }
 
 export class MemStorage implements IStorage {
@@ -316,6 +321,42 @@ export class MemStorage implements IStorage {
   async deleteWeightEntry(id: string): Promise<boolean> {
     return this.weightEntries.delete(id);
   }
+
+  // Stripe Subscription Methods
+  async updateUserStripeInfo(userId: string, stripeData: any): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser: User = {
+      ...user,
+      ...stripeData,
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    // Return default plans for MemStorage
+    return [
+      {
+        id: "monthly",
+        name: "Piano Mensile",
+        description: "Accesso completo al piano alimentare personalizzato",
+        priceMonthly: "29",
+        priceEur: "29",
+        duration: "monthly",
+        stripePriceId: "price_monthly",
+        trialDays: 3,
+        features: ["Piano alimentare personalizzato", "Assistente IA", "Tracking peso"],
+        isActive: "yes",
+        createdAt: new Date(),
+      }
+    ];
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    return plan as SubscriptionPlan;
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -512,6 +553,28 @@ export class DatabaseStorage implements IStorage {
   async deleteWeightEntry(id: string): Promise<boolean> {
     const result = await db.delete(weightEntries).where(eq(weightEntries.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  // Stripe Subscription Methods
+  async updateUserStripeInfo(userId: string, stripeData: any): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set(stripeData)
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
+  }
+
+  async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
+    return await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, "yes"));
+  }
+
+  async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
+    const [subscriptionPlan] = await db
+      .insert(subscriptionPlans)
+      .values(plan)
+      .returning();
+    return subscriptionPlan;
   }
 }
 

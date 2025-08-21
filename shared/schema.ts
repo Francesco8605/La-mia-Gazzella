@@ -8,6 +8,14 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  // Stripe subscription fields
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  subscriptionStatus: varchar("subscription_status"), // "active", "trialing", "canceled", "expired"
+  subscriptionPlan: varchar("subscription_plan"), // "monthly", "quarterly", "annual"
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  trialEndDate: timestamp("trial_end_date"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -110,6 +118,21 @@ export const recipes = pgTable("recipes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Stripe subscription plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  priceMonthly: numeric("price_monthly", { precision: 8, scale: 2 }),
+  priceEur: numeric("price_eur", { precision: 8, scale: 2 }).notNull(),
+  duration: varchar("duration").notNull(), // "monthly", "quarterly", "annual"
+  stripePriceId: varchar("stripe_price_id").notNull(),
+  trialDays: integer("trial_days").default(3),
+  features: json("features").$type<string[]>(),
+  isActive: text("is_active").default("yes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Type definitions
 export type MealPlanDay = {
   day: string;
@@ -204,6 +227,8 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
   createdAt: true,
 });
 
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -215,3 +240,5 @@ export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
 export type MealPlan = typeof mealPlans.$inferSelect;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type Recipe = typeof recipes.$inferSelect;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
