@@ -974,6 +974,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let sessionParams: Stripe.Checkout.SessionCreateParams;
       const hasUsedTrial = user.hasUsedTrial === 'yes';
       const planHasTrial = (selectedPlan.trialDays || 0) > 0;
+      
+
 
       // Create or get Stripe customer
       let customerId = user.stripeCustomerId;
@@ -1030,6 +1032,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       };
 
+      // Calculate trial period - remove trial for users who already used it
+      const trialDaysValue = (hasUsedTrial || !planHasTrial) ? undefined : (selectedPlan.trialDays || undefined);
+      
+      // Update the sessionParams with the calculated trial value
+      if (sessionParams.subscription_data) {
+        sessionParams.subscription_data.trial_period_days = trialDaysValue;
+      }
+      
       const session = await stripe.checkout.sessions.create(sessionParams);
 
       res.json({ url: session.url });
@@ -1196,8 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hasUsedTrial: user.hasUsedTrial === 'yes'
       };
 
-      console.log("🔍 User hasUsedTrial field:", user.hasUsedTrial, "-> converted to:", user.hasUsedTrial === 'yes');
-      console.log("📤 Sending subscription info:", subscriptionInfo);
+
 
       res.json(subscriptionInfo);
     } catch (error) {
