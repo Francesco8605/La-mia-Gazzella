@@ -51,10 +51,14 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
-    // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
-    console.log("🔍 Debug user:", user.username, "| ID:", userId);
-    if (user.username && (user.username.toLowerCase() === 'francesco' || user.email?.toLowerCase().includes('fresco8605'))) {
-      console.log("🔓 Accesso completo garantito per utente Francesco");
+    // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing) - CONTROLLO DIRETTO
+    console.log("🔍 Middleware debug user:", user.username, "| Email:", user.email, "| ID:", userId);
+    
+    // Controllo diretto per Francesco - più specifico 
+    if (userId === '458ce208-3e1b-4316-b28b-b0547ccd785c' || 
+        (user.username && user.username.toLowerCase() === 'francesco') ||
+        (user.email && user.email.toLowerCase().includes('fresco8605'))) {
+      console.log("🔓 FRANCESCO IDENTIFICATO - Middleware: Accesso completo garantito!");
       return next();
     }
 
@@ -1142,10 +1146,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
-      // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
-      console.log("🔍 Subscription debug user:", user.username, "| Email:", user.email);
-      if (user.username && (user.username.toLowerCase() === 'francesco' || user.email?.toLowerCase().includes('fresco8605'))) {
-        console.log("🔓 Subscription: Accesso completo per Francesco");
+      // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing) - CONTROLLO DIRETTO
+      console.log("🔍 Subscription debug user:", user.username, "| Email:", user.email, "| ID:", userId);
+      
+      // Controllo diretto per Francesco - più specifico
+      if (userId === '458ce208-3e1b-4316-b28b-b0547ccd785c' || 
+          (user.username && user.username.toLowerCase() === 'francesco') ||
+          (user.email && user.email.toLowerCase().includes('fresco8605'))) {
+        
+        console.log("🔓 FRANCESCO IDENTIFICATO - Accesso completo garantito!");
+        
+        // Disabilita cache per Francesco
+        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.set('Pragma', 'no-cache');
+        res.set('Expires', '0');
+        
         const subscriptionInfo = {
           hasActiveSubscription: true, // Accesso garantito
           status: 'active', // Mostra come attivo
