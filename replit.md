@@ -2,7 +2,11 @@
 
 "La Mia Gazzella" è una moderna applicazione web per la nutrizione e la pianificazione alimentare alimentata dall'IA, costruita con un'architettura TypeScript full-stack. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
 
-## Recent Major Updates (August 20, 2025)
+## Recent Major Updates (August 21, 2025)
+- **🔧 STRIPE CHECKOUT FIXED**: Resolved TypeScript errors in checkout session creation - updated API version and fixed type casting issues
+- **✅ STRIPE INTEGRATION WORKING**: All three subscription plans (monthly €29, quarterly €79, annual €249) now generate valid checkout URLs successfully
+- **🛡️ SUBSCRIPTION PROTECTION COMPLETE**: Backend middleware and frontend guards block cancelled users from premium features
+- **📱 MOBILE NAVIGATION ENHANCED**: Added logout button and subscription status indicator to mobile menu
 - **🎯 CRITICAL API ERROR RESOLVED**: Fixed persistent "Method is not a valid HTTP token" error by correcting apiRequest parameter order across entire application
 - **✅ COMPREHENSIVE TESTING COMPLETED**: Full end-to-end testing confirms all systems operational - authentication, meal plans, weight tracking, recipes, AI assistant
 - **🔧 FRONTEND API FIXES**: Corrected apiRequest(method, url, data) to proper apiRequest(url, data, method) in meal-plan-generator.tsx, user-input-form.tsx, weight-tracker.tsx, update-profile.tsx

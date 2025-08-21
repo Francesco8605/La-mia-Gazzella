@@ -12,7 +12,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
+  apiVersion: "2025-07-30.basil",
 });
 
 // Simple in-memory session storage
@@ -44,7 +44,7 @@ function isAuthenticated(req: any, res: any, next: any) {
 // Middleware to check if user has active subscription
 async function requireActiveSubscription(req: any, res: any, next: any) {
   try {
-    const userId = req.user.claims.sub;
+    const userId = (req as any).user.claims.sub;
     const user = await storage.getUser(userId);
     
     if (!user) {
@@ -229,7 +229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user-profiles/current", isAuthenticated, async (req: any, res) => {
     try {
       // Use authenticated user ID from session
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       const profile = await storage.getUserProfile(userId);
       
       if (!profile) {
@@ -299,7 +299,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user subscription status
   app.get("/api/user/subscription", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       const user = await storage.getUser(userId);
       
       if (!user) {
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("POST /api/meal-plans/generate called");
       
       // Use authenticated user ID from session
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       const profile = await storage.getUserProfile(userId);
       
       console.log("Profile found:", !!profile);
@@ -509,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route  
   app.get("/api/meal-plans/user", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       console.log("Fetching meal plans for current user:", userId);
       const mealPlans = await storage.getMealPlansByUser(userId);
       console.log("Found meal plans:", mealPlans?.length || 0);
@@ -717,7 +717,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const requestData = schema.parse(req.body);
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       
       // Get existing recipes for this user to ensure uniqueness
       const userRecipes = await storage.getRecipesByUser(userId);
@@ -796,7 +796,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get current user's recipes (simplified route)
   app.get("/api/recipes/user", isAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       console.log("Fetching recipes for current user:", userId);
       const recipes = await storage.getRecipesByUser(userId);
       console.log("Found recipes:", recipes?.length || 0);
@@ -914,7 +914,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/ai-chat/message", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       const { message } = req.body;
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
 
       if (!message || typeof message !== 'string') {
         return res.status(400).json({ message: "Messaggio richiesto" });
@@ -970,7 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create Stripe checkout session for subscription
   app.post("/api/create-checkout-session", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       const { planId } = req.body;
       
       if (!planId) {
@@ -1008,7 +1008,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
-        customer: customerId,
+        customer: customerId as string,
         payment_method_types: ['card'],
         line_items: [
           {
@@ -1120,7 +1120,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get user subscription status
   app.get("/api/user/subscription", isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = (req as any).user.claims.sub;
       const user = await storage.getUser(userId);
       
       if (!user) {
