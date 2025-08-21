@@ -25,7 +25,7 @@ export default function CancelSubscription() {
         description: "Il tuo abbonamento è stato cancellato con successo.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/user/subscription"] });
-      setLocation("/dashboard");
+      setLocation("/");
     },
     onError: (error: any) => {
       toast({
@@ -61,9 +61,9 @@ export default function CancelSubscription() {
               <p className="text-slate-600 mb-6">
                 Non hai un abbonamento attivo da cancellare.
               </p>
-              <Button onClick={() => setLocation("/dashboard")}>
+              <Button onClick={() => setLocation("/")}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Torna alla Dashboard
+                Torna alla Homepage
               </Button>
             </CardContent>
           </Card>
@@ -80,11 +80,11 @@ export default function CancelSubscription() {
           <div className="mb-8">
             <Button
               variant="ghost"
-              onClick={() => setLocation("/dashboard")}
+              onClick={() => setLocation("/")}
               className="mb-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Torna alla Dashboard
+              Torna alla Homepage
             </Button>
             <h1 className="text-3xl font-bold text-slate-800">
               Cancella Abbonamento
