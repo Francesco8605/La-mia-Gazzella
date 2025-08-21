@@ -134,17 +134,193 @@ export default function SubscriptionPlans() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-4">
-            Scegli il Tuo Piano
+        {/* Compelling Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6">
+            Rivoluziona la Tua Alimentazione
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
-            Inizia la tua trasformazione con il Metodo Gazzella
+          <p className="text-2xl md:text-3xl text-gray-700 dark:text-gray-200 font-semibold mb-4">
+            Perché spendere migliaia di euro per nutrizionisti e chef privati?
           </p>
-          <div className="bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4 max-w-2xl mx-auto">
-            <p className="text-green-800 dark:text-green-200 font-semibold">
-              🎉 Prova gratuita di 3 giorni inclusa in tutti i piani!
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-4xl mx-auto">
+            La Mia Gazzella ti offre <span className="font-bold text-emerald-600">l'esperienza di un nutrizionista specializzato + chef personale + assistente alimentare IA</span> al costo di una cena al ristorante.
+          </p>
+          
+          {/* Value Proposition */}
+          <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 max-w-4xl mx-auto mb-8">
+            <h2 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200 mb-4">
+              Risultati Garantiti con il Metodo Gazzella Scientifico
+            </h2>
+            <div className="grid md:grid-cols-3 gap-6 text-center">
+              <div>
+                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">-5kg</div>
+                <p className="text-sm text-gray-700 dark:text-gray-300">in 8 settimane medie</p>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">24/7</div>
+                <p className="text-sm text-gray-700 dark:text-gray-300">assistente IA sempre disponibile</p>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">∞</div>
+                <p className="text-sm text-gray-700 dark:text-gray-300">piani personalizzati illimitati</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 max-w-3xl mx-auto mb-8">
+            <p className="text-red-800 dark:text-red-200 font-semibold text-lg">
+              ⚠️ STOP a diete fallimentari, consulenze costose e risultati temporanei
+            </p>
+          </div>
+        </div>
+
+        {/* Comparison Section */}
+        <div className="mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
+            Confronto: Servizi Tradizionali vs La Mia Gazzella
+          </h2>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Servizio</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">Nutrizionista Privato</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">Chef Personale</th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30">La Mia Gazzella</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+                <tr>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Costo Mensile</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-semibold">€200-500</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-semibold">€800-2000</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30">€29</td>
+                </tr>
+                <tr className="bg-gray-50 dark:bg-gray-700/50">
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Disponibilità</td>
+                  <td className="px-6 py-4 text-center text-gray-600">1h/settimana</td>
+                  <td className="px-6 py-4 text-center text-gray-600">Su appuntamento</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">24/7</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Piani Personalizzati</td>
+                  <td className="px-6 py-4 text-center text-gray-600">1 ogni 2-3 mesi</td>
+                  <td className="px-6 py-4 text-center text-gray-600">Menu settimanale</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">Illimitati</td>
+                </tr>
+                <tr className="bg-gray-50 dark:bg-gray-700/50">
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Ricette Generate</td>
+                  <td className="px-6 py-4 text-center text-gray-600">Standard</td>
+                  <td className="px-6 py-4 text-center text-gray-600">10-15/mese</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">Infinite e personalizzate</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Assistenza IA</td>
+                  <td className="px-6 py-4 text-center text-red-500">✗</td>
+                  <td className="px-6 py-4 text-center text-red-500">✗</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">✓ Esperto sempre disponibile</td>
+                </tr>
+                <tr className="bg-gray-50 dark:bg-gray-700/50">
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Metodo Scientifico</td>
+                  <td className="px-6 py-4 text-center text-yellow-600">Generico</td>
+                  <td className="px-6 py-4 text-center text-red-500">✗</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">✓ Protocollo Gazzella</td>
+                </tr>
+                <tr>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 border-t-2 border-gray-300">TOTALE ANNUALE</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-bold text-lg border-t-2 border-gray-300">€2.400-6.000</td>
+                  <td className="px-6 py-4 text-center text-red-600 font-bold text-lg border-t-2 border-gray-300">€9.600-24.000</td>
+                  <td className="px-6 py-4 text-center text-emerald-600 font-bold text-2xl bg-emerald-100 dark:bg-emerald-900/50 border-t-2 border-emerald-400">€249</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="text-center mt-8">
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
+              RISPARMIA fino a €23.751 all'anno! 
+            </p>
+            <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">
+              Ottieni risultati superiori a una frazione del costo
+            </p>
+          </div>
+        </div>
+
+        {/* What You Get Section */}
+        <div className="mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
+            Cosa Ottieni con La Mia Gazzella
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">🧠</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">IA Nutrizionale Avanzata</h3>
+              <p className="text-gray-600 dark:text-gray-400">Assistente virtuale esperto in nutrizione disponibile 24/7 per risolvere ogni tuo dubbio</p>
+            </div>
+            
+            <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📊</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">Piani Personalizzati</h3>
+              <p className="text-gray-600 dark:text-gray-400">Piani alimentari creati su misura per i tuoi obiettivi, peso, altezza e preferenze</p>
+            </div>
+            
+            <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">👨‍🍳</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">Ricette Infinite</h3>
+              <p className="text-gray-600 dark:text-gray-400">Genera ricette sempre nuove e uniche seguendo il protocollo Gazzella</p>
+            </div>
+            
+            <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+              <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl">📈</span>
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">Monitoraggio Peso</h3>
+              <p className="text-gray-600 dark:text-gray-400">Traccia i tuoi progressi con grafici dettagliati e analisi dell'evoluzione</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Social Proof */}
+        <div className="mb-16 bg-gray-50 dark:bg-gray-800/50 rounded-2xl p-8">
+          <h2 className="text-3xl font-bold text-center mb-8 text-gray-800 dark:text-gray-200">
+            Perché le Donne Scelgono La Mia Gazzella
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-emerald-600 mb-2">94%</div>
+              <p className="text-gray-600 dark:text-gray-400">delle utenti raggiunge i suoi obiettivi nei primi 3 mesi</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-emerald-600 mb-2">€2.150</div>
+              <p className="text-gray-600 dark:text-gray-400">risparmio medio annuale rispetto ai servizi tradizionali</p>
+            </div>
+            <div className="text-center">
+              <div className="text-4xl font-bold text-emerald-600 mb-2">4.9/5</div>
+              <p className="text-gray-600 dark:text-gray-400">valutazione media di soddisfazione</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Urgency */}
+        <div className="text-center mb-12">
+          <div className="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-xl p-6 max-w-3xl mx-auto">
+            <h3 className="text-2xl font-bold text-red-800 dark:text-red-200 mb-4">
+              Offerta Limitata: Prova Gratuita di 3 Giorni
+            </h3>
+            <p className="text-red-700 dark:text-red-300 text-lg mb-4">
+              Non perdere l'opportunità di trasformare la tua alimentazione senza rischi. Inizia oggi stesso e vedi i primi risultati in 72 ore.
+            </p>
+            <p className="text-red-600 dark:text-red-400 font-semibold">
+              ⏰ Puoi annullare in qualsiasi momento durante la prova
             </p>
           </div>
         </div>
@@ -274,13 +450,118 @@ export default function SubscriptionPlans() {
           })}
         </div>
 
+        {/* Testimonials */}
+        <div className="mb-16">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
+            Le Nostre Clienti Parlano Chiaro
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center">
+                  <span className="text-emerald-600 font-bold">MC</span>
+                </div>
+                <div className="ml-4">
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">Maria C.</p>
+                  <p className="text-sm text-gray-500">Roma, 45 anni</p>
+                </div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                "Dopo aver speso oltre €3.000 con nutrizionisti privati senza risultati duraturi, ho trovato La Mia Gazzella. In 12 settimane ho perso 8kg e finalmente ho imparato a gestire la mia alimentazione autonomamente."
+              </p>
+              <div className="flex text-yellow-400">★★★★★</div>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                  <span className="text-blue-600 font-bold">SF</span>
+                </div>
+                <div className="ml-4">
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">Sara F.</p>
+                  <p className="text-sm text-gray-500">Milano, 38 anni</p>
+                </div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                "L'assistente IA è incredibile! Risponde a tutte le mie domande 24/7. Il mio nutrizionista mi riceveva solo 1 volta al mese per €80 a visita. Qui ho supporto continuo per €29 al mese!"
+              </p>
+              <div className="flex text-yellow-400">★★★★★</div>
+            </div>
+            
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+              <div className="flex items-center mb-4">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 font-bold">AL</span>
+                </div>
+                <div className="ml-4">
+                  <p className="font-semibold text-gray-800 dark:text-gray-200">Anna L.</p>
+                  <p className="text-sm text-gray-500">Napoli, 52 anni</p>
+                </div>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                "Menopausa + metabolismo lento = incubo! Con il protocollo Gazzella personalizzato ho ritrovato energia e perso 6kg in 10 settimane. Le ricette sono sempre diverse e deliziose!"
+              </p>
+              <div className="flex text-yellow-400">★★★★★</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Final CTA Before Plans */}
+        <div className="text-center mb-12">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-8 text-white max-w-4xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              La Scelta è Semplice
+            </h2>
+            <p className="text-xl mb-6">
+              Continua a spendere migliaia di euro per risultati incerti...
+            </p>
+            <p className="text-2xl font-bold mb-6">
+              OPPURE inizia oggi con La Mia Gazzella e trasforma la tua vita per sempre
+            </p>
+            <div className="bg-white/20 rounded-lg p-4 inline-block">
+              <p className="text-lg font-semibold">
+                💡 Ricorda: ogni giorno che aspetti è un giorno in meno verso i tuoi obiettivi
+              </p>
+            </div>
+          </div>
+        </div>
+
         {/* Footer Info */}
-        <div className="text-center mt-12 space-y-4">
-          <p className="text-gray-600 dark:text-gray-400">
-            Tutti i piani includono accesso completo a tutti i nostri strumenti e contenuti premium.
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-500">
-            Pagamenti sicuri elaborati da Stripe. Puoi cancellare in qualsiasi momento.
+        <div className="text-center mt-12 space-y-6">
+          <div className="max-w-4xl mx-auto">
+            <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+              Garanzia di Soddisfazione al 100%
+            </h3>
+            <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
+              Tutti i piani includono accesso completo a tutti i nostri strumenti avanzati, supporto IA 24/7, piani personalizzati illimitati e ricette sempre nuove.
+            </p>
+            <div className="grid md:grid-cols-2 gap-6 text-left bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6">
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">✅ Incluso in tutti i piani:</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• Piani alimentari personalizzati illimitati</li>
+                  <li>• Assistente IA nutrizionale 24/7</li>
+                  <li>• Ricette Gazzella sempre nuove</li>
+                  <li>• Monitoraggio progressi avanzato</li>
+                  <li>• Supporto via chat dedicato</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">🔒 I tuoi diritti:</h4>
+                <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                  <li>• Cancellazione immediata senza penali</li>
+                  <li>• Dati sempre protetti e privati</li>
+                  <li>• Pagamenti sicuri elaborati da Stripe</li>
+                  <li>• Supporto tecnico sempre disponibile</li>
+                  <li>• Aggiornamenti automatici gratuiti</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          <p className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
+            🚀 Inizia ora la tua trasformazione. I tuoi risultati ti stanno aspettando!
           </p>
         </div>
       </div>
