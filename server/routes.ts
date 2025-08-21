@@ -1133,7 +1133,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req as any).user.claims.sub;
       const user = await storage.getUser(userId);
       
-      if (!user || !user.stripeSubscriptionId) {
+      if (!user || (!user.stripeSubscriptionId && user.subscriptionStatus !== 'trialing')) {
         return res.status(404).json({ 
           message: "Nessun abbonamento attivo trovato" 
         });
@@ -1141,26 +1141,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
-      // Cancel the subscription in Stripe
-      const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
-      
-      // Update user status in database
-      await storage.updateUserStripeInfo(userId, {
-        stripeCustomerId: user.stripeCustomerId,
-        stripeSubscriptionId: user.stripeSubscriptionId,
-        subscriptionStatus: 'canceled'
-      });
+      if (user.stripeSubscriptionId) {
+        // Cancel the subscription in Stripe if it exists
+        const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+        
+        // Update user status in database
+        await storage.updateUserStripeInfo(userId, {
+          stripeCustomerId: user.stripeCustomerId,
+          stripeSubscriptionId: user.stripeSubscriptionId,
+          subscriptionStatus: 'canceled'
+        });
 
-      console.log(`✅ Subscription canceled for user ${user.email}: ${subscription.id}`);
-      
-      res.json({ 
-        message: "Abbonamento cancellato con successo",
-        subscription: {
-          id: subscription.id,
-          status: subscription.status,
-          endDate: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null
-        }
-      });
+        console.log(`✅ Stripe subscription canceled for user ${user.email}: ${subscription.id}`);
+        
+        res.json({ 
+          message: "Abbonamento cancellato con successo",
+          subscription: {
+            id: subscription.id,
+            status: subscription.status,
+            endDate: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : null
+          }
+        });
+      } else {
+        // Cancel trial subscription (no Stripe subscription)
+        await storage.updateUserStripeInfo(userId, {
+          stripeCustomerId: user.stripeCustomerId,
+          subscriptionStatus: 'canceled',
+          trialEndDate: new Date(), // End trial immediately
+        });
+
+        console.log(`✅ Trial subscription canceled for user ${user.email}`);
+        
+        res.json({ 
+          message: "Abbonamento di prova cancellato con successo",
+          subscription: {
+            id: 'trial',
+            status: 'canceled',
+            endDate: new Date().toISOString()
+          }
+        });
+      }
     } catch (error: any) {
       console.error('Error canceling subscription:', error);
       res.status(500).json({ 
