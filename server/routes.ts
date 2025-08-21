@@ -51,6 +51,12 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
+    // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
+    if (user.username && user.username.toLowerCase() === 'francesco') {
+      console.log("🔓 Accesso completo garantito per utente Francesco");
+      return next();
+    }
+
     // Check if user has active subscription
     const now = new Date();
     let hasActiveSubscription = false;
@@ -1133,6 +1139,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
+      if (user.username && user.username.toLowerCase() === 'francesco') {
+        const subscriptionInfo = {
+          hasActiveSubscription: true, // Accesso garantito
+          status: 'active', // Mostra come attivo
+          plan: 'annual', // Piano premium
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 anno nel futuro
+          trialEndDate: null,
+          isInTrial: false,
+          isTestUser: true // Flag per identificarlo come utente di test
+        };
+        return res.json(subscriptionInfo);
       }
 
       const subscriptionInfo = {
