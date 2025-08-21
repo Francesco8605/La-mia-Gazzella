@@ -310,47 +310,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get user subscription status
-  app.get("/api/user/subscription", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = (req as any).user.claims.sub;
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return res.status(404).json({ message: "Utente non trovato" });
-      }
 
-      const now = new Date();
-      let hasActiveSubscription = false;
-      let isInTrial = false;
-
-      if (user.subscriptionStatus === 'active') {
-        // Check if subscription hasn't expired
-        if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
-          hasActiveSubscription = true;
-        }
-      } else if (user.subscriptionStatus === 'trialing') {
-        // Check if trial hasn't expired
-        if (user.trialEndDate && new Date(user.trialEndDate) > now) {
-          hasActiveSubscription = true;
-          isInTrial = true;
-        }
-      }
-
-      res.json({
-        hasActiveSubscription,
-        status: user.subscriptionStatus,
-        plan: user.subscriptionPlan,
-        startDate: user.subscriptionStartDate,
-        endDate: user.subscriptionEndDate,
-        trialEndDate: user.trialEndDate,
-        isInTrial
-      });
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      res.status(500).json({ message: "Errore nel controllo dell'abbonamento" });
-    }
-  });
 
   // Get current user profile (API for frontend)
   app.get("/api/user-profile", async (req, res) => {
@@ -1218,43 +1178,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
-      // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing) - CONTROLLO DIRETTO
-      console.log("🔍 Subscription debug user:", user.username, "| Email:", user.email, "| ID:", userId);
-      
-      // Controllo diretto per Francesco - più specifico
-      if (userId === '458ce208-3e1b-4316-b28b-b0547ccd785c' || 
-          (user.username && user.username.toLowerCase() === 'francesco') ||
-          (user.email && user.email.toLowerCase().includes('fresco8605'))) {
-        
-        console.log("🔓 FRANCESCO IDENTIFICATO - Accesso completo garantito!");
-        
-        // Disabilita cache per Francesco
-        res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-        res.set('Pragma', 'no-cache');
-        res.set('Expires', '0');
-        
-        const subscriptionInfo = {
-          hasActiveSubscription: true, // Accesso garantito
-          status: 'active', // Mostra come attivo
-          plan: 'annual', // Piano premium
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 anno nel futuro
-          trialEndDate: null,
-          isInTrial: false,
-          isTestUser: true // Flag per identificarlo come utente di test
-        };
-        return res.json(subscriptionInfo);
-      }
+      // Determine subscription status
+      const isTrialing = user.subscriptionStatus === 'trialing' && 
+                         user.trialEndDate && 
+                         new Date() < user.trialEndDate;
+                         
+      const hasActiveSubscription = (user.subscriptionStatus === 'active') || isTrialing;
 
       const subscriptionInfo = {
-        hasActiveSubscription: user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing',
-        status: user.subscriptionStatus,
-        plan: user.subscriptionPlan,
+        hasActiveSubscription: hasActiveSubscription,
+        status: user.subscriptionStatus || 'none',
+        plan: user.subscriptionPlan || '',
         startDate: user.subscriptionStartDate,
         endDate: user.subscriptionEndDate,
-        trialEndDate: user.trialEndDate,
-        isInTrial: user.subscriptionStatus === 'trialing',
+        trialEndDate: user.trialEndDate ? user.trialEndDate.toISOString() : null,
+        isInTrial: isTrialing,
+        hasUsedTrial: user.hasUsedTrial === 'yes'
       };
+
+      console.log("🔍 User hasUsedTrial field:", user.hasUsedTrial, "-> converted to:", user.hasUsedTrial === 'yes');
+      console.log("📤 Sending subscription info:", subscriptionInfo);
 
       res.json(subscriptionInfo);
     } catch (error) {

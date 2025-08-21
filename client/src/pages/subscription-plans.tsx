@@ -24,6 +24,7 @@ interface UserSubscription {
   plan: string;
   isInTrial: boolean;
   trialEndDate: string;
+  hasUsedTrial: boolean;
 }
 
 export default function SubscriptionPlans() {
@@ -369,7 +370,7 @@ export default function SubscriptionPlans() {
         <div className="grid md:grid-cols-3 gap-8">
           {(plans as SubscriptionPlan[]).map((plan) => {
             const priceInfo = formatPrice(plan.priceEur, plan.duration);
-            const isCurrentPlan = userSubscription?.plan === plan.id;
+            const isCurrentPlan = userSubscription?.hasActiveSubscription && userSubscription?.plan === plan.id;
             
             return (
               <Card 
@@ -413,12 +414,21 @@ export default function SubscriptionPlans() {
                   </div>
 
                   {/* Trial Notice */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
-                    <p className="text-blue-800 dark:text-blue-200 text-sm">
-                      <span className="font-semibold">{plan.trialDays} giorni di prova gratuita</span>
-                      <br />poi {priceInfo.main}/{plan.duration === 'quarterly' ? 'trimestre' : plan.duration === 'annual' ? 'anno' : 'mese'}
-                    </p>
-                  </div>
+                  {!userSubscription?.hasUsedTrial ? (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 text-center">
+                      <p className="text-blue-800 dark:text-blue-200 text-sm">
+                        <span className="font-semibold">{plan.trialDays} giorni di prova gratuita</span>
+                        <br />poi {priceInfo.main}/{plan.duration === 'quarterly' ? 'trimestre' : plan.duration === 'annual' ? 'anno' : 'mese'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 text-center">
+                      <p className="text-orange-800 dark:text-orange-200 text-sm">
+                        <span className="font-semibold">Abbonamento diretto</span>
+                        <br />{priceInfo.main}/{plan.duration === 'quarterly' ? 'trimestre' : plan.duration === 'annual' ? 'anno' : 'mese'}
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Features */}
                   <div className="space-y-3">
@@ -450,6 +460,8 @@ export default function SubscriptionPlans() {
                       </div>
                     ) : isCurrentPlan ? (
                       "Piano Attuale"
+                    ) : userSubscription && userSubscription.hasUsedTrial ? (
+                      `Abbonati Ora`
                     ) : (
                       `Inizia Prova Gratuita`
                     )}
