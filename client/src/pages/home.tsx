@@ -110,7 +110,7 @@ export default function Home() {
                 Contatta Supporto
               </Button>
               
-              <Link href="/aggiorna-profilo">
+              <Link href="/cancella-abbonamento">
                 <Button
                   variant="outline"
                   className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
