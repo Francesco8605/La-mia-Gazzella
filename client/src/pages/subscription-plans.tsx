@@ -143,7 +143,7 @@ export default function SubscriptionPlans() {
             Perché spendere migliaia di euro per nutrizionisti e chef privati?
           </p>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-4xl mx-auto">
-            La Mia Gazzella ti offre <span className="font-bold text-emerald-600">un team specializzato nel metodo Gazzella: nutrizionista esperto + chef personale + assistente alimentare IA</span> al costo di una cena al ristorante.
+            La Mia Gazzella ti offre <span className="font-bold text-emerald-600">un team specializzato nel metodo Gazzella: chef personale + assistente alimentare IA</span> al costo di una cena al ristorante.
           </p>
           
           {/* Value Proposition */}
