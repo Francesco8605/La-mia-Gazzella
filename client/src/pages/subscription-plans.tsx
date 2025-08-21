@@ -149,7 +149,7 @@ export default function SubscriptionPlans() {
           {/* Value Proposition */}
           <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 border-2 border-emerald-300 dark:border-emerald-700 rounded-xl p-6 max-w-4xl mx-auto mb-8">
             <h2 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200 mb-4">
-              Risultati Garantiti con il Metodo Gazzella Scientifico
+              Risultati Garantiti con il Metodo Gazzella
             </h2>
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div>
