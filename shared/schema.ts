@@ -16,6 +16,7 @@ export const users = pgTable("users", {
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionEndDate: timestamp("subscription_end_date"),
   trialEndDate: timestamp("trial_end_date"),
+  hasUsedTrial: text("has_used_trial").default("no"), // "yes" | "no" - tracks if user ever used a trial
   createdAt: timestamp("created_at").defaultNow(),
 });
 

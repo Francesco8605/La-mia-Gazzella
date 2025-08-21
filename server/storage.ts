@@ -41,7 +41,7 @@ export interface IStorage {
   deleteWeightEntry(id: string): Promise<boolean>;
   
   // Stripe Subscription Methods
-  updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date }): Promise<User | undefined>;
+  updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date; hasUsedTrial?: string }): Promise<User | undefined>;
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
 }

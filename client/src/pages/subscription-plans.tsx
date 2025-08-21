@@ -54,7 +54,7 @@ export default function SubscriptionPlans() {
         window.location.href = data.url;
       }
     },
-    onError: (error) => {
+    onError: (error: any) => {
       if (isUnauthorizedError(error)) {
         toast({
           title: "Accesso richiesto",
@@ -64,6 +64,16 @@ export default function SubscriptionPlans() {
         setTimeout(() => {
           window.location.href = "/accedi";
         }, 2000);
+        return;
+      }
+      
+      // Check for trial already used error (403)
+      if (error.status === 403) {
+        toast({
+          title: "Prova gratuita già utilizzata",
+          description: "Hai già utilizzato la prova gratuita in passato. Scegli un piano a pagamento per continuare.",
+          variant: "destructive",
+        });
         return;
       }
       

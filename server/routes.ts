@@ -106,11 +106,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Create user
+      // Create user with automatic 3-day trial (since they're new)
       const user = await storage.createUser({
         username,
         email,
         password: hashedPassword,
+      });
+
+      // Give new users automatic 3-day trial
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 3);
+      
+      await storage.updateUserStripeInfo(user.id, {
+        subscriptionStatus: 'trialing',
+        subscriptionPlan: 'trial',
+        subscriptionStartDate: new Date(),
+        trialEndDate: trialEndDate,
+        hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
       });
 
       console.log("User created successfully:", user.username);
@@ -998,6 +1010,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Piano di abbonamento non trovato" });
       }
 
+      // Check if user has already used trial and prevent trial access
+      if (user.hasUsedTrial === 'yes' && (selectedPlan.trialDays || 0) > 0) {
+        return res.status(403).json({ 
+          message: "Hai già utilizzato la prova gratuita in passato. Scegli un piano a pagamento per continuare." 
+        });
+      }
+
       // Create or get Stripe customer
       let customerId = user.stripeCustomerId;
       if (!customerId) {
@@ -1145,11 +1164,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Cancel the subscription in Stripe if it exists
         const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
         
-        // Update user status in database
+        // Update user status in database and mark as having used trial
         await storage.updateUserStripeInfo(userId, {
           stripeCustomerId: user.stripeCustomerId,
           stripeSubscriptionId: user.stripeSubscriptionId,
-          subscriptionStatus: 'canceled'
+          subscriptionStatus: 'canceled',
+          hasUsedTrial: 'yes' // Prevent future trial access
         });
 
         console.log(`✅ Stripe subscription canceled for user ${user.email}: ${subscription.id}`);
@@ -1168,6 +1188,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           stripeCustomerId: user.stripeCustomerId,
           subscriptionStatus: 'canceled',
           trialEndDate: new Date(), // End trial immediately
+          hasUsedTrial: 'yes' // Prevent future trial access
         });
 
         console.log(`✅ Trial subscription canceled for user ${user.email}`);
