@@ -140,18 +140,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sameSite: 'lax'
       });
 
-      // Give new users automatic 3-day trial
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 3);
-      
-      await storage.updateUserStripeInfo(user.id, {
-        subscriptionStatus: 'trialing',
-        subscriptionPlan: 'trial',
-        subscriptionStartDate: new Date(),
-        trialEndDate: trialEndDate,
-        hasUsedTrial: 'yes'
-      });
-      console.log("🎁 Trial activated for new user:", username);
+      // No automatic trial - users must subscribe to start trial
+      console.log("👤 New user created without trial - must subscribe first:", username);
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
@@ -199,20 +189,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sameSite: 'lax'
       });
 
-      // Give new users automatic 3-day trial ONLY after email verification
-      if (!user.subscriptionStatus || user.subscriptionStatus === 'none') {
-        const trialEndDate = new Date();
-        trialEndDate.setDate(trialEndDate.getDate() + 3);
-        
-        await storage.updateUserStripeInfo(user.id, {
-          subscriptionStatus: 'trialing',
-          subscriptionPlan: 'trial',
-          subscriptionStartDate: new Date(),
-          trialEndDate: trialEndDate,
-          hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
-        });
-        console.log("🎁 Trial activated for verified user:", username);
-      }
+      // No automatic trial on login - users must subscribe to get trial
+      console.log("✅ Login successful - no automatic trial given:", username);
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
@@ -1227,12 +1205,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
-      // Determine subscription status
+      // Determine subscription status - NO automatic trial
       const isTrialing = user.subscriptionStatus === 'trialing' && 
                          user.trialEndDate && 
                          new Date() < user.trialEndDate;
-                         
-      const hasActiveSubscription = (user.subscriptionStatus === 'active') || isTrialing;
+      
+      const isPaidActive = user.subscriptionStatus === 'active';
+      const hasActiveSubscription = isPaidActive || isTrialing;
 
       const subscriptionInfo = {
         hasActiveSubscription: hasActiveSubscription,

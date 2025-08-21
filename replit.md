@@ -8,7 +8,7 @@
 - **⚡ INSTANT REGISTRATION & LOGIN**: Direct access system implemented - new users get immediate 3-day trial access upon registration with automatic session creation
 - **🎯 SIMPLIFIED USER ONBOARDING**: Zero-friction registration process - no email verification, no password reset emails, no blocked access - users start using the app immediately
 - **🔧 RESEND.COM INTEGRATION READY**: Email service switched from SendGrid to Resend.com with complete API integration (currently not needed since email auth removed)
-- **✅ TRIAL SYSTEM STREAMLINED**: Automatic 3-day trial activation on registration with immediate access to all premium features
+- **🎯 NETFLIX-STYLE TRIAL SYSTEM**: Trial activation only upon subscription - users register freely but must subscribe to access features, with 3-day trial starting only when payment method is provided (like Netflix model)
 
 ## Recent Major Updates (August 21, 2025) - Previous
 - **🛡️ TRIAL ABUSE PREVENTION SYSTEM IMPLEMENTED**: Complete protection against free trial abuse with database tracking (`hasUsedTrial` field), automatic user marking on cancellation, intelligent checkout logic that removes trial periods for users who already used them, while still allowing paid subscriptions without trial access - **STRIPE PAYMENTS WORK CORRECTLY**: Users who already used trials are immediately charged without trial period
