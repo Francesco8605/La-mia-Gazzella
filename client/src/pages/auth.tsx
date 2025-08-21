@@ -109,16 +109,16 @@ export default function Auth() {
     onSuccess: (user) => {
       toast({
         title: "Registrazione Completata!",
-        description: `Account creato con successo per ${user.username}. Completa ora il tuo profilo nutrizionale.`,
+        description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
       });
       
       // Invalida e aggiorna la cache dell'autenticazione
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla personalizzazione
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla pagina degli abbonamenti
       setTimeout(() => {
-        setLocation("/personalization");
+        setLocation("/piani-abbonamento");
       }, 100);
     },
     onError: (error) => {
