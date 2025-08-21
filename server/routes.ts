@@ -1402,10 +1402,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "La password deve essere di almeno 6 caratteri" });
       }
 
+      // Find user by reset token
+      const users = await storage.getAllUsers();
+      const user = users.find(u => 
+        u.passwordResetToken === token && 
+        u.passwordResetExpiry && 
+        new Date(u.passwordResetExpiry) > new Date()
+      );
+
+      if (!user) {
+        return res.status(410).json({ message: "Token di reset scaduto o non valido" });
+      }
+
       // Hash new password
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // For now, return success
+      // Update password and clear reset fields
+      await storage.updateUser(user.id, {
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpiry: null
+      });
+
+      console.log("✅ Password reset completed for user:", user.username);
       res.json({ message: "Password reimpostata con successo!" });
     } catch (error) {
       console.error("Reset password error:", error);
