@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, RefreshCw, Scale, Target } from "lucide-react";
+import { ArrowLeft, Save, RefreshCw, Scale, Target, CreditCard, Settings, AlertTriangle } from "lucide-react";
 import { Link } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
@@ -39,14 +39,14 @@ export default function UpdateProfile() {
   const form = useForm<UpdateWeightForm>({
     resolver: zodResolver(updateWeightSchema),
     defaultValues: {
-      weight: userProfile?.weight || 0,
+      weight: userProfile?.weight ? parseFloat(userProfile.weight.toString()) : 0,
     },
   });
 
   // Update form when profile loads
   if (userProfile && !form.formState.isDirty) {
     form.reset({
-      weight: userProfile.weight || 0,
+      weight: userProfile.weight ? parseFloat(userProfile.weight.toString()) : 0,
     });
   }
 
@@ -265,9 +265,39 @@ export default function UpdateProfile() {
             </Card>
           </div>
 
-          {/* Subscription Settings Section */}
+          {/* Subscription Management Section */}
           <div className="mt-8">
-            <SubscriptionSettings />
+            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                  <CreditCard className="w-5 h-5 mr-2 text-emerald-600" />
+                  Gestione Abbonamento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <Link href="/piani-abbonamento" className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Visualizza Piani
+                      </Button>
+                    </Link>
+                    
+                    <Link href="/cancella-abbonamento" className="flex-1">
+                      <Button variant="destructive" className="w-full">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        Cancella Abbonamento
+                      </Button>
+                    </Link>
+                  </div>
+                  
+                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
+                    Gestisci il tuo abbonamento o cancellalo quando vuoi
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
