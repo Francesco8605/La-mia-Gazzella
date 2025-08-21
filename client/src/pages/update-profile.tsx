@@ -17,6 +17,7 @@ import { insertUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
+import { SubscriptionSettings } from "@/components/subscription-settings";
 
 // Schema for weight update (simplified)
 const updateWeightSchema = z.object({
@@ -262,6 +263,11 @@ export default function UpdateProfile() {
                 </Form>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Subscription Settings Section */}
+          <div className="mt-8">
+            <SubscriptionSettings />
           </div>
         </div>
       </div>

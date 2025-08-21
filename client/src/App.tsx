@@ -21,6 +21,7 @@ import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
+import CancelSubscription from "@/pages/cancel-subscription";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -165,6 +166,9 @@ function Router() {
             );
           }}
         </Route>
+        
+        <Route path="/cancella-abbonamento" component={CancelSubscription} />
+        <Route path="/cancel-subscription" component={CancelSubscription} />
         
         <Route path="/subscription-success">
           {() => {

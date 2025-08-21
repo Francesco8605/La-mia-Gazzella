@@ -22,9 +22,9 @@ export function useSubscription() {
 
   // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
   const isFrancesco = user && (
-    (user.username && user.username.toLowerCase() === 'francesco') ||
-    (user.email && user.email.toLowerCase().includes('fresco8605')) ||
-    user.id === '458ce208-3e1b-4316-b28b-b0547ccd785c'
+    (user as any).username?.toLowerCase() === 'francesco' ||
+    (user as any).email?.toLowerCase().includes('fresco8605') ||
+    (user as any).id === '458ce208-3e1b-4316-b28b-b0547ccd785c'
   );
 
   // Se è Francesco, forza l'accesso completo

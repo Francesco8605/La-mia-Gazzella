@@ -1136,6 +1136,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ received: true });
   });
 
+  // Cancel subscription endpoint
+  app.post("/api/cancel-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.stripeSubscriptionId) {
+        return res.status(404).json({ 
+          message: "Nessun abbonamento attivo trovato" 
+        });
+      }
+
+      // Prevent Francesco (test user) from canceling
+      if (user.email === "fresco8605@gmail.com") {
+        return res.status(400).json({
+          message: "Account di test - cancellazione non disponibile"
+        });
+      }
+
+      // Cancel the subscription in Stripe
+      const subscription = await stripe.subscriptions.cancel(user.stripeSubscriptionId);
+      
+      // Update user status in database
+      await storage.updateUserStripeInfo(userId, {
+        stripeCustomerId: user.stripeCustomerId,
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        subscriptionStatus: 'canceled'
+      });
+
+      console.log(`✅ Subscription canceled for user ${user.email}: ${subscription.id}`);
+      
+      res.json({ 
+        message: "Abbonamento cancellato con successo",
+        subscription: {
+          id: subscription.id,
+          status: subscription.status,
+          endDate: subscription.current_period_end ? new Date(subscription.current_period_end * 1000).toISOString() : null
+        }
+      });
+    } catch (error: any) {
+      console.error('Error canceling subscription:', error);
+      res.status(500).json({ 
+        message: "Errore durante la cancellazione dell'abbonamento: " + error.message 
+      });
+    }
+  });
+
   // Get user subscription status
   app.get("/api/user/subscription", isAuthenticated, async (req, res) => {
     try {
@@ -1188,6 +1235,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user subscription:", error);
       res.status(500).json({ message: "Errore nel recupero dello stato dell'abbonamento" });
+    }
+  });
+
+  // Cancel subscription endpoint
+  app.post("/api/cancel-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      if (!user.stripeSubscriptionId) {
+        return res.status(400).json({ message: "Nessun abbonamento attivo da cancellare" });
+      }
+
+      // Cancel subscription in Stripe
+      const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        cancel_at_period_end: true
+      });
+
+      // Update user subscription status
+      const endDate = new Date((subscription as any).current_period_end * 1000);
+      await storage.updateUserStripeInfo(userId, {
+        subscriptionStatus: 'canceled',
+        subscriptionEndDate: endDate,
+      });
+
+      res.json({ 
+        message: "Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo di fatturazione corrente.",
+        endDate: endDate
+      });
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({ message: "Errore nella cancellazione dell'abbonamento" });
     }
   });
 
