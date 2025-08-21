@@ -1,11 +1,13 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, Menu, X, LogOut } from "lucide-react";
+import { Leaf, Menu, X, LogOut, Crown, AlertTriangle } from "lucide-react";
 import { useState } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { hasActiveSubscription, isInTrial, subscriptionStatus } = useSubscription();
 
   const navItems = [
     { href: "/", label: "Dashboard" },
@@ -39,6 +41,32 @@ export default function Navigation() {
               {item.label}
             </Link>
           ))}
+          
+          {/* Subscription Status Indicator */}
+          <div className="flex items-center">
+            {hasActiveSubscription ? (
+              <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">
+                {isInTrial ? (
+                  <>
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Trial</span>
+                  </>
+                ) : (
+                  <>
+                    <Crown className="h-3 w-3" />
+                    <span>Premium</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link href="/piani-abbonamento">
+                <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium hover:bg-orange-200 cursor-pointer transition-colors">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Riattiva</span>
+                </div>
+              </Link>
+            )}
+          </div>
           
           {/* Logout Button */}
           <Button

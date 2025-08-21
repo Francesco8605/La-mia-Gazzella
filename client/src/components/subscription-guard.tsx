@@ -14,6 +14,7 @@ export function SubscriptionGuard({ children, fallbackPath = "/piani-abbonamento
   useEffect(() => {
     // Se non stiamo caricando e non abbiamo un abbonamento attivo
     if (!isLoading && !hasActiveSubscription && location !== fallbackPath) {
+      console.log("🚫 Abbonamento non attivo - reindirizzo a:", fallbackPath);
       setLocation(fallbackPath);
     }
   }, [isLoading, hasActiveSubscription, location, fallbackPath, setLocation]);
@@ -30,10 +31,22 @@ export function SubscriptionGuard({ children, fallbackPath = "/piani-abbonamento
     );
   }
 
-  // Se non ha abbonamento attivo e non siamo sulla pagina degli abbonamenti, non mostrare niente
-  // (il redirect avverrà nel useEffect)
+  // Se non ha abbonamento attivo e non siamo sulla pagina degli abbonamenti, mostra un messaggio
   if (!hasActiveSubscription && location !== fallbackPath) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-600 text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Abbonamento Richiesto</h2>
+          <p className="text-slate-600 mb-6">
+            Per accedere a questa funzionalità premium, è necessario un abbonamento attivo.
+          </p>
+          <p className="text-sm text-slate-500">
+            Reindirizzamento in corso...
+          </p>
+        </div>
+      </div>
+    );
   }
 
   // Mostra i contenuti se ha abbonamento attivo o è sulla pagina degli abbonamenti

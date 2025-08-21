@@ -41,6 +41,46 @@ function isAuthenticated(req: any, res: any, next: any) {
   next();
 }
 
+// Middleware to check if user has active subscription
+async function requireActiveSubscription(req: any, res: any, next: any) {
+  try {
+    const userId = req.user.claims.sub;
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "Utente non trovato" });
+    }
+
+    // Check if user has active subscription
+    const now = new Date();
+    let hasActiveSubscription = false;
+
+    if (user.subscriptionStatus === 'active') {
+      // Check if subscription hasn't expired
+      if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
+        hasActiveSubscription = true;
+      }
+    } else if (user.subscriptionStatus === 'trialing') {
+      // Check if trial hasn't expired
+      if (user.trialEndDate && new Date(user.trialEndDate) > now) {
+        hasActiveSubscription = true;
+      }
+    }
+
+    if (!hasActiveSubscription) {
+      return res.status(403).json({ 
+        message: "Abbonamento scaduto o non attivo. Rinnova il tuo abbonamento per continuare.",
+        requiresSubscription: true 
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Error checking subscription:", error);
+    res.status(500).json({ message: "Errore nel controllo dell'abbonamento" });
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Authentication Routes
@@ -256,6 +296,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get user subscription status
+  app.get("/api/user/subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      const now = new Date();
+      let hasActiveSubscription = false;
+      let isInTrial = false;
+
+      if (user.subscriptionStatus === 'active') {
+        // Check if subscription hasn't expired
+        if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
+          hasActiveSubscription = true;
+        }
+      } else if (user.subscriptionStatus === 'trialing') {
+        // Check if trial hasn't expired
+        if (user.trialEndDate && new Date(user.trialEndDate) > now) {
+          hasActiveSubscription = true;
+          isInTrial = true;
+        }
+      }
+
+      res.json({
+        hasActiveSubscription,
+        status: user.subscriptionStatus,
+        plan: user.subscriptionPlan,
+        startDate: user.subscriptionStartDate,
+        endDate: user.subscriptionEndDate,
+        trialEndDate: user.trialEndDate,
+        isInTrial
+      });
+    } catch (error) {
+      console.error("Error checking subscription:", error);
+      res.status(500).json({ message: "Errore nel controllo dell'abbonamento" });
+    }
+  });
+
   // Get current user profile (API for frontend)
   app.get("/api/user-profile", async (req, res) => {
     try {
@@ -320,8 +402,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Meal Plans
-  app.post("/api/meal-plans/generate", isAuthenticated, async (req: any, res) => {
+  // Meal Plans  
+  app.post("/api/meal-plans/generate", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       console.log("POST /api/meal-plans/generate called");
       
@@ -424,8 +506,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route
-  app.get("/api/meal-plans/user", isAuthenticated, async (req: any, res) => {
+  // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route  
+  app.get("/api/meal-plans/user", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       console.log("Fetching meal plans for current user:", userId);
@@ -438,7 +520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/meal-plans/:userId", isAuthenticated, async (req: any, res) => {
+  app.get("/api/meal-plans/:userId", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       // Check if requesting own data or if admin
       const requestedUserId = req.params.userId;
@@ -455,7 +537,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/meal-plan/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/meal-plan/:id", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       const mealPlan = await storage.getMealPlan(req.params.id);
       if (!mealPlan) {
@@ -606,7 +688,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint specifico per il generatore ricette Gazzella  
-  app.post("/api/recipes/generate-gazzella", isAuthenticated, async (req: any, res) => {
+  app.post("/api/recipes/generate-gazzella", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       console.log("=== SERVER DEBUG RECIPE GENERATION ===");
       console.log("Raw request body:", JSON.stringify(req.body, null, 2));
@@ -753,7 +835,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Weight tracking endpoints
-  app.get("/api/weight-entries", isAuthenticated, async (req, res) => {
+  app.get("/api/weight-entries", isAuthenticated, requireActiveSubscription, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const entries = await storage.getWeightEntriesByUserId(userId);
@@ -764,7 +846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/weight-entries", isAuthenticated, async (req, res) => {
+  app.post("/api/weight-entries", isAuthenticated, requireActiveSubscription, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       console.log("Creating weight entry for user:", userId);
@@ -829,7 +911,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AI Chat endpoint
-  app.post("/api/ai-chat/message", isAuthenticated, async (req: any, res) => {
+  app.post("/api/ai-chat/message", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       const { message } = req.body;
       const userId = req.user.claims.sub;

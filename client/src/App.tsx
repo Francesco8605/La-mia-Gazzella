@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { SubscriptionGuard } from "@/components/subscription-guard";
 import Navigation from "@/components/navigation";
 import Home from "@/pages/home";
 import MealPlan from "@/pages/meal-plan";
@@ -58,29 +59,98 @@ function Router() {
           return null;
         }} />
 
-        <Route path="/recipe-generator" component={RecipeGenerator} />
-        <Route path="/recipes" component={Recipes} />
-        <Route path="/ricette" component={Recipes} />
-        <Route path="/genera-piano" component={MealPlanGenerator} />
-        <Route path="/meal-plan-generator" component={MealPlanGenerator} />
-        <Route path="/piani-personalizzati" component={MyMealPlans} />
-        <Route path="/piano-salvato/:id" component={SavedMealPlan} />
+        {/* Protected Routes - Require Active Subscription */}
+        <Route path="/recipe-generator">
+          {() => (
+            <SubscriptionGuard>
+              <RecipeGenerator />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/recipes">
+          {() => (
+            <SubscriptionGuard>
+              <Recipes />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/ricette">
+          {() => (
+            <SubscriptionGuard>
+              <Recipes />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/genera-piano">
+          {() => (
+            <SubscriptionGuard>
+              <MealPlanGenerator />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/meal-plan-generator">
+          {() => (
+            <SubscriptionGuard>
+              <MealPlanGenerator />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/piani-personalizzati">
+          {() => (
+            <SubscriptionGuard>
+              <MyMealPlans />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/piano-salvato/:id">
+          {() => (
+            <SubscriptionGuard>
+              <SavedMealPlan />
+            </SubscriptionGuard>
+          )}
+        </Route>
         <Route path="/aggiorna-profilo">
           {() => {
             const AggiornaProfiloPage = React.lazy(() => import("./pages/aggiorna-profilo"));
             return (
-              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-              </div>}>
-                <AggiornaProfiloPage />
-              </React.Suspense>
+              <SubscriptionGuard>
+                <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                </div>}>
+                  <AggiornaProfiloPage />
+                </React.Suspense>
+              </SubscriptionGuard>
             );
           }}
         </Route>
-        <Route path="/meal-plan/:id" component={MealPlan} />
-        <Route path="/recipe/:id" component={RecipeDetail} />
-        <Route path="/ai-chat" component={AIChat} />
-        <Route path="/assistente-ia" component={AIChat} />
+        <Route path="/meal-plan/:id">
+          {() => (
+            <SubscriptionGuard>
+              <MealPlan />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/recipe/:id">
+          {() => (
+            <SubscriptionGuard>
+              <RecipeDetail />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/ai-chat">
+          {() => (
+            <SubscriptionGuard>
+              <AIChat />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/assistente-ia">
+          {() => (
+            <SubscriptionGuard>
+              <AIChat />
+            </SubscriptionGuard>
+          )}
+        </Route>
         
         {/* Subscription Pages */}
         <Route path="/piani-abbonamento">
