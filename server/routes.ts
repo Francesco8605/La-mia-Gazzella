@@ -52,7 +52,8 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     }
 
     // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
-    if (user.username && user.username.toLowerCase() === 'francesco') {
+    console.log("🔍 Debug user:", user.username, "| ID:", userId);
+    if (user.username && (user.username.toLowerCase() === 'francesco' || user.email?.toLowerCase().includes('fresco8605'))) {
       console.log("🔓 Accesso completo garantito per utente Francesco");
       return next();
     }
@@ -1142,7 +1143,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // 🎯 ACCESSO COMPLETO PER FRANCESCO (per testing)
-      if (user.username && user.username.toLowerCase() === 'francesco') {
+      console.log("🔍 Subscription debug user:", user.username, "| Email:", user.email);
+      if (user.username && (user.username.toLowerCase() === 'francesco' || user.email?.toLowerCase().includes('fresco8605'))) {
+        console.log("🔓 Subscription: Accesso completo per Francesco");
         const subscriptionInfo = {
           hasActiveSubscription: true, // Accesso garantito
           status: 'active', // Mostra come attivo
