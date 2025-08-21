@@ -19,11 +19,12 @@ export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     await mailService.send({
       to: params.to,
-      from: params.from,
+      from: params.from || "fresco8605@gmail.com", // Usa la tua email verificata come fallback
       subject: params.subject,
       text: params.text || '',
       html: params.html || '',
     });
+    console.log('✅ Email sent successfully to:', params.to);
     return true;
   } catch (error) {
     console.error('SendGrid email error:', error);
