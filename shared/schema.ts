@@ -33,7 +33,7 @@ export const userProfiles = pgTable("user_profiles", {
   phone: text("phone"),
   // Dati fisici
   age: integer("age"),
-  weight: numeric("weight", { precision: 5, scale: 1 }),
+  weight: text("weight"), // Store as text for consistency
   height: integer("height"),
   // Condizioni di salute
   thyroidIssues: text("thyroid_issues"), // "si" | "no" | "eutirox"
@@ -71,11 +71,11 @@ export const mealPlans = pgTable("meal_plans", {
   targetCarbs: integer("target_carbs"),
   targetFat: integer("target_fat"),
   // Client profile data for personalization
-  currentWeight: numeric("current_weight", { precision: 5, scale: 1 }),
-  targetWeight: numeric("target_weight", { precision: 5, scale: 1 }),
-  currentBMI: numeric("current_bmi", { precision: 4, scale: 1 }),
+  currentWeight: text("current_weight"),
+  targetWeight: text("target_weight"),
+  currentBMI: text("current_bmi"),
   bmiCategory: varchar("bmi_category"),
-  weightToLose: numeric("weight_to_lose", { precision: 4, scale: 1 }),
+  weightToLose: text("weight_to_lose"),
   estimatedTimeWeeks: integer("estimated_time_weeks"),
   // Diet explanation and methodology
   dietMethod: text("diet_method"),

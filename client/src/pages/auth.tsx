@@ -83,9 +83,14 @@ export default function Auth() {
       }, 100);
     },
     onError: (error) => {
+      let errorMessage = "Credenziali non valide";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
       toast({
         title: "Errore di Accesso",
-        description: error instanceof Error ? error.message : "Credenziali non valide",
+        description: errorMessage,
         variant: "destructive",
       });
     },

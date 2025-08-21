@@ -87,10 +87,10 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Authentication Routes
+  // Authentication Routes - REGISTRATION WITH EMAIL VERIFICATION REQUIRED
   app.post("/api/auth/register", async (req, res) => {
     try {
-      console.log("Registration request body:", req.body);
+      console.log("🔍 Registration attempt:", req.body);
       
       const { username, email, password } = req.body;
       
@@ -102,50 +102,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        return res.status(400).json({ message: "Username già in uso" });
+        console.log("❌ Username already taken:", username);
+        return res.status(409).json({ message: "Nome utente già esistente" });
+      }
+
+      // Check if email already exists
+      const existingEmailUser = await storage.getUserByEmail(email);
+      if (existingEmailUser) {
+        console.log("❌ Email already taken:", email);
+        return res.status(409).json({ message: "Email già registrata" });
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Create user with automatic 3-day trial (since they're new)
+      console.log("🔐 Password hashed successfully");
+
+      // Generate email verification token
+      const verificationToken = generateSecureToken();
+      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      // Create user with email verification fields - NO SESSION YET!
       const user = await storage.createUser({
         username,
         email,
         password: hashedPassword,
+        emailVerified: "no",
+        emailVerificationToken: verificationToken,
+        emailVerificationExpiry: verificationExpiry,
       });
+      console.log("👤 User created (NOT LOGGED IN):", user.id);
 
-      // Give new users automatic 3-day trial
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 3);
+      // Send verification email
+      const baseUrl = getBaseUrl();
+      const verificationUrl = `${baseUrl}/verifica-email/${verificationToken}`;
+      const emailContent = generateEmailVerificationEmail(user.username, verificationUrl);
       
-      await storage.updateUserStripeInfo(user.id, {
-        subscriptionStatus: 'trialing',
-        subscriptionPlan: 'trial',
-        subscriptionStartDate: new Date(),
-        trialEndDate: trialEndDate,
-        hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
+      const emailSent = await sendEmail({
+        to: user.email,
+        from: "noreply@lamiagazella.app",
+        subject: emailContent.subject,
+        html: emailContent.html,
+        text: emailContent.text
       });
 
-      console.log("User created successfully:", user.username);
+      if (emailSent) {
+        console.log("📧 Verification email sent to:", user.email);
+      } else {
+        console.warn("⚠️ Failed to send verification email");
+      }
 
-      // Create session
-      const sessionId = generateSessionId();
-      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
-
-      // Set session cookie
-      res.cookie('session', sessionId, { 
-        httpOnly: true, 
-        secure: false, // set to true in production with HTTPS
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax'
+      // CRITICAL: DO NOT CREATE SESSION HERE - User must verify email first
+      res.status(201).json({ 
+        message: "Registrazione completata! Controlla la tua email per verificare l'account prima di poter accedere.",
+        emailSent: emailSent,
+        user: {
+          id: user.id, 
+          username: user.username, 
+          email: user.email,
+          emailVerified: false
+        }
       });
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error("❌ Registration error:", error);
       res.status(500).json({ message: "Errore durante la registrazione" });
     }
   });
@@ -153,20 +171,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/login", async (req, res) => {
     try {
       const { username, password } = req.body;
+      console.log("🔍 Login attempt for:", username);
       
       // Find user
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log("❌ User not found:", username);
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
       // Check password
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
+        console.log("❌ Invalid password for:", username);
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
-      // Create session
+      // CRITICAL: Check email verification
+      if (user.emailVerified === "no") {
+        console.log("❌ Email not verified for:", username);
+        return res.status(403).json({ 
+          message: "Devi verificare la tua email prima di poter accedere. Controlla la tua casella di posta.",
+          emailNotVerified: true 
+        });
+      }
+
+      console.log("✅ Email verified, proceeding with login for:", username);
+
+      // Create session only after email verification
       const sessionId = generateSessionId();
       sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
 
@@ -178,11 +210,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sameSite: 'lax'
       });
 
+      // Give new users automatic 3-day trial ONLY after email verification
+      if (!user.subscriptionStatus || user.subscriptionStatus === 'none') {
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 3);
+        
+        await storage.updateUserStripeInfo(user.id, {
+          subscriptionStatus: 'trialing',
+          subscriptionPlan: 'trial',
+          subscriptionStartDate: new Date(),
+          trialEndDate: trialEndDate,
+          hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
+        });
+        console.log("🎁 Trial activated for verified user:", username);
+      }
+
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
+      console.log("✅ Login successful for:", username);
       res.json(userWithoutPassword);
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error:", error);
       res.status(500).json({ message: "Errore durante l'accesso" });
     }
   });
@@ -1262,7 +1310,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Token di verifica richiesto" });
       }
 
-      // For now, simplified implementation - mark as verified
+      // Find user by verification token
+      const users = await storage.getAllUsers(); // This method needs to exist
+      const user = users.find(u => 
+        u.emailVerificationToken === token && 
+        u.emailVerificationExpiry && 
+        new Date(u.emailVerificationExpiry) > new Date()
+      );
+
+      if (!user) {
+        return res.status(410).json({ message: "Token di verifica scaduto o non valido" });
+      }
+
+      if (user.emailVerified === "yes") {
+        return res.status(409).json({ message: "Email già verificata" });
+      }
+
+      // Mark email as verified and clear verification fields
+      await storage.updateUser(user.id, {
+        emailVerified: "yes",
+        emailVerificationToken: null,
+        emailVerificationExpiry: null
+      });
+
+      console.log("✅ Email verified for user:", user.username);
       res.json({ message: "Email verificata con successo!" });
     } catch (error) {
       console.error("Email verification error:", error);
