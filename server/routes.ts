@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const emailSent = await sendEmail({
         to: user.email,
-        from: "fresco8605@gmail.com", // Usa la tua email verificata
+        from: "La Mia Gazzella <onboarding@resend.dev>", // Dominio Resend verificato
         subject: emailContent.subject,
         html: emailContent.html,
         text: emailContent.text
@@ -1372,7 +1372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const emailSent = await sendEmail({
         to: user.email,
-        from: "fresco8605@gmail.com", // Usa la tua email verificata
+        from: "La Mia Gazzella <onboarding@resend.dev>", // Dominio Resend verificato
         subject: emailContent.subject,
         html: emailContent.html,
         text: emailContent.text
