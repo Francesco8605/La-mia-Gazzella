@@ -6,8 +6,6 @@ import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePe
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
-import { sendEmail, generateEmailVerificationEmail, generatePasswordResetEmail } from "./email";
-import { generateSecureToken, getBaseUrl } from "./utils";
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {
@@ -87,10 +85,10 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Authentication Routes - REGISTRATION WITH EMAIL VERIFICATION REQUIRED
+  // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      console.log("🔍 Registration attempt:", req.body);
+      console.log("Registration request body:", req.body);
       
       const { username, email, password } = req.body;
       
@@ -102,82 +100,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user already exists
       const existingUser = await storage.getUserByUsername(username);
       if (existingUser) {
-        console.log("❌ Username already taken:", username);
-        return res.status(409).json({ message: "Nome utente già esistente" });
-      }
-
-      // Check if email already exists
-      const existingEmailUser = await storage.getUserByEmail(email);
-      if (existingEmailUser) {
-        console.log("❌ Email already taken:", email);
-        return res.status(409).json({ message: "Email già registrata" });
+        return res.status(400).json({ message: "Username già in uso" });
       }
 
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
-      console.log("🔐 Password hashed successfully");
-
-      // Create user directly - no email verification required
+      
+      // Create user with automatic 3-day trial (since they're new)
       const user = await storage.createUser({
         username,
         email,
         password: hashedPassword,
-        emailVerified: "yes", // Direct verification
-        emailVerificationToken: null,
-        emailVerificationExpiry: null,
-      });
-      console.log("👤 User created successfully:", user.id);
-
-      // Create session immediately
-      const sessionId = generateSessionId();
-      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
-
-      // Set session cookie
-      res.cookie('session', sessionId, { 
-        httpOnly: true, 
-        secure: false,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: 'lax'
       });
 
-      // No automatic trial - users must subscribe to start trial
-      console.log("👤 New user created without trial - must subscribe first:", username);
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json({ 
-        message: "Registrazione completata! Benvenuto in La Mia Gazzella.",
-        user: userWithoutPassword
-      });
-    } catch (error) {
-      console.error("❌ Registration error:", error);
-      res.status(500).json({ message: "Errore durante la registrazione" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { username, password } = req.body;
-      console.log("🔍 Login attempt for:", username);
+      // Give new users automatic 3-day trial
+      const trialEndDate = new Date();
+      trialEndDate.setDate(trialEndDate.getDate() + 3);
       
-      // Find user
-      const user = await storage.getUserByUsername(username);
-      if (!user) {
-        console.log("❌ User not found:", username);
-        return res.status(401).json({ message: "Credenziali non valide" });
-      }
+      await storage.updateUserStripeInfo(user.id, {
+        subscriptionStatus: 'trialing',
+        subscriptionPlan: 'trial',
+        subscriptionStartDate: new Date(),
+        trialEndDate: trialEndDate,
+        hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
+      });
 
-      // Check password
-      const isValidPassword = await bcrypt.compare(password, user.password);
-      if (!isValidPassword) {
-        console.log("❌ Invalid password for:", username);
-        return res.status(401).json({ message: "Credenziali non valide" });
-      }
+      console.log("User created successfully:", user.username);
 
-      // Email verification removed - direct access allowed
-      console.log("✅ Direct access allowed for:", username);
-
-      // Create session only after email verification
+      // Create session
       const sessionId = generateSessionId();
       sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
 
@@ -189,15 +139,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sameSite: 'lax'
       });
 
-      // No automatic trial on login - users must subscribe to get trial
-      console.log("✅ Login successful - no automatic trial given:", username);
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Errore durante la registrazione" });
+    }
+  });
+
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { username, password } = req.body;
+      
+      // Find user
+      const user = await storage.getUserByUsername(username);
+      if (!user) {
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+
+      // Check password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+
+      // Create session
+      const sessionId = generateSessionId();
+      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+
+      // Set session cookie
+      res.cookie('session', sessionId, { 
+        httpOnly: true, 
+        secure: false, // set to true in production with HTTPS
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        sameSite: 'lax'
+      });
 
       // Remove password from response
       const { password: _, ...userWithoutPassword } = user;
-      console.log("✅ Login successful for:", username);
       res.json(userWithoutPassword);
     } catch (error) {
-      console.error("❌ Login error:", error);
+      console.error("Login error:", error);
       res.status(500).json({ message: "Errore durante l'accesso" });
     }
   });
@@ -1205,13 +1188,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
-      // Determine subscription status - NO automatic trial
+      // Determine subscription status
       const isTrialing = user.subscriptionStatus === 'trialing' && 
                          user.trialEndDate && 
                          new Date() < user.trialEndDate;
-      
-      const isPaidActive = user.subscriptionStatus === 'active';
-      const hasActiveSubscription = isPaidActive || isTrialing;
+                         
+      const hasActiveSubscription = (user.subscriptionStatus === 'active') || isTrialing;
 
       const subscriptionInfo = {
         hasActiveSubscription: hasActiveSubscription,
@@ -1268,13 +1250,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore nella cancellazione dell'abbonamento" });
     }
   });
-
-  // Email verification endpoint
-  // Email verification endpoint removed
-
-  // Forgot password endpoint removed - no email verification needed
-
-  // Reset password endpoint removed - no email verification needed
 
   const httpServer = createServer(app);
   return httpServer;

@@ -83,14 +83,9 @@ export default function Auth() {
       }, 100);
     },
     onError: (error) => {
-      let errorMessage = "Credenziali non valide";
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
       toast({
         title: "Errore di Accesso",
-        description: errorMessage,
+        description: error instanceof Error ? error.message : "Credenziali non valide",
         variant: "destructive",
       });
     },
@@ -111,26 +106,20 @@ export default function Auth() {
       }
       return response.json();
     },
-    onSuccess: (data) => {
-      if (data.message && data.message.includes("Controlla la tua email")) {
-        toast({
-          title: "Registrazione Completata!",
-          description: data.message,
-        });
-      } else {
-        toast({
-          title: "Registrazione Completata!",
-          description: `Account creato con successo per ${data.user?.username || 'nuovo utente'}. Scegli ora il tuo piano di abbonamento per iniziare!`,
-        });
-        
-        // Se non è richiesta verifica email, procedi normalmente
-        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-        queryClient.setQueryData(["/api/auth/user"], data.user);
-        
-        setTimeout(() => {
-          setLocation("/piani-abbonamento");
-        }, 100);
-      }
+    onSuccess: (user) => {
+      toast({
+        title: "Registrazione Completata!",
+        description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
+      });
+      
+      // Invalida e aggiorna la cache dell'autenticazione
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.setQueryData(["/api/auth/user"], user);
+      
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla pagina degli abbonamenti
+      setTimeout(() => {
+        setLocation("/piani-abbonamento");
+      }, 100);
     },
     onError: (error) => {
       toast({
@@ -249,18 +238,6 @@ export default function Auth() {
                         </>
                       )}
                     </Button>
-                    
-                    <div className="text-center mt-4">
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="text-sm text-slate-600 hover:text-slate-800"
-                        onClick={() => setLocation("/password-dimenticata")}
-                        data-testid="link-forgot-password"
-                      >
-                        Password dimenticata?
-                      </Button>
-                    </div>
                   </form>
                 </Form>
               </CardContent>

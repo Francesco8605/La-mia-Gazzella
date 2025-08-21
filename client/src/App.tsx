@@ -22,9 +22,6 @@ import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
 import CancelSubscription from "@/pages/cancel-subscription";
-import VerifyEmail from "@/pages/verify-email";
-import ForgotPassword from "@/pages/forgot-password";
-import ResetPassword from "@/pages/reset-password";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -41,16 +38,11 @@ function Router() {
     );
   }
 
-  // Se non autenticato, mostra solo la pagina di auth e pagine pubbliche
+  // Se non autenticato, mostra solo la pagina di auth
   if (!isAuthenticated) {
     return (
       <Switch>
         <Route path="/auth" component={Auth} />
-        <Route path="/login" component={Auth} />
-        <Route path="/register" component={Auth} />
-        <Route path="/verifica-email/:token" component={VerifyEmail} />
-        <Route path="/password-dimenticata" component={ForgotPassword} />
-        <Route path="/reset-password/:token" component={ResetPassword} />
         <Route component={Auth} />
       </Switch>
     );

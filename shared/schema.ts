@@ -8,11 +8,6 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  emailVerified: text("email_verified").default("no"), // "yes" | "no"
-  emailVerificationToken: varchar("email_verification_token"),
-  emailVerificationExpiry: timestamp("email_verification_expiry"),
-  passwordResetToken: varchar("password_reset_token"),
-  passwordResetExpiry: timestamp("password_reset_expiry"),
   // Stripe subscription fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
@@ -33,7 +28,7 @@ export const userProfiles = pgTable("user_profiles", {
   phone: text("phone"),
   // Dati fisici
   age: integer("age"),
-  weight: text("weight"), // Store as text for consistency
+  weight: numeric("weight", { precision: 5, scale: 1 }),
   height: integer("height"),
   // Condizioni di salute
   thyroidIssues: text("thyroid_issues"), // "si" | "no" | "eutirox"
@@ -71,11 +66,11 @@ export const mealPlans = pgTable("meal_plans", {
   targetCarbs: integer("target_carbs"),
   targetFat: integer("target_fat"),
   // Client profile data for personalization
-  currentWeight: text("current_weight"),
-  targetWeight: text("target_weight"),
-  currentBMI: text("current_bmi"),
+  currentWeight: numeric("current_weight", { precision: 5, scale: 1 }),
+  targetWeight: numeric("target_weight", { precision: 5, scale: 1 }),
+  currentBMI: numeric("current_bmi", { precision: 4, scale: 1 }),
   bmiCategory: varchar("bmi_category"),
-  weightToLose: text("weight_to_lose"),
+  weightToLose: numeric("weight_to_lose", { precision: 4, scale: 1 }),
   estimatedTimeWeeks: integer("estimated_time_weeks"),
   // Diet explanation and methodology
   dietMethod: text("diet_method"),
