@@ -576,9 +576,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         durationDays,
       });
       
+      // Get authenticated user ID
+      const currentUserId = (req as any).user?.claims?.sub;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Utente non autenticato" });
+      }
+      
       // Save to storage
       const mealPlan = await storage.createMealPlan({
-        userId: userProfile.userId,
+        userId: currentUserId,
         title: aiMealPlan.title,
         description: aiMealPlan.description,
         targetCalories: aiMealPlan.targetCalories,
@@ -1006,9 +1012,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUserStripeInfo(userId, { stripeCustomerId: customerId });
       }
 
-      // Create Stripe checkout session
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId as string,
+      // Create Stripe checkout session  
+      const sessionParams: Stripe.Checkout.SessionCreateParams = {
+        customer: customerId,
         payment_method_types: ['card'],
         line_items: [
           {
@@ -1016,7 +1022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               currency: 'eur',
               product_data: {
                 name: selectedPlan.name,
-                description: selectedPlan.description,
+                description: selectedPlan.description || undefined,
               },
               unit_amount: Math.round(parseFloat(selectedPlan.priceEur) * 100), // Convert to cents
               recurring: {
@@ -1037,13 +1043,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           planId: planId,
         },
         subscription_data: {
-          trial_period_days: selectedPlan.trialDays,
+          trial_period_days: selectedPlan.trialDays || undefined,
           metadata: {
             userId: userId,
             planId: planId,
           }
         },
-      });
+      };
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
       res.json({ url: session.url });
     } catch (error) {
