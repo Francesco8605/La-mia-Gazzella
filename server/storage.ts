@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type PhoneVerification, type InsertPhoneVerification } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, phoneVerifications } from "@shared/schema";
+import { eq, and, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -44,6 +44,14 @@ export interface IStorage {
   updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date; hasUsedTrial?: string }): Promise<User | undefined>;
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+
+  // Phone Verification Methods
+  createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification>;
+  getPhoneVerification(id: string): Promise<PhoneVerification | undefined>;
+  getActivePhoneVerifications(phone: string): Promise<PhoneVerification[]>;
+  updatePhoneVerificationStatus(id: string, status: string, verifiedAt?: Date): Promise<PhoneVerification | undefined>;
+  incrementVerificationAttempts(id: string): Promise<PhoneVerification | undefined>;
+  updateUserPhoneVerification(userId: string, phone: string, verified: boolean): Promise<User | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -52,6 +60,7 @@ export class MemStorage implements IStorage {
   private mealPlans: Map<string, MealPlan>;
   private recipes: Map<string, Recipe>;
   private weightEntries: Map<string, WeightEntry>;
+  private phoneVerifications: Map<string, PhoneVerification>;
 
   constructor() {
     this.users = new Map();
@@ -59,6 +68,7 @@ export class MemStorage implements IStorage {
     this.mealPlans = new Map();
     this.recipes = new Map();
     this.weightEntries = new Map();
+    this.phoneVerifications = new Map();
   }
 
   // Users
@@ -357,6 +367,79 @@ export class MemStorage implements IStorage {
   async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
     return plan as SubscriptionPlan;
   }
+
+  // Phone Verification Methods
+  async createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification> {
+    const id = randomUUID();
+    const phoneVerification: PhoneVerification = {
+      ...verification,
+      id,
+      userId: verification.userId || null,
+      provider: verification.provider || null,
+      status: verification.status || "pending",
+      attempts: verification.attempts || 0,
+      maxAttempts: verification.maxAttempts || 3,
+      verifiedAt: verification.verifiedAt || null,
+      sentAt: verification.sentAt || new Date(),
+      providerData: verification.providerData || null,
+      createdAt: new Date(),
+    };
+    this.phoneVerifications.set(id, phoneVerification);
+    return phoneVerification;
+  }
+
+  async getPhoneVerification(id: string): Promise<PhoneVerification | undefined> {
+    return this.phoneVerifications.get(id);
+  }
+
+  async getActivePhoneVerifications(phone: string): Promise<PhoneVerification[]> {
+    const now = new Date();
+    return Array.from(this.phoneVerifications.values()).filter(
+      verification => 
+        verification.phone === phone && 
+        verification.status === 'pending' && 
+        new Date(verification.expiresAt) > now
+    );
+  }
+
+  async updatePhoneVerificationStatus(id: string, status: string, verifiedAt?: Date): Promise<PhoneVerification | undefined> {
+    const verification = this.phoneVerifications.get(id);
+    if (!verification) return undefined;
+
+    const updatedVerification: PhoneVerification = {
+      ...verification,
+      status,
+      verifiedAt: verifiedAt || null,
+    };
+    this.phoneVerifications.set(id, updatedVerification);
+    return updatedVerification;
+  }
+
+  async incrementVerificationAttempts(id: string): Promise<PhoneVerification | undefined> {
+    const verification = this.phoneVerifications.get(id);
+    if (!verification) return undefined;
+
+    const updatedVerification: PhoneVerification = {
+      ...verification,
+      attempts: verification.attempts + 1,
+    };
+    this.phoneVerifications.set(id, updatedVerification);
+    return updatedVerification;
+  }
+
+  async updateUserPhoneVerification(userId: string, phone: string, verified: boolean): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+
+    const updatedUser: User = {
+      ...user,
+      phone,
+      phoneVerified: verified ? "yes" : "no",
+      phoneVerifiedAt: verified ? new Date() : null,
+    };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -575,6 +658,71 @@ export class DatabaseStorage implements IStorage {
       .values(plan)
       .returning();
     return subscriptionPlan;
+  }
+
+  // Phone Verification Methods
+  async createPhoneVerification(verification: InsertPhoneVerification): Promise<PhoneVerification> {
+    const [phoneVerification] = await db
+      .insert(phoneVerifications)
+      .values(verification)
+      .returning();
+    return phoneVerification;
+  }
+
+  async getPhoneVerification(id: string): Promise<PhoneVerification | undefined> {
+    const [verification] = await db.select().from(phoneVerifications).where(eq(phoneVerifications.id, id));
+    return verification || undefined;
+  }
+
+  async getActivePhoneVerifications(phone: string): Promise<PhoneVerification[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(phoneVerifications)
+      .where(
+        and(
+          eq(phoneVerifications.phone, phone),
+          eq(phoneVerifications.status, "pending"),
+          gte(phoneVerifications.expiresAt, now)
+        )
+      );
+  }
+
+  async updatePhoneVerificationStatus(id: string, status: string, verifiedAt?: Date): Promise<PhoneVerification | undefined> {
+    const [verification] = await db
+      .update(phoneVerifications)
+      .set({ 
+        status,
+        verifiedAt: verifiedAt || null 
+      })
+      .where(eq(phoneVerifications.id, id))
+      .returning();
+    return verification || undefined;
+  }
+
+  async incrementVerificationAttempts(id: string): Promise<PhoneVerification | undefined> {
+    const verification = await this.getPhoneVerification(id);
+    if (!verification) return undefined;
+
+    const [updated] = await db
+      .update(phoneVerifications)
+      .set({ attempts: verification.attempts + 1 })
+      .where(eq(phoneVerifications.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async updateUserPhoneVerification(userId: string, phone: string, verified: boolean): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        phone,
+        phoneVerified: verified ? "yes" : "no",
+        phoneVerifiedAt: verified ? new Date() : null
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
   }
 }
 

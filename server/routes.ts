@@ -1,8 +1,9 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, sendPhoneVerificationSchema, verifyPhoneCodeSchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
+import { phoneVerificationService } from "./services/phoneVerification";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -1248,6 +1249,231 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error canceling subscription:", error);
       res.status(500).json({ message: "Errore nella cancellazione dell'abbonamento" });
+    }
+  });
+
+  // =====================================================
+  // PHONE VERIFICATION ROUTES
+  // =====================================================
+
+  // Test route for debugging
+  app.get("/api/phone/test", async (req, res) => {
+    try {
+      res.json({ 
+        message: "Phone API test working!", 
+        timestamp: new Date().toISOString(),
+        service: "available"
+      });
+    } catch (error) {
+      console.error("Test route error:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Unknown error" });
+    }
+  });
+
+  // Send phone verification code
+  app.post("/api/phone/send-verification", async (req, res) => {
+    try {
+      console.log("📱 Phone verification request:", req.body);
+
+      // Validate request
+      const validatedData = sendPhoneVerificationSchema.parse(req.body);
+      const { phone, method, provider } = validatedData;
+
+      // Normalize phone number
+      const normalizedPhone = phoneVerificationService.normalizePhone(phone);
+      
+      // Check if there are active verifications for this number
+      const activeVerifications = await storage.getActivePhoneVerifications(normalizedPhone);
+      if (activeVerifications.length > 0) {
+        return res.status(429).json({ 
+          message: "Codice di verifica già inviato. Riprova tra qualche minuto.",
+          retryAfter: 300 // 5 minutes
+        });
+      }
+
+      // Generate verification code
+      const code = phoneVerificationService.generateCode(6);
+      const expiresAt = phoneVerificationService.getExpirationDate(10); // 10 minutes
+
+      // Send verification via provider
+      const sendResult = await phoneVerificationService.sendVerificationCode(
+        normalizedPhone, 
+        code, 
+        method, 
+        provider
+      );
+
+      if (!sendResult.success) {
+        return res.status(500).json({
+          message: `Errore nell'invio del codice: ${sendResult.error}`,
+          error: sendResult.error
+        });
+      }
+
+      // Save verification to database
+      const verification = await storage.createPhoneVerification({
+        phone: normalizedPhone,
+        code,
+        method,
+        provider,
+        status: "pending",
+        attempts: 0,
+        maxAttempts: 3,
+        expiresAt,
+        providerData: sendResult.providerData
+      });
+
+      console.log(`✅ Verification code sent to ${normalizedPhone} via ${method.toUpperCase()}`);
+
+      res.json({
+        message: `Codice di verifica inviato via ${method.toUpperCase()} al numero ${normalizedPhone}`,
+        verificationId: verification.id,
+        expiresAt: verification.expiresAt.toISOString(),
+        method
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Dati non validi",
+          errors: error.errors.map(e => e.message)
+        });
+      }
+      
+      console.error("Error sending phone verification:", error);
+      res.status(500).json({
+        message: "Errore durante l'invio del codice di verifica"
+      });
+    }
+  });
+
+  // Verify phone verification code
+  app.post("/api/phone/verify-code", async (req, res) => {
+    try {
+      console.log("🔐 Phone code verification:", req.body);
+
+      // Validate request
+      const validatedData = verifyPhoneCodeSchema.parse(req.body);
+      const { verificationId, code } = validatedData;
+
+      // Get verification from database
+      const verification = await storage.getPhoneVerification(verificationId);
+      if (!verification) {
+        return res.status(404).json({
+          message: "Codice di verifica non trovato"
+        });
+      }
+
+      // Check if verification is expired
+      if (phoneVerificationService.isExpired(verification.expiresAt)) {
+        await storage.updatePhoneVerificationStatus(verificationId, "expired");
+        return res.status(400).json({
+          message: "Codice di verifica scaduto. Richiedi un nuovo codice."
+        });
+      }
+
+      // Check if verification is already used
+      if (verification.status !== "pending") {
+        return res.status(400).json({
+          message: `Codice di verifica già ${verification.status === "verified" ? "utilizzato" : "non valido"}`
+        });
+      }
+
+      // Check attempts limit
+      if (verification.attempts >= verification.maxAttempts) {
+        await storage.updatePhoneVerificationStatus(verificationId, "failed");
+        return res.status(400).json({
+          message: "Numero massimo di tentativi superato. Richiedi un nuovo codice."
+        });
+      }
+
+      // Verify code
+      const isCodeValid = phoneVerificationService.verifyCode(verification.code, code);
+      
+      if (!isCodeValid) {
+        // Increment attempts
+        await storage.incrementVerificationAttempts(verificationId);
+        const remainingAttempts = verification.maxAttempts - verification.attempts - 1;
+        
+        return res.status(400).json({
+          message: `Codice non valido. Tentativi rimanenti: ${remainingAttempts}`,
+          remainingAttempts
+        });
+      }
+
+      // Mark verification as successful
+      await storage.updatePhoneVerificationStatus(verificationId, "verified", new Date());
+
+      console.log(`✅ Phone verification successful for ${verification.phone}`);
+
+      res.json({
+        message: "Numero di telefono verificato con successo!",
+        verified: true,
+        phone: verification.phone
+      });
+
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Dati non validi",
+          errors: error.errors.map(e => e.message)
+        });
+      }
+      
+      console.error("Error verifying phone code:", error);
+      res.status(500).json({
+        message: "Errore durante la verifica del codice"
+      });
+    }
+  });
+
+  // Update user phone number (requires authentication)
+  app.post("/api/phone/update-user-phone", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const { verificationId } = req.body;
+
+      if (!verificationId) {
+        return res.status(400).json({
+          message: "ID verifica richiesto"
+        });
+      }
+
+      // Get verification
+      const verification = await storage.getPhoneVerification(verificationId);
+      if (!verification || verification.status !== "verified") {
+        return res.status(400).json({
+          message: "Verifica telefonica non valida o non completata"
+        });
+      }
+
+      // Update user phone
+      const updatedUser = await storage.updateUserPhoneVerification(
+        userId, 
+        verification.phone, 
+        true
+      );
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          message: "Utente non trovato"
+        });
+      }
+
+      console.log(`✅ User ${userId} phone updated to ${verification.phone}`);
+
+      // Remove password from response
+      const { password: _, ...userWithoutPassword } = updatedUser;
+      res.json({
+        message: "Numero di telefono aggiornato con successo!",
+        user: userWithoutPassword
+      });
+
+    } catch (error) {
+      console.error("Error updating user phone:", error);
+      res.status(500).json({
+        message: "Errore durante l'aggiornamento del numero di telefono"
+      });
     }
   });
 
