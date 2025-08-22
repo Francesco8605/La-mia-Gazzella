@@ -1270,6 +1270,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if phone number was already used for trial
+  app.post("/api/phone/check-trial-usage", async (req, res) => {
+    try {
+      const { phone } = req.body;
+      
+      if (!phone) {
+        return res.status(400).json({ message: "Numero di telefono richiesto" });
+      }
+
+      const normalizedPhone = phoneVerificationService.normalizePhone(phone);
+      
+      // Check if any user has this phone number and used trial
+      const existingUsers = await storage.getUserByPhone(normalizedPhone);
+      
+      if (existingUsers && existingUsers.hasUsedTrial === 'yes') {
+        return res.status(409).json({
+          message: "Questo numero di telefono è già stato utilizzato per una prova gratuita. Ogni numero può essere usato solo una volta.",
+          alreadyUsed: true
+        });
+      }
+
+      res.json({
+        message: "Numero disponibile per la registrazione",
+        alreadyUsed: false
+      });
+
+    } catch (error) {
+      console.error("Error checking trial usage:", error);
+      res.status(500).json({ message: "Errore durante la verifica" });
+    }
+  });
+
   // Send phone verification code
   app.post("/api/phone/send-verification", async (req, res) => {
     try {
@@ -1281,6 +1313,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Normalize phone number
       const normalizedPhone = phoneVerificationService.normalizePhone(phone);
+      
+      // Check if phone number was already used for trial  
+      const existingUsers = await storage.getUserByPhone(normalizedPhone);
+      if (existingUsers && existingUsers.hasUsedTrial === 'yes') {
+        return res.status(409).json({
+          message: "Questo numero è già stato utilizzato per una prova gratuita. Ogni numero può essere usato solo una volta.",
+          alreadyUsed: true
+        });
+      }
       
       // Check if there are active verifications for this number
       const activeVerifications = await storage.getActivePhoneVerifications(normalizedPhone);
@@ -1380,7 +1421,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check attempts limit
-      if (verification.attempts >= verification.maxAttempts) {
+      if ((verification.attempts || 0) >= (verification.maxAttempts || 3)) {
         await storage.updatePhoneVerificationStatus(verificationId, "failed");
         return res.status(400).json({
           message: "Numero massimo di tentativi superato. Richiedi un nuovo codice."
@@ -1393,7 +1434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isCodeValid) {
         // Increment attempts
         await storage.incrementVerificationAttempts(verificationId);
-        const remainingAttempts = verification.maxAttempts - verification.attempts - 1;
+        const remainingAttempts = (verification.maxAttempts || 3) - (verification.attempts || 0) - 1;
         
         return res.status(400).json({
           message: `Codice non valido. Tentativi rimanenti: ${remainingAttempts}`,
