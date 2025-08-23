@@ -73,9 +73,7 @@ async function testStripeConfig() {
       items: [{
         price_data: {
           currency: 'eur',
-          product_data: {
-            name: 'Piano Test'
-          },
+          product: 'prod_test_123',
           unit_amount: 2900,
           recurring: {
             interval: 'month'
