@@ -21,6 +21,7 @@ import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
+import TestAI from "@/pages/test-ai";
 import CancelSubscription from "@/pages/cancel-subscription";
 
 function Router() {
@@ -149,6 +150,13 @@ function Router() {
           {() => (
             <SubscriptionGuard>
               <AIChat />
+            </SubscriptionGuard>
+          )}
+        </Route>
+        <Route path="/test-ai">
+          {() => (
+            <SubscriptionGuard>
+              <TestAI />
             </SubscriptionGuard>
           )}
         </Route>
