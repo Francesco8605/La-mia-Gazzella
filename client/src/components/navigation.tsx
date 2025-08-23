@@ -17,7 +17,6 @@ export default function Navigation() {
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/recipes", label: "Ricette" },
     { href: "/assistente-ia", label: "Assistente IA" },
-    { href: "/test-ai", label: "Test IA" },
     { href: "/piani-abbonamento", label: "Abbonamenti" },
   ];
 
