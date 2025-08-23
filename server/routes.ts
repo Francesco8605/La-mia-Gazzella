@@ -106,24 +106,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
       
-      // Create user with automatic 3-day trial (since they're new)
+      // Create user without automatic trial - users must subscribe with payment details
       const user = await storage.createUser({
         username,
         email,
         password: hashedPassword,
       });
 
-      // Give new users automatic 3-day trial
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + 3);
-      
-      await storage.updateUserStripeInfo(user.id, {
-        subscriptionStatus: 'trialing',
-        subscriptionPlan: 'trial',
-        subscriptionStartDate: new Date(),
-        trialEndDate: trialEndDate,
-        hasUsedTrial: 'yes' // Mark as used immediately to prevent future trials
-      });
+      // New users start without any subscription - they must go through Stripe checkout for trial
 
       console.log("User created successfully:", user.username);
 
