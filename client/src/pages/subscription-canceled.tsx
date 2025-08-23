@@ -43,7 +43,7 @@ export default function SubscriptionCanceled() {
                 </h4>
                 <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <li>• Piani alimentari personalizzati</li>
-                  <li>• Assistente IA nutrizionale 24/7</li>
+                  <li>• Consulente nutrizionale 24/7</li>
                   <li>• Ricette Gazzella illimitate</li>
                   <li>• Tracking progressi avanzato</li>
                   <li>• Supporto prioritario</li>

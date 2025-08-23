@@ -111,7 +111,7 @@ export function MealPlanLoading() {
           className="glass-dark border-blue-200 text-slate-700 px-4 py-2"
         >
           <Bot className="mr-2 h-4 w-4 text-blue-500" />
-          🤖 Powered by OpenAI GPT-4o e protocollo Nutrizionista Gazzella
+          🌱 Powered by protocollo avanzato Nutrizionista Gazzella
         </Badge>
       </div>
 

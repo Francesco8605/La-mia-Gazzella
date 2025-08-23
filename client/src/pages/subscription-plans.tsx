@@ -154,7 +154,7 @@ export default function SubscriptionPlans() {
             Perché spendere migliaia di euro per nutrizionisti e chef privati?
           </p>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-4xl mx-auto">
-            La Mia Gazzella ti offre <span className="font-bold text-emerald-600">un team specializzato nel metodo Gazzella + chef personale + assistente alimentare IA</span> al costo di una cena al ristorante.
+            La Mia Gazzella ti offre <span className="font-bold text-emerald-600">un team specializzato nel metodo Gazzella + chef personale + consulente nutrizionale</span> al costo di una cena al ristorante.
           </p>
           
           {/* Value Proposition */}
@@ -169,7 +169,7 @@ export default function SubscriptionPlans() {
               </div>
               <div>
                 <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">24/7</div>
-                <p className="text-sm text-gray-700 dark:text-gray-300">assistente IA sempre disponibile</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">consulente nutrizionale sempre disponibile</p>
               </div>
               <div>
                 <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">∞</div>
@@ -227,7 +227,7 @@ export default function SubscriptionPlans() {
                   <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">Infinite e personalizzate</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Assistenza IA</td>
+                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Consulenza Nutrizionale</td>
                   <td className="px-6 py-4 text-center text-red-500">✗</td>
                   <td className="px-6 py-4 text-center text-red-500">✗</td>
                   <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">✓ Esperto sempre disponibile</td>
@@ -269,7 +269,7 @@ export default function SubscriptionPlans() {
               <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">🧠</span>
               </div>
-              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">IA Nutrizionale Avanzata</h3>
+              <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-gray-200">Consulenza Nutrizionale Avanzata</h3>
               <p className="text-gray-600 dark:text-gray-400">Assistente virtuale esperto in nutrizione disponibile 24/7 per risolvere ogni tuo dubbio</p>
             </div>
             
@@ -506,7 +506,7 @@ export default function SubscriptionPlans() {
                 </div>
               </div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                "L'assistente IA è incredibile! Risponde a tutte le mie domande 24/7. Il mio nutrizionista mi riceveva solo 1 volta al mese per €80 a visita. Qui ho supporto continuo per €29 al mese!"
+                "Il consulente nutrizionale è incredibile! Risponde a tutte le mie domande 24/7. Il mio nutrizionista mi riceveva solo 1 volta al mese per €80 a visita. Qui ho supporto continuo per €29 al mese!"
               </p>
               <div className="flex text-yellow-400">★★★★★</div>
             </div>
@@ -556,14 +556,14 @@ export default function SubscriptionPlans() {
               Garanzia di Soddisfazione al 100%
             </h3>
             <p className="text-lg text-gray-600 dark:text-gray-400 mb-4">
-              Tutti i piani includono accesso completo a tutti i nostri strumenti avanzati, supporto IA 24/7, piani personalizzati illimitati e ricette sempre nuove.
+              Tutti i piani includono accesso completo a tutti i nostri strumenti avanzati, supporto nutrizionale 24/7, piani personalizzati illimitati e ricette sempre nuove.
             </p>
             <div className="grid md:grid-cols-2 gap-6 text-left bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6">
               <div>
                 <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">✅ Incluso in tutti i piani:</h4>
                 <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>• Piani alimentari personalizzati illimitati</li>
-                  <li>• Assistente IA nutrizionale 24/7</li>
+                  <li>• Consulente nutrizionale 24/7</li>
                   <li>• Ricette Gazzella sempre nuove</li>
                   <li>• Monitoraggio progressi avanzato</li>
                   <li>• Supporto via chat dedicato</li>

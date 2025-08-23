@@ -103,7 +103,7 @@ export function ProfileGuard({ children, requiresProfile = true }: ProfileGuardP
                     
                     <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
                       <h4 className="font-medium text-purple-800 dark:text-purple-200 mb-2">
-                        🤖 Assistente IA Intelligente
+                        🤖 Consulente Nutrizionale Intelligente
                       </h4>
                       <p className="text-sm text-purple-700 dark:text-purple-300">
                         L'assistente nutrizionale può fornirti consigli accurati solo conoscendo i tuoi dati antropometrici e le tue abitudini alimentari.

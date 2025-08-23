@@ -182,7 +182,7 @@ export default function MealPlanGenerator() {
 
             <div className="text-center text-sm text-slate-500 mt-6">
               <p>⚡ La generazione richiede circa 30-60 secondi</p>
-              <p>🤖 Powered by OpenAI GPT-4o e protocollo Nutrizionista Gazzella</p>
+              <p>🌱 Powered by protocollo avanzato Nutrizionista Gazzella</p>
             </div>
           </CardContent>
         </Card>

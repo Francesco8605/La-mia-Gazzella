@@ -151,7 +151,7 @@ function Router() {
             </SubscriptionGuard>
           )}
         </Route>
-        <Route path="/assistente-ia">
+        <Route path="/assistente-nutrizionale">
           {() => (
             <SubscriptionGuard>
               <ProfileGuard>

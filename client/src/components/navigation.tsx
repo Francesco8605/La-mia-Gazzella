@@ -16,7 +16,7 @@ export default function Navigation() {
     { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/recipes", label: "Ricette" },
-    { href: "/assistente-ia", label: "Assistente IA" },
+    { href: "/assistente-nutrizionale", label: "Consulente Nutrizionale" },
     { href: "/piani-abbonamento", label: "Abbonamenti" },
   ];
 

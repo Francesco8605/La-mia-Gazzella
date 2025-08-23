@@ -5,7 +5,7 @@ export default function LoadingStates() {
   return (
     <div className="max-w-4xl mx-auto">
       <div className="text-center mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Processo di Generazione IA</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-4">Processo di Generazione Nutrizionale</h2>
         <p className="text-slate-600 text-lg">Stati di caricamento moderni e indicatori di progresso</p>
       </div>
 
@@ -16,7 +16,7 @@ export default function LoadingStates() {
           <CardContent className="p-8">
             <div className="text-center mb-6">
               <h3 className="text-xl font-bold text-slate-800 mb-2">Generating Your Meal Plan</h3>
-              <p className="text-slate-600">Our AI is analyzing your preferences and creating a personalized plan...</p>
+              <p className="text-slate-600">Il nostro sistema sta analizzando le tue preferenze per creare un piano personalizzato...</p>
             </div>
             
             <div className="max-w-md mx-auto">
@@ -93,7 +93,7 @@ export default function LoadingStates() {
                 <Sparkles className="h-8 w-8 text-red-500" />
               </div>
               <h3 className="text-xl font-bold text-slate-800 mb-2">Service Temporarily Unavailable</h3>
-              <p className="text-slate-600 mb-6">We're having trouble connecting to our AI service. Please try again in a moment.</p>
+              <p className="text-slate-600 mb-6">Problemi di connessione con il servizio nutrizionale. Riprova tra poco.</p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button 

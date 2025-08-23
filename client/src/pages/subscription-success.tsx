@@ -49,7 +49,7 @@ export default function SubscriptionSuccess() {
                 </h4>
                 <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                   <li>• Crea il tuo piano alimentare personalizzato</li>
-                  <li>• Chatta con l'assistente IA nutrizionale</li>
+                  <li>• Chatta con il consulente nutrizionale</li>
                   <li>• Genera ricette Gazzella illimitate</li>
                   <li>• Traccia i tuoi progressi di peso</li>
                 </ul>

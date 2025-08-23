@@ -44,7 +44,7 @@ export default function AIChat() {
     if (!authLoading && !isAuthenticated) {
       toast({
         title: "Accesso Richiesto",
-        description: "Effettua il login per accedere al tuo assistente IA personale.",
+        description: "Effettua il login per accedere al tuo consulente nutrizionale personale.",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -167,7 +167,7 @@ export default function AIChat() {
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Assistente IA Gazzella
+              Consulente Nutrizionale Gazzella
             </h1>
             <p className="text-muted-foreground">
               Il tuo consulente nutrizionale personale basato sul Manuale della Gazzella
@@ -243,7 +243,7 @@ export default function AIChat() {
               {messages.length === 0 && (
                 <div className="text-center py-12">
                   <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Ciao! Sono il tuo Assistente Gazzella</h3>
+                  <h3 className="text-lg font-medium mb-2">Ciao! Sono il tuo Consulente Nutrizionale</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
                     Sono qui per aiutarti con domande sul Manuale della Gazzella, i tuoi piani nutrizionali, 
                     ricette e tutto ciò che riguarda il tuo percorso di benessere.

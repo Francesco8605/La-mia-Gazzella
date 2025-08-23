@@ -28,7 +28,7 @@ export default function Home() {
             Nutrizionale Personale
           </h1>
           <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto">
-            Pianificazione alimentare alimentata dall'IA che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
+            Pianificazione alimentare avanzata che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 justify-center items-center max-w-4xl mx-auto">
             <Link href="/recipe-generator">
@@ -51,14 +51,14 @@ export default function Home() {
                 <span className="text-white drop-shadow-lg font-bold">I Miei Piani</span>
               </Button>
             </Link>
-            <Link href="/ai-chat">
+            <Link href="/assistente-nutrizionale">
               <Button
                 size="lg"
                 className="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold px-6 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                 data-testid="ai-assistant-button"
               >
                 <MessageCircle className="mr-2 h-5 w-5 text-white" />
-                <span className="text-white drop-shadow-lg font-bold">🤖 Assistente IA</span>
+                <span className="text-white drop-shadow-lg font-bold">🤖 Consulente Nutrizionale</span>
               </Button>
             </Link>
             <Link href="/aggiorna-profilo">
@@ -98,7 +98,7 @@ export default function Home() {
               <span className="font-bold text-2xl">La Mia Gazzella</span>
             </div>
             <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
-              Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale alimentata dall'IA. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
+              Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale avanzata. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
             </p>
             <div className="flex justify-center gap-4">
               <Button
