@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionGuard } from "@/components/subscription-guard";
 import Navigation from "@/components/navigation";
+import { InstallPWABanner } from "@/components/install-pwa-banner";
 import Home from "@/pages/home";
 import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
@@ -215,6 +216,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Router />
+        <InstallPWABanner />
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

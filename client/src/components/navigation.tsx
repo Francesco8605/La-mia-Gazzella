@@ -3,6 +3,7 @@ import { Leaf, Menu, X, LogOut, Crown, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
+import { InstallPWAButton } from "./install-pwa-button";
 
 export default function Navigation() {
   const [location] = useLocation();
@@ -68,6 +69,13 @@ export default function Navigation() {
               </Link>
             )}
           </div>
+          
+          {/* Install PWA Button */}
+          <InstallPWAButton 
+            variant="ghost" 
+            size="sm"
+            className="text-slate-700 hover:text-primary transition-colors duration-300"
+          />
           
           {/* Logout Button */}
           <Button
@@ -149,8 +157,18 @@ export default function Navigation() {
               </Link>
             ))}
             
-            {/* Mobile Logout Button */}
-            <div className="pt-2 border-t border-slate-200">
+            {/* Mobile Actions */}
+            <div className="pt-2 border-t border-slate-200 space-y-2">
+              {/* Install PWA Button in Mobile */}
+              <InstallPWAButton 
+                variant="ghost" 
+                size="sm"
+                className="text-slate-700 hover:text-primary transition-colors duration-300 w-full justify-start"
+              >
+                📱 Installa App
+              </InstallPWAButton>
+              
+              {/* Mobile Logout Button */}
               <Button
                 variant="ghost"
                 size="sm"
