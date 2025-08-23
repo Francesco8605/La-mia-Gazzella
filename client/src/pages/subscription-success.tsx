@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Home, CreditCard } from "lucide-react";
+import { CheckCircle, Home, CreditCard, User } from "lucide-react";
 
 export default function SubscriptionSuccess() {
   const [, setLocation] = useLocation();
@@ -31,9 +31,14 @@ export default function SubscriptionSuccess() {
               <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-2">
                 🎉 La tua prova gratuita è iniziata!
               </h3>
-              <p className="text-blue-700 dark:text-blue-300">
+              <p className="text-blue-700 dark:text-blue-300 mb-2">
                 Hai 3 giorni completi per esplorare tutti i nostri strumenti premium gratuitamente.
               </p>
+              <div className="bg-amber-100 dark:bg-amber-900/30 border border-amber-300 dark:border-amber-700 rounded p-3 mt-3">
+                <p className="text-amber-800 dark:text-amber-200 text-sm font-medium">
+                  ⚡ <strong>Prossimo passo obbligatorio:</strong> Completa il tuo profilo personale per utilizzare tutti i servizi. È necessario per calcolare piani alimentari e ricette personalizzate.
+                </p>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-4 text-left">
@@ -78,24 +83,19 @@ export default function SubscriptionSuccess() {
             )}
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col gap-4 justify-center">
             <Button 
-              onClick={() => setLocation("/")}
+              onClick={() => setLocation("/aggiorna-profilo")}
               className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-8 py-3"
-              data-testid="go-home-button"
+              data-testid="complete-profile-button"
             >
-              <Home className="h-5 w-5 mr-2" />
-              Vai alla Dashboard
+              <User className="h-5 w-5 mr-2" />
+              Completa il Tuo Profilo
             </Button>
             
-            <Button 
-              variant="outline"
-              onClick={() => setLocation("/genera-piano")}
-              className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 px-8 py-3"
-              data-testid="create-plan-button"
-            >
-              Crea il Tuo Piano
-            </Button>
+            <p className="text-sm text-center text-gray-600 dark:text-gray-400">
+              Devi completare il profilo per accedere ai servizi premium
+            </p>
           </div>
         </CardContent>
       </Card>

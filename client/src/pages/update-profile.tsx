@@ -18,6 +18,7 @@ import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
 import { SubscriptionSettings } from "@/components/subscription-settings";
+import CreateProfileForm from "@/components/create-profile-form";
 
 // Schema for weight update (simplified)
 const updateWeightSchema = z.object({
@@ -96,31 +97,12 @@ export default function UpdateProfile() {
   }
 
   if (!userProfile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <Scale className="h-12 w-12 mx-auto mb-4 text-pink-600" />
-              <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
-                Profilo non trovato
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-4">
-                Devi prima creare un profilo per poter aggiornare i tuoi dati.
-              </p>
-              <Link href="/profilo">
-                <Button>Crea il tuo profilo</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+    return <CreateProfileForm />;
   }
 
   // Calculate current BMI
   const currentBMI = userProfile.weight && userProfile.height 
-    ? userProfile.weight / Math.pow(userProfile.height / 100, 2)
+    ? parseFloat(userProfile.weight.toString()) / Math.pow(userProfile.height / 100, 2)
     : 0;
   const idealWeight = userProfile.height 
     ? Math.round(22 * Math.pow(userProfile.height / 100, 2))
@@ -138,10 +120,10 @@ export default function UpdateProfile() {
             </Button>
           </Link>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Aggiorna i tuoi dati
+            Il Mio Profilo
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-            Mantieni il tuo profilo sempre aggiornato per piani alimentari più precisi
+            Mantieni il tuo profilo sempre aggiornato per piani alimentari e consigli più precisi
           </p>
         </div>
 

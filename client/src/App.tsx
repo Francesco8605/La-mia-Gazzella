@@ -9,6 +9,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionGuard } from "@/components/subscription-guard";
 import Navigation from "@/components/navigation";
 import { InstallPWABanner } from "@/components/install-pwa-banner";
+import { ProfileGuard } from "@/components/profile-guard";
 import Home from "@/pages/home";
 import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
@@ -65,7 +66,9 @@ function Router() {
         <Route path="/recipe-generator">
           {() => (
             <SubscriptionGuard>
-              <RecipeGenerator />
+              <ProfileGuard>
+                <RecipeGenerator />
+              </ProfileGuard>
             </SubscriptionGuard>
           )}
         </Route>
@@ -86,7 +89,9 @@ function Router() {
         <Route path="/genera-piano">
           {() => (
             <SubscriptionGuard>
-              <MealPlanGenerator />
+              <ProfileGuard>
+                <MealPlanGenerator />
+              </ProfileGuard>
             </SubscriptionGuard>
           )}
         </Route>
@@ -149,7 +154,9 @@ function Router() {
         <Route path="/assistente-ia">
           {() => (
             <SubscriptionGuard>
-              <AIChat />
+              <ProfileGuard>
+                <AIChat />
+              </ProfileGuard>
             </SubscriptionGuard>
           )}
         </Route>
