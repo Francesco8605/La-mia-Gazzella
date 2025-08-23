@@ -377,11 +377,11 @@ export default function Auth() {
         <div className="text-center mt-8">
           <p className="text-sm text-slate-500">
             Accedendo accetti i nostri{" "}
-            <a href="#" className="text-primary hover:underline">
+            <a href="/terms-of-service" className="text-primary hover:underline">
               Termini di Servizio
             </a>{" "}
             e{" "}
-            <a href="#" className="text-primary hover:underline">
+            <a href="/privacy-policy" className="text-primary hover:underline">
               Privacy Policy
             </a>
           </p>

@@ -125,10 +125,20 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="border-t border-slate-800 mt-8 pt-8 text-center">
-            <p className="text-slate-400">
-              &copy; 2025 La Mia Gazzella. Tutti i diritti riservati.
-            </p>
+          <div className="border-t border-slate-800 mt-8 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-4 md:space-y-0">
+              <p className="text-slate-400">
+                &copy; 2025 La Mia Gazzella. Tutti i diritti riservati.
+              </p>
+              <div className="flex space-x-6">
+                <Link href="/privacy-policy" className="text-slate-400 hover:text-white transition-colors text-sm">
+                  Privacy Policy
+                </Link>
+                <Link href="/terms-of-service" className="text-slate-400 hover:text-white transition-colors text-sm">
+                  Termini di Servizio
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
