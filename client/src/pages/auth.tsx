@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Phone, Shield, CheckCircle } from "lucide-react";
+import { User, Mail, Lock, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +22,6 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
   email: z.string().email("Email non valida"),
-  phone: z.string().min(10, "Numero di telefono deve essere almeno 10 cifre").max(15, "Numero troppo lungo"),
   password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -30,23 +29,12 @@ const signupSchema = z.object({
   path: ["confirmPassword"],
 });
 
-const phoneVerificationSchema = z.object({
-  code: z.string().min(4, "Codice deve essere almeno 4 cifre").max(8, "Codice troppo lungo"),
-});
-
 type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
-type PhoneVerificationData = z.infer<typeof phoneVerificationSchema>;
 
 export default function Auth() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  
-  // Stati per la verifica telefonica multi-step
-  const [registrationStep, setRegistrationStep] = useState<'form' | 'phone-verification' | 'completed'>('form');
-  const [pendingSignupData, setPendingSignupData] = useState<SignupFormData | null>(null);
-  const [verificationId, setVerificationId] = useState<string>('');
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -61,16 +49,8 @@ export default function Auth() {
     defaultValues: {
       username: "",
       email: "",
-      phone: "",
       password: "",
       confirmPassword: "",
-    },
-  });
-
-  const verificationForm = useForm<PhoneVerificationData>({
-    resolver: zodResolver(phoneVerificationSchema),
-    defaultValues: {
-      code: "",
     },
   });
 
@@ -111,89 +91,6 @@ export default function Auth() {
     },
   });
 
-  // Mutation per controllare se il numero è già stato usato
-  const checkPhoneMutation = useMutation({
-    mutationFn: async (phone: string) => {
-      const response = await fetch("/api/phone/check-trial-usage", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Errore nella verifica del numero");
-      }
-      return response.json();
-    },
-  });
-
-  // Mutation per inviare il codice di verifica
-  const sendVerificationMutation = useMutation({
-    mutationFn: async (phone: string) => {
-      const response = await fetch("/api/phone/send-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phone,
-          method: "whatsapp",
-          provider: "mail2whats"
-        }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Errore nell'invio del codice");
-      }
-      return response.json();
-    },
-    onSuccess: (response) => {
-      setVerificationId(response.verificationId);
-      setRegistrationStep('phone-verification');
-      toast({
-        title: "Codice Inviato!",
-        description: `Abbiamo inviato un codice di verifica via WhatsApp al numero ${phoneNumber}`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Errore Invio Codice",
-        description: error instanceof Error ? error.message : "Impossibile inviare il codice di verifica",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mutation per verificare il codice OTP
-  const verifyCodeMutation = useMutation({
-    mutationFn: async (code: string) => {
-      const response = await fetch("/api/phone/verify-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          verificationId,
-          code
-        }),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Errore nella verifica del codice");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      // Ora possiamo procedere con la registrazione
-      if (pendingSignupData) {
-        signupMutation.mutate(pendingSignupData);
-      }
-    },
-    onError: (error) => {
-      toast({
-        title: "Codice Non Valido",
-        description: error instanceof Error ? error.message : "Il codice inserito non è corretto",
-        variant: "destructive",
-      });
-    },
-  });
-
   const signupMutation = useMutation({
     mutationFn: async (data: SignupFormData) => {
       const { confirmPassword, ...signupData } = data;
@@ -210,7 +107,6 @@ export default function Auth() {
       return response.json();
     },
     onSuccess: (user) => {
-      setRegistrationStep('completed');
       toast({
         title: "Registrazione Completata!",
         description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
@@ -238,50 +134,8 @@ export default function Auth() {
     loginMutation.mutate(data);
   };
 
-  const onSignup = async (data: SignupFormData) => {
-    // Step 1: Controllo anti-abuso del numero
-    try {
-      setPhoneNumber(data.phone);
-      const checkResult = await checkPhoneMutation.mutateAsync(data.phone);
-      
-      if (checkResult.alreadyUsed) {
-        toast({
-          title: "Numero già utilizzato",
-          description: "Questo numero di telefono è già stato utilizzato per una prova gratuita. Ogni numero può essere usato solo una volta.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Step 2: Salva i dati di registrazione e invia codice OTP
-      setPendingSignupData(data);
-      sendVerificationMutation.mutate(data.phone);
-      
-    } catch (error) {
-      toast({
-        title: "Errore di verifica",
-        description: error instanceof Error ? error.message : "Errore durante la verifica del numero",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const onVerifyCode = (data: PhoneVerificationData) => {
-    verifyCodeMutation.mutate(data.code);
-  };
-
-  const onResendCode = () => {
-    if (phoneNumber) {
-      sendVerificationMutation.mutate(phoneNumber);
-    }
-  };
-
-  const onBackToForm = () => {
-    setRegistrationStep('form');
-    setPendingSignupData(null);
-    setVerificationId('');
-    setPhoneNumber('');
-    verificationForm.reset();
+  const onSignup = (data: SignupFormData) => {
+    signupMutation.mutate(data);
   };
 
   return (
@@ -391,18 +245,16 @@ export default function Auth() {
 
             {/* Signup Tab */}
             <TabsContent value="signup">
-              {registrationStep === 'form' && (
-                <>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <UserPlus className="h-5 w-5" />
-                      Crea un Nuovo Account
-                    </CardTitle>
-                    <CardDescription>
-                      Registrati per iniziare il tuo percorso nutrizionale personalizzato
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Crea un Nuovo Account
+                </CardTitle>
+                <CardDescription>
+                  Registrati per iniziare il tuo percorso nutrizionale personalizzato
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
                     <FormField
@@ -446,38 +298,6 @@ export default function Auth() {
                             </div>
                           </FormControl>
                           <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>
-                            <div className="flex items-center gap-2">
-                              <Phone className="h-4 w-4" />
-                              Numero di Telefono
-                              <Shield className="h-3 w-3 text-green-600" />
-                            </div>
-                          </FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                              <Input 
-                                type="tel" 
-                                placeholder="320 123 4567"
-                                className="pl-10"
-                                {...field}
-                                data-testid="input-signup-phone"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                          <p className="text-xs text-slate-600 mt-1">
-                            🛡️ Proteggiamo la tua prova gratuita: un numero = un trial
-                          </p>
                         </FormItem>
                       )}
                     />
@@ -530,141 +350,25 @@ export default function Auth() {
 
                     <Button
                       type="submit"
-                      disabled={checkPhoneMutation.isPending || sendVerificationMutation.isPending}
+                      disabled={signupMutation.isPending}
                       className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
                       data-testid="button-signup"
                     >
-                      {(checkPhoneMutation.isPending || sendVerificationMutation.isPending) ? (
+                      {signupMutation.isPending ? (
                         <>
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                          Verificando numero...
+                          Registrando...
                         </>
                       ) : (
                         <>
-                          <Shield className="mr-2 h-4 w-4" />
-                          Verifica Numero e Registrati
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Registrati
                         </>
                       )}
                     </Button>
                   </form>
                 </Form>
-                </CardContent>
-                </>
-              )}
-
-              {/* Step 2: Verifica Codice OTP */}
-              {registrationStep === 'phone-verification' && (
-                <>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-green-600" />
-                      Verifica Numero di Telefono
-                    </CardTitle>
-                    <CardDescription>
-                      Abbiamo inviato un codice di verifica via WhatsApp al numero <strong>{phoneNumber}</strong>
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Form {...verificationForm}>
-                      <form onSubmit={verificationForm.handleSubmit(onVerifyCode)} className="space-y-4">
-                        <FormField
-                          control={verificationForm.control}
-                          name="code"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Codice di Verifica</FormLabel>
-                              <FormControl>
-                                <div className="relative">
-                                  <Shield className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                                  <Input 
-                                    type="text" 
-                                    placeholder="Inserisci il codice"
-                                    className="pl-10 text-center text-lg font-mono"
-                                    maxLength={6}
-                                    {...field}
-                                    data-testid="input-verification-code"
-                                  />
-                                </div>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <div className="space-y-3">
-                          <Button
-                            type="submit"
-                            disabled={verifyCodeMutation.isPending}
-                            className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
-                            data-testid="button-verify-code"
-                          >
-                            {verifyCodeMutation.isPending ? (
-                              <>
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                                Verificando...
-                              </>
-                            ) : (
-                              <>
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Verifica e Completa Registrazione
-                              </>
-                            )}
-                          </Button>
-
-                          <div className="flex gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={onResendCode}
-                              disabled={sendVerificationMutation.isPending}
-                              className="flex-1"
-                              data-testid="button-resend-code"
-                            >
-                              {sendVerificationMutation.isPending ? (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-600 mr-2" />
-                              ) : (
-                                <Phone className="mr-2 h-4 w-4" />
-                              )}
-                              Reinvia Codice
-                            </Button>
-
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={onBackToForm}
-                              className="flex-1"
-                              data-testid="button-back-to-form"
-                            >
-                              ← Indietro
-                            </Button>
-                          </div>
-                        </div>
-                      </form>
-                    </Form>
-                  </CardContent>
-                </>
-              )}
-
-              {/* Step 3: Registrazione in corso */}
-              {registrationStep === 'completed' && (
-                <>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      Registrazione Completata!
-                    </CardTitle>
-                    <CardDescription>
-                      Account creato con successo. Verrai reindirizzato a breve...
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4" />
-                      <p className="text-slate-600">Preparando il tuo profilo nutrizionale...</p>
-                    </div>
-                  </CardContent>
-                </>
-              )}
+              </CardContent>
             </TabsContent>
           </Tabs>
         </Card>

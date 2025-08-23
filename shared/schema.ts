@@ -8,10 +8,6 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
-  // Phone verification fields
-  phone: text("phone").unique(), // numero di telefono per WhatsApp
-  phoneVerified: text("phone_verified").default("no"), // "yes" | "no" | "pending"
-  phoneVerifiedAt: timestamp("phone_verified_at"),
   // Stripe subscription fields
   stripeCustomerId: varchar("stripe_customer_id"),
   stripeSubscriptionId: varchar("stripe_subscription_id"),
@@ -138,24 +134,6 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Phone verification table
-export const phoneVerifications = pgTable("phone_verifications", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id"), // nullable per verifiche non autenticate
-  phone: text("phone").notNull(),
-  code: text("code").notNull(), // codice OTP a 6 cifre
-  method: varchar("method").notNull(), // "whatsapp" | "sms" | "call"
-  provider: varchar("provider"), // "twilio" | "telesign" | "meta" | "mail2whats"
-  status: varchar("status").default("pending"), // "pending" | "verified" | "expired" | "failed"
-  attempts: integer("attempts").default(0), // tentativi di verifica
-  maxAttempts: integer("max_attempts").default(3),
-  expiresAt: timestamp("expires_at").notNull(),
-  verifiedAt: timestamp("verified_at"),
-  sentAt: timestamp("sent_at").defaultNow(),
-  providerData: json("provider_data").$type<Record<string, any>>(), // dati specifici del provider
-  createdAt: timestamp("created_at").defaultNow(),
-});
-
 // Type definitions
 export type MealPlanDay = {
   day: string;
@@ -252,32 +230,6 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
 
-export const insertPhoneVerificationSchema = createInsertSchema(phoneVerifications).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  phone: z.string().min(10, "Numero di telefono deve essere almeno 10 cifre").max(15, "Numero di telefono troppo lungo"),
-  method: z.enum(["whatsapp", "sms", "call"], {
-    errorMap: () => ({ message: "Metodo di verifica non valido" })
-  }),
-  provider: z.enum(["twilio", "telesign", "meta", "mail2whats"]).optional(),
-});
-
-// Schema for verifying a code
-export const verifyPhoneCodeSchema = z.object({
-  verificationId: z.string().min(1, "ID verifica obbligatorio"),
-  code: z.string().min(4, "Codice deve essere almeno 4 cifre").max(8, "Codice troppo lungo"),
-});
-
-// Schema for sending verification
-export const sendPhoneVerificationSchema = z.object({
-  phone: z.string().min(10, "Numero di telefono deve essere almeno 10 cifre").max(15, "Numero di telefono troppo lungo"),
-  method: z.enum(["whatsapp", "sms", "call"], {
-    errorMap: () => ({ message: "Metodo di verifica non valido" })
-  }).default("whatsapp"),
-  provider: z.enum(["twilio", "telesign", "meta", "mail2whats"]).default("mail2whats"),
-});
-
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -291,7 +243,3 @@ export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type Recipe = typeof recipes.$inferSelect;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
-export type InsertPhoneVerification = z.infer<typeof insertPhoneVerificationSchema>;
-export type PhoneVerification = typeof phoneVerifications.$inferSelect;
-export type SendPhoneVerification = z.infer<typeof sendPhoneVerificationSchema>;
-export type VerifyPhoneCode = z.infer<typeof verifyPhoneCodeSchema>;
