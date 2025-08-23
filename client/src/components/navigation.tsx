@@ -21,15 +21,15 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-lg shadow-lg border border-white/20 rounded-full px-6 py-3 animate-fade-in" data-testid="main-navigation">
-      <div className="flex items-center space-x-8">
+    <nav className="fixed top-2 md:top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-lg shadow-lg border border-white/20 rounded-full px-4 md:px-6 py-2 md:py-3 animate-fade-in w-[95%] md:w-auto" data-testid="main-navigation">
+      <div className="flex items-center justify-between w-full md:space-x-8">
         <Link href="/" className="flex items-center space-x-2" data-testid="logo-link">
           <Leaf className="text-secondary text-xl" />
           <span className="font-bold text-slate-800 text-lg">La Mia Gazzella</span>
         </Link>
         
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden md:flex items-center space-x-4 lg:space-x-6">
           {navItems.map((item) => (
             <Link
               key={item.href}

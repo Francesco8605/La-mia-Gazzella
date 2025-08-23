@@ -63,7 +63,7 @@ export default function CreateProfileForm() {
       return await apiRequest("/api/user-profiles/current", data, "PUT");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
       toast({
         title: "Profilo creato con successo! 🎉",
         description: "Ora puoi accedere a tutti i nostri servizi premium personalizzati.",

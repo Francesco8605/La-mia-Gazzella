@@ -33,8 +33,9 @@ export default function UpdateProfile() {
   const { user } = useAuth();
 
   const { data: userProfile, isLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/user-profile"],
+    queryKey: ["/api/user-profiles/current"],
     enabled: !!user,
+    staleTime: 1000 * 60 * 2, // 2 minuti di cache
   });
 
   const form = useForm<UpdateWeightForm>({
@@ -53,12 +54,12 @@ export default function UpdateProfile() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateWeightForm) => {
-      return await apiRequest(`/api/user-profile`, {
+      return await apiRequest(`/api/user-profiles/current`, {
         weight: data.weight,
       }, "PATCH");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user-profile"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
       toast({
         title: "Dati aggiornati!",
         description: "I tuoi dati sono stati aggiornati con successo. Ora puoi generare un nuovo piano personalizzato.",

@@ -17,7 +17,7 @@ export function useSubscription() {
   const { data: subscription, isLoading, error } = useQuery<UserSubscription>({
     queryKey: ["/api/user/subscription"],
     retry: false,
-    staleTime: 0, // No cache per Francesco
+    staleTime: 1000 * 60 * 1, // 1 minuto di cache per subscription status
   });
 
 

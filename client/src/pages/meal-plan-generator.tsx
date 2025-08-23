@@ -97,11 +97,11 @@ export default function MealPlanGenerator() {
           
           <CardContent className="space-y-8">
             {userProfile && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <div className="text-center p-4 bg-white/50 rounded-lg backdrop-blur-sm">
-                  <Heart className="h-8 w-8 text-red-500 mx-auto mb-2" />
-                  <div className="text-2xl font-bold text-slate-800">{userProfile.age}</div>
-                  <div className="text-sm text-slate-600">anni</div>
+                  <Heart className="h-6 w-6 md:h-8 md:w-8 text-red-500 mx-auto mb-2" />
+                  <div className="text-lg md:text-2xl font-bold text-slate-800">{userProfile.age}</div>
+                  <div className="text-xs md:text-sm text-slate-600">anni</div>
                 </div>
                 
                 <div className="text-center p-4 bg-white/50 rounded-lg backdrop-blur-sm">

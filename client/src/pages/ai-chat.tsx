@@ -64,18 +64,21 @@ export default function AIChat() {
     queryKey: ["/api/user-profiles/current"],
     enabled: isAuthenticated,
     retry: false,
+    staleTime: 1000 * 60 * 2, // 2 minuti di cache
   });
 
   const { data: mealPlans } = useQuery({
     queryKey: ["/api/meal-plans/user"],
     enabled: isAuthenticated,
     retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minuti di cache
   });
 
   const { data: recipes } = useQuery({
     queryKey: ["/api/recipes/user"],
     enabled: isAuthenticated,
     retry: false,
+    staleTime: 1000 * 60 * 5, // 5 minuti di cache
   });
 
   // Send message mutation

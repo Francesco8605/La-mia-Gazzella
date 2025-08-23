@@ -16,9 +16,10 @@ export function ProfileGuard({ children, requiresProfile = true }: ProfileGuardP
   const { user } = useAuth();
   
   const { data: userProfile, isLoading, error } = useQuery<UserProfile>({
-    queryKey: ["/api/user-profile"],
+    queryKey: ["/api/user-profiles/current"],
     enabled: !!user && requiresProfile,
     retry: false,
+    staleTime: 1000 * 60 * 2, // 2 minuti di cache
   });
 
   // Se il profilo non è richiesto, mostra sempre i children

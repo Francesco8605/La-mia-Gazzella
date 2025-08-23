@@ -21,7 +21,7 @@ export function MealPlanLoading() {
       {/* Card con benefici del piano */}
       <Card className="glass-morphism shadow-2xl mb-8">
         <CardContent className="p-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
                 <div className="h-5 w-5 bg-green-500 rounded-full flex items-center justify-center">
@@ -86,11 +86,11 @@ export function MealPlanLoading() {
           </div>
         </div>
         
-        <div className="mt-6 space-y-2">
-          <h3 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+        <div className="mt-4 md:mt-6 space-y-2">
+          <h3 className="text-lg md:text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
             Generazione in corso...
           </h3>
-          <p className="text-slate-600 text-sm">
+          <p className="text-slate-600 text-xs md:text-sm">
             La tua nutrizionista virtuale sta creando il piano perfetto per te
           </p>
         </div>
