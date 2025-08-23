@@ -42,11 +42,13 @@ function Router() {
     );
   }
 
-  // Se non autenticato, mostra solo la pagina di auth
+  // Se non autenticato, mostra solo la pagina di auth e i documenti legali
   if (!isAuthenticated) {
     return (
       <Switch>
         <Route path="/auth" component={Auth} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
         <Route component={Auth} />
       </Switch>
     );
