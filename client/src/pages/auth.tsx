@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 const loginSchema = z.object({
@@ -377,13 +377,17 @@ export default function Auth() {
         <div className="text-center mt-8">
           <p className="text-sm text-slate-500">
             Accedendo accetti i nostri{" "}
-            <a href="/terms-of-service" className="text-primary hover:underline">
-              Termini di Servizio
-            </a>{" "}
+            <Link href="/terms-of-service">
+              <span className="text-primary hover:underline cursor-pointer">
+                Termini di Servizio
+              </span>
+            </Link>{" "}
             e{" "}
-            <a href="/privacy-policy" className="text-primary hover:underline">
-              Privacy Policy
-            </a>
+            <Link href="/privacy-policy">
+              <span className="text-primary hover:underline cursor-pointer">
+                Privacy Policy
+              </span>
+            </Link>
           </p>
         </div>
       </div>
