@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans } from "@shared/schema";
@@ -75,8 +75,16 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
       id,
+      stripeCustomerId: insertUser.stripeCustomerId ?? null,
+      stripeSubscriptionId: insertUser.stripeSubscriptionId ?? null,
+      subscriptionStatus: insertUser.subscriptionStatus ?? null,
+      subscriptionPlan: insertUser.subscriptionPlan ?? null,
+      subscriptionStartDate: insertUser.subscriptionStartDate ?? null,
+      subscriptionEndDate: insertUser.subscriptionEndDate ?? null,
+      trialEndDate: insertUser.trialEndDate ?? null,
+      hasUsedTrial: insertUser.hasUsedTrial ?? "no",
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -93,10 +101,9 @@ export class MemStorage implements IStorage {
   async createUserProfile(insertProfile: InsertUserProfile): Promise<UserProfile> {
     const id = randomUUID();
     const profile: UserProfile = {
-      ...insertProfile,
       id,
+      userId: insertProfile.userId!,
       createdAt: new Date(),
-      // Gestire tutti i nuovi campi con valori di default appropriati
       email: insertProfile.email ?? null,
       phone: insertProfile.phone ?? null,
       height: insertProfile.height ?? null,
@@ -108,15 +115,15 @@ export class MemStorage implements IStorage {
       breakfastTime: insertProfile.breakfastTime ?? null,
       lunchTime: insertProfile.lunchTime ?? null,
       dinnerTime: insertProfile.dinnerTime ?? null,
-      excludedFoods: insertProfile.excludedFoods ?? null,
+      excludedFoods: insertProfile.excludedFoods ?? [],
       dailyWaterIntake: insertProfile.dailyWaterIntake ?? null,
       cravingTimeFrame: insertProfile.cravingTimeFrame ?? null,
       preferredCheatFood: insertProfile.preferredCheatFood ?? null,
       takingFormulaGazzella: insertProfile.takingFormulaGazzella ?? null,
-      dietaryPreferences: insertProfile.dietaryPreferences ?? null,
+      dietaryPreferences: insertProfile.dietaryPreferences ?? [],
       healthGoal: insertProfile.healthGoal ?? null,
       activityLevel: insertProfile.activityLevel ?? null,
-      allergies: insertProfile.allergies ?? null,
+      allergies: insertProfile.allergies ?? [],
     };
     this.userProfiles.set(id, profile);
     return profile;
@@ -146,12 +153,23 @@ export class MemStorage implements IStorage {
     
     if (existingProfile) {
       // Update existing profile
-      const updatedProfile = { ...existingProfile, ...profileData };
+      const updatedProfile = {
+        ...existingProfile,
+        ...profileData,
+        weight: profileData.weight !== undefined ? String(profileData.weight) : existingProfile.weight,
+      };
       this.userProfiles.set(existingProfile.id, updatedProfile);
       return updatedProfile;
     } else {
-      // Create new profile
-      return await this.createUserProfile({ ...profileData, userId });
+      // Create new profile - only if all required fields are provided
+      const requiredFields = ['age', 'weight', 'height', 'thyroidIssues', 'intestinalIssues', 'weeklyExercise', 'breakfastTime', 'lunchTime', 'dinnerTime', 'dailyWaterIntake', 'cravingTimeFrame', 'preferredCheatFood', 'takingFormulaGazzella'] as const;
+      const hasAllRequired = requiredFields.every(field => profileData[field] !== undefined);
+      
+      if (!hasAllRequired) {
+        throw new Error('Missing required fields for profile creation');
+      }
+      
+      return await this.createUserProfile({ ...profileData, userId } as InsertUserProfile);
     }
   }
 
@@ -177,9 +195,23 @@ export class MemStorage implements IStorage {
       targetProtein: insertMealPlan.targetProtein ?? null,
       targetCarbs: insertMealPlan.targetCarbs ?? null,
       targetFat: insertMealPlan.targetFat ?? null,
+      currentWeight: insertMealPlan.currentWeight ?? null,
+      targetWeight: insertMealPlan.targetWeight ?? null,
+      currentBMI: insertMealPlan.currentBMI ?? null,
+      bmiCategory: insertMealPlan.bmiCategory ?? null,
+      weightToLose: insertMealPlan.weightToLose ?? null,
+      estimatedTimeWeeks: insertMealPlan.estimatedTimeWeeks ?? null,
+      dietMethod: insertMealPlan.dietMethod ?? null,
+      dietPrinciples: (insertMealPlan.dietPrinciples as any) || null,
+      expectedResults: insertMealPlan.expectedResults ?? null,
+      timeToGoal: insertMealPlan.timeToGoal ?? null,
+      bmi: insertMealPlan.bmi ?? null,
+      idealWeight: insertMealPlan.idealWeight ?? null,
+      weightGoal: insertMealPlan.weightGoal ?? null,
+      healthStatus: insertMealPlan.healthStatus ?? null,
       startDate: insertMealPlan.startDate ?? null,
       endDate: insertMealPlan.endDate ?? null,
-      days: insertMealPlan.days as any ?? null,
+      days: insertMealPlan.days as MealPlanDay[] | null ?? null,
     };
     this.mealPlans.set(id, mealPlan);
     return mealPlan;
@@ -199,8 +231,9 @@ export class MemStorage implements IStorage {
       targetFat: updateData.targetFat ?? existingPlan.targetFat,
       startDate: updateData.startDate ?? existingPlan.startDate,
       endDate: updateData.endDate ?? existingPlan.endDate,
-      days: updateData.days as any ?? existingPlan.days,
-    };
+      days: updateData.days as MealPlanDay[] | null ?? existingPlan.days,
+      dietPrinciples: (updateData.dietPrinciples as any) ?? existingPlan.dietPrinciples,
+    } as MealPlan;
     this.mealPlans.set(id, updatedPlan);
     return updatedPlan;
   }
@@ -243,10 +276,10 @@ export class MemStorage implements IStorage {
       ...insertRecipe,
       id,
       createdAt: new Date(),
-      userId: insertRecipe.userId ?? null, // Support userId for recipe ownership
+      userId: insertRecipe.userId ?? null,
       description: insertRecipe.description ?? null,
-      ingredients: insertRecipe.ingredients as any ?? null,
-      instructions: insertRecipe.instructions as any ?? null,
+      ingredients: insertRecipe.ingredients ? [...insertRecipe.ingredients] as string[] : null,
+      instructions: insertRecipe.instructions ? [...insertRecipe.instructions] as string[] : null,
       calories: insertRecipe.calories ?? null,
       protein: insertRecipe.protein ?? null,
       carbs: insertRecipe.carbs ?? null,
@@ -256,7 +289,7 @@ export class MemStorage implements IStorage {
       cookTime: insertRecipe.cookTime ?? null,
       difficulty: insertRecipe.difficulty ?? null,
       cuisine: insertRecipe.cuisine ?? null,
-      dietaryTags: insertRecipe.dietaryTags as any ?? null,
+      dietaryTags: insertRecipe.dietaryTags ? [...insertRecipe.dietaryTags] as string[] : null,
       imageUrl: insertRecipe.imageUrl ?? null,
       rating: insertRecipe.rating ?? null,
     };
@@ -272,8 +305,8 @@ export class MemStorage implements IStorage {
       ...existingRecipe,
       ...updateData,
       description: updateData.description ?? existingRecipe.description,
-      ingredients: updateData.ingredients as any ?? existingRecipe.ingredients,
-      instructions: updateData.instructions as any ?? existingRecipe.instructions,
+      ingredients: updateData.ingredients ? [...updateData.ingredients] as string[] : existingRecipe.ingredients,
+      instructions: updateData.instructions ? [...updateData.instructions] as string[] : existingRecipe.instructions,
       calories: updateData.calories ?? existingRecipe.calories,
       protein: updateData.protein ?? existingRecipe.protein,
       carbs: updateData.carbs ?? existingRecipe.carbs,
@@ -283,7 +316,7 @@ export class MemStorage implements IStorage {
       cookTime: updateData.cookTime ?? existingRecipe.cookTime,
       difficulty: updateData.difficulty ?? existingRecipe.difficulty,
       cuisine: updateData.cuisine ?? existingRecipe.cuisine,
-      dietaryTags: updateData.dietaryTags as any ?? existingRecipe.dietaryTags,
+      dietaryTags: updateData.dietaryTags ? [...updateData.dietaryTags] as string[] : existingRecipe.dietaryTags,
       imageUrl: updateData.imageUrl ?? existingRecipe.imageUrl,
       rating: updateData.rating ?? existingRecipe.rating,
     };
@@ -389,15 +422,21 @@ export class DatabaseStorage implements IStorage {
   async createUserProfile(insertProfile: InsertUserProfile): Promise<UserProfile> {
     const [profile] = await db
       .insert(userProfiles)
-      .values(insertProfile)
+      .values(insertProfile as any)
       .returning();
     return profile;
   }
 
   async updateUserProfile(userId: string, updateData: Partial<InsertUserProfile>): Promise<UserProfile | undefined> {
+    // Convert weight to string if it's a number
+    const processedUpdateData = {
+      ...updateData,
+      weight: updateData.weight !== undefined ? String(updateData.weight) : undefined,
+    };
+    
     const [profile] = await db
       .update(userProfiles)
-      .set(updateData)
+      .set(processedUpdateData)
       .where(eq(userProfiles.userId, userId))
       .returning();
     return profile || undefined;
@@ -409,10 +448,10 @@ export class DatabaseStorage implements IStorage {
     
     if (existingProfile) {
       // Update existing profile
-      const updateFields = { ...profileData };
-      if (updateFields.weight !== undefined) {
-        updateFields.weight = String(updateFields.weight);
-      }
+      const updateFields = {
+        ...profileData,
+        weight: profileData.weight !== undefined ? String(profileData.weight) : undefined,
+      };
       const [updatedProfile] = await db
         .update(userProfiles)
         .set(updateFields)
@@ -421,10 +460,11 @@ export class DatabaseStorage implements IStorage {
       return updatedProfile;
     } else {
       // Create new profile
-      const insertFields = { ...profileData, userId };
-      if (insertFields.weight !== undefined) {
-        insertFields.weight = String(insertFields.weight);
-      }
+      const insertFields = {
+        ...profileData,
+        userId,
+        weight: profileData.weight !== undefined ? String(profileData.weight) : undefined,
+      };
       const [newProfile] = await db
         .insert(userProfiles)
         .values(insertFields)
@@ -446,7 +486,7 @@ export class DatabaseStorage implements IStorage {
   async createMealPlan(insertMealPlan: InsertMealPlan): Promise<MealPlan> {
     const [mealPlan] = await db
       .insert(mealPlans)
-      .values(insertMealPlan)
+      .values(insertMealPlan as any)
       .returning();
     return mealPlan;
   }
@@ -454,7 +494,7 @@ export class DatabaseStorage implements IStorage {
   async updateMealPlan(id: string, updateData: Partial<InsertMealPlan>): Promise<MealPlan | undefined> {
     const [mealPlan] = await db
       .update(mealPlans)
-      .set(updateData)
+      .set(updateData as any)
       .where(eq(mealPlans.id, id))
       .returning();
     return mealPlan || undefined;
@@ -508,7 +548,7 @@ export class DatabaseStorage implements IStorage {
   async createRecipe(insertRecipe: InsertRecipe): Promise<Recipe> {
     const [recipe] = await db
       .insert(recipes)
-      .values(insertRecipe)
+      .values(insertRecipe as any)
       .returning();
     return recipe;
   }
@@ -516,7 +556,7 @@ export class DatabaseStorage implements IStorage {
   async updateRecipe(id: string, updateData: Partial<InsertRecipe>): Promise<Recipe | undefined> {
     const [recipe] = await db
       .update(recipes)
-      .set(updateData)
+      .set(updateData as any)
       .where(eq(recipes.id, id))
       .returning();
     return recipe || undefined;
