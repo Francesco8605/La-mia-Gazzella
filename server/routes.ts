@@ -1093,8 +1093,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
 
             // Set subscription end date for active subscriptions
-            if (stripeSubscription.status === 'active' && stripeSubscription.current_period_end) {
-              updateData.subscriptionEndDate = new Date(stripeSubscription.current_period_end * 1000);
+            if (stripeSubscription.status === 'active' && (stripeSubscription as any).current_period_end) {
+              updateData.subscriptionEndDate = new Date((stripeSubscription as any).current_period_end * 1000);
             }
             
             console.log('💾 Updating user subscription info with real Stripe data...');
