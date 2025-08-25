@@ -1041,35 +1041,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Handle Stripe webhooks
   app.post("/api/stripe-webhook", async (req, res) => {
+    console.log('🎯 WEBHOOK RECEIVED:', new Date().toISOString());
+    console.log('📦 Headers:', JSON.stringify(req.headers, null, 2));
+    console.log('📄 Body type:', typeof req.body);
+    console.log('📄 Body:', JSON.stringify(req.body, null, 2));
+    
     const sig = req.headers['stripe-signature'];
     let event;
 
     try {
       // In a real app, you'd verify the webhook signature
       event = req.body;
+      console.log('✅ Event parsed successfully:', event.type);
     } catch (err) {
-      console.error('Webhook signature verification failed.', err);
+      console.error('❌ Webhook signature verification failed.', err);
       return res.status(400).send(`Webhook Error: ${err}`);
     }
 
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed':
+        console.log('🛒 Processing checkout.session.completed...');
         const session = event.data.object;
-        const userId = session.metadata.userId;
-        const planId = session.metadata.planId;
+        const userId = session.metadata?.userId;
+        const planId = session.metadata?.planId;
+        
+        console.log('👤 UserId from metadata:', userId);
+        console.log('📋 PlanId from metadata:', planId);
+        console.log('💳 Subscription ID:', session.subscription);
         
         if (userId && planId) {
-          const trialEnd = new Date();
-          trialEnd.setDate(trialEnd.getDate() + 3); // 3 giorni di prova
-          
-          await storage.updateUserStripeInfo(userId, {
-            stripeSubscriptionId: session.subscription,
-            subscriptionStatus: 'trialing',
-            subscriptionPlan: planId,
-            subscriptionStartDate: new Date(),
-            trialEndDate: trialEnd,
-          });
+          try {
+            const trialEnd = new Date();
+            trialEnd.setDate(trialEnd.getDate() + 3); // 3 giorni di prova
+            
+            console.log('💾 Updating user subscription info...');
+            console.log('⏰ Trial end date:', trialEnd.toISOString());
+            
+            await storage.updateUserStripeInfo(userId, {
+              stripeSubscriptionId: session.subscription,
+              subscriptionStatus: 'trialing',
+              subscriptionPlan: planId,
+              subscriptionStartDate: new Date(),
+              trialEndDate: trialEnd,
+            });
+            
+            console.log('✅ User subscription updated successfully for userId:', userId);
+          } catch (updateError) {
+            console.error('❌ Error updating user subscription:', updateError);
+            return res.status(500).json({ error: 'Failed to update subscription' });
+          }
+        } else {
+          console.error('❌ Missing userId or planId in session metadata:', { userId, planId });
+          return res.status(400).json({ error: 'Missing required metadata' });
         }
         break;
         
