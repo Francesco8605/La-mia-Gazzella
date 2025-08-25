@@ -1293,12 +1293,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
-      // Determine subscription status
+      console.log(`🔍 Checking subscription for user ${user.email}:`, {
+        subscriptionStatus: user.subscriptionStatus,
+        trialEndDate: user.trialEndDate,
+        subscriptionEndDate: user.subscriptionEndDate,
+        stripeSubscriptionId: user.stripeSubscriptionId
+      });
+
+      const now = new Date();
+      
+      // Determine trial status - Fix date comparison
       const isTrialing = user.subscriptionStatus === 'trialing' && 
                          user.trialEndDate && 
-                         new Date() < user.trialEndDate;
+                         new Date(user.trialEndDate) > now;
                          
-      const hasActiveSubscription = (user.subscriptionStatus === 'active') || isTrialing;
+      // Determine active subscription status  
+      const isActiveSubscription = user.subscriptionStatus === 'active' &&
+                                    user.subscriptionEndDate &&
+                                    new Date(user.subscriptionEndDate) > now;
+                         
+      const hasActiveSubscription = isActiveSubscription || isTrialing;
 
       const subscriptionInfo = {
         hasActiveSubscription: hasActiveSubscription,
@@ -1306,12 +1320,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         plan: user.subscriptionPlan || '',
         startDate: user.subscriptionStartDate,
         endDate: user.subscriptionEndDate,
-        trialEndDate: user.trialEndDate ? user.trialEndDate.toISOString() : null,
+        trialEndDate: user.trialEndDate ? new Date(user.trialEndDate).toISOString() : null,
         isInTrial: isTrialing,
         hasUsedTrial: user.hasUsedTrial === 'yes'
       };
 
-
+      console.log(`📊 Subscription status calculated for ${user.email}:`, {
+        hasActiveSubscription,
+        isInTrial: isTrialing,
+        isActiveSubscription,
+        currentTime: now.toISOString()
+      });
 
       res.json(subscriptionInfo);
     } catch (error) {
