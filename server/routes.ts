@@ -1070,21 +1070,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('📋 PlanId from metadata:', planId);
         console.log('💳 Subscription ID:', session.subscription);
         
-        if (userId && planId) {
+        if (userId && planId && session.subscription) {
           try {
-            const trialEnd = new Date();
-            trialEnd.setDate(trialEnd.getDate() + 3); // 3 giorni di prova
+            // Retrieve the actual subscription data from Stripe to get the real trial dates
+            const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription);
             
-            console.log('💾 Updating user subscription info...');
-            console.log('⏰ Trial end date:', trialEnd.toISOString());
+            console.log('📊 Stripe subscription status:', stripeSubscription.status);
+            console.log('⏰ Trial start:', stripeSubscription.trial_start ? new Date(stripeSubscription.trial_start * 1000).toISOString() : 'No trial');
+            console.log('⏰ Trial end:', stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000).toISOString() : 'No trial');
             
-            await storage.updateUserStripeInfo(userId, {
+            const updateData: any = {
               stripeSubscriptionId: session.subscription,
-              subscriptionStatus: 'trialing',
+              subscriptionStatus: stripeSubscription.status,
               subscriptionPlan: planId,
-              subscriptionStartDate: new Date(),
-              trialEndDate: trialEnd,
-            });
+              subscriptionStartDate: new Date(stripeSubscription.start_date * 1000),
+            };
+
+            // If it's a trial, set the trial end date and mark user as having used trial
+            if (stripeSubscription.status === 'trialing' && stripeSubscription.trial_end) {
+              updateData.trialEndDate = new Date(stripeSubscription.trial_end * 1000);
+              updateData.hasUsedTrial = 'yes'; // Mark that user has used their trial
+            }
+
+            // Set subscription end date for active subscriptions
+            if (stripeSubscription.status === 'active' && stripeSubscription.current_period_end) {
+              updateData.subscriptionEndDate = new Date(stripeSubscription.current_period_end * 1000);
+            }
+            
+            console.log('💾 Updating user subscription info with real Stripe data...');
+            console.log('📄 Update data:', JSON.stringify(updateData, null, 2));
+            
+            await storage.updateUserStripeInfo(userId, updateData);
             
             console.log('✅ User subscription updated successfully for userId:', userId);
           } catch (updateError) {
@@ -1092,20 +1108,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
             return res.status(500).json({ error: 'Failed to update subscription' });
           }
         } else {
-          console.error('❌ Missing userId or planId in session metadata:', { userId, planId });
-          return res.status(400).json({ error: 'Missing required metadata' });
+          console.error('❌ Missing required data:', { userId, planId, subscription: session.subscription });
+          return res.status(400).json({ error: 'Missing required metadata or subscription' });
         }
         break;
         
       case 'customer.subscription.updated':
+        console.log('🔄 Processing customer.subscription.updated...');
         const subscription = event.data.object;
         const customerUserId = subscription.metadata.userId;
         
+        console.log('👤 UserId from subscription metadata:', customerUserId);
+        console.log('📊 New subscription status:', subscription.status);
+        console.log('⏰ Current period end:', (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : 'No period end');
+        
         if (customerUserId) {
-          await storage.updateUserStripeInfo(customerUserId, {
+          const updateData: any = {
             subscriptionStatus: subscription.status,
-            subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-          });
+            subscriptionEndDate: (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000) : null,
+          };
+
+          // If subscription is now active (transitioned from trial), clear trial end date
+          if (subscription.status === 'active') {
+            updateData.trialEndDate = null;
+            console.log('✅ Subscription is now active - clearing trial end date');
+          }
+
+          // If subscription is still in trial, update trial end date
+          if (subscription.status === 'trialing' && subscription.trial_end) {
+            updateData.trialEndDate = new Date(subscription.trial_end * 1000);
+            console.log('⏰ Trial updated, new trial end:', updateData.trialEndDate.toISOString());
+          }
+
+          await storage.updateUserStripeInfo(customerUserId, updateData);
+          console.log('✅ User subscription updated for userId:', customerUserId);
+        } else {
+          console.error('❌ Missing userId in subscription metadata');
         }
         break;
         
@@ -1126,6 +1164,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     res.json({ received: true });
+  });
+
+  // Debug endpoint to check user subscription status
+  app.get("/api/debug/user-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      const now = new Date();
+      const response: any = {
+        userId: user.id,
+        email: user.email,
+        stripeCustomerId: user.stripeCustomerId,
+        stripeSubscriptionId: user.stripeSubscriptionId,
+        subscriptionStatus: user.subscriptionStatus,
+        subscriptionPlan: user.subscriptionPlan,
+        subscriptionStartDate: user.subscriptionStartDate,
+        subscriptionEndDate: user.subscriptionEndDate,
+        trialEndDate: user.trialEndDate,
+        hasUsedTrial: user.hasUsedTrial,
+        currentTime: now.toISOString(),
+      };
+
+      // Check trial status
+      if (user.subscriptionStatus === 'trialing' && user.trialEndDate) {
+        response.trialActive = new Date(user.trialEndDate) > now;
+        response.trialTimeLeft = user.trialEndDate ? Math.max(0, new Date(user.trialEndDate).getTime() - now.getTime()) : 0;
+      }
+
+      // Check subscription status
+      if (user.subscriptionStatus === 'active' && user.subscriptionEndDate) {
+        response.subscriptionActive = new Date(user.subscriptionEndDate) > now;
+      }
+
+      // Determine overall access status using the same logic as requireActiveSubscription
+      let hasAccess = false;
+      if (user.subscriptionStatus === 'active' && user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
+        hasAccess = true;
+      } else if (user.subscriptionStatus === 'trialing' && user.trialEndDate && new Date(user.trialEndDate) > now) {
+        hasAccess = true;
+      }
+      
+      response.hasAccess = hasAccess;
+
+      res.json(response);
+    } catch (error) {
+      console.error("Error checking user subscription:", error);
+      res.status(500).json({ message: "Errore nel controllo dell'abbonamento" });
+    }
   });
 
   // Cancel subscription endpoint
