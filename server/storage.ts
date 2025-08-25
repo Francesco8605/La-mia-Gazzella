@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions } from "@shared/schema";
+import { eq, lt } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -39,6 +39,12 @@ export interface IStorage {
   getWeightEntriesByUserId(userId: string): Promise<WeightEntry[]>;
   createWeightEntry(entry: InsertWeightEntry): Promise<WeightEntry>;
   deleteWeightEntry(id: string): Promise<boolean>;
+  
+  // Sessions
+  createSession(sessionId: string, userId: string, expiresAt: Date): Promise<Session>;
+  getSession(sessionId: string): Promise<Session | undefined>;
+  deleteSession(sessionId: string): Promise<boolean>;
+  deleteExpiredSessions(): Promise<void>;
   
   // Stripe Subscription Methods
   updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date; hasUsedTrial?: string }): Promise<User | undefined>;
@@ -390,6 +396,51 @@ export class MemStorage implements IStorage {
   async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {
     return plan as SubscriptionPlan;
   }
+
+  // Sessions (in-memory - would be lost on restart)
+  private sessions: Map<string, { userId: string, expiresAt: Date }> = new Map();
+
+  async createSession(sessionId: string, userId: string, expiresAt: Date): Promise<Session> {
+    const session: Session = {
+      id: sessionId,
+      userId: userId,
+      createdAt: new Date(),
+      expiresAt: expiresAt
+    };
+    this.sessions.set(sessionId, { userId, expiresAt });
+    return session;
+  }
+
+  async getSession(sessionId: string): Promise<Session | undefined> {
+    const sessionData = this.sessions.get(sessionId);
+    if (!sessionData) return undefined;
+    
+    // Check if session has expired
+    if (new Date() > sessionData.expiresAt) {
+      this.sessions.delete(sessionId);
+      return undefined;
+    }
+    
+    return {
+      id: sessionId,
+      userId: sessionData.userId,
+      createdAt: new Date(), // Mock creation date
+      expiresAt: sessionData.expiresAt
+    };
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    return this.sessions.delete(sessionId);
+  }
+
+  async deleteExpiredSessions(): Promise<void> {
+    const now = new Date();
+    for (const [sessionId, sessionData] of this.sessions.entries()) {
+      if (now > sessionData.expiresAt) {
+        this.sessions.delete(sessionId);
+      }
+    }
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -615,6 +666,45 @@ export class DatabaseStorage implements IStorage {
       .values(plan)
       .returning();
     return subscriptionPlan;
+  }
+
+  // Sessions
+  async createSession(sessionId: string, userId: string, expiresAt: Date): Promise<Session> {
+    const [session] = await db
+      .insert(sessions)
+      .values({
+        id: sessionId,
+        userId: userId,
+        expiresAt: expiresAt
+      })
+      .returning();
+    return session;
+  }
+
+  async getSession(sessionId: string): Promise<Session | undefined> {
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId));
+    
+    // Check if session has expired
+    if (session && new Date() > session.expiresAt) {
+      // Delete expired session
+      await this.deleteSession(sessionId);
+      return undefined;
+    }
+    
+    return session || undefined;
+  }
+
+  async deleteSession(sessionId: string): Promise<boolean> {
+    const result = await db.delete(sessions).where(eq(sessions.id, sessionId));
+    return (result.rowCount || 0) > 0;
+  }
+
+  async deleteExpiredSessions(): Promise<void> {
+    const now = new Date();
+    await db.delete(sessions).where(lt(sessions.expiresAt, now));
   }
 }
 

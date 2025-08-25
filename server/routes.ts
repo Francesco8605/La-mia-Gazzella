@@ -15,30 +15,42 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: "2025-07-30.basil",
 });
 
-// Simple in-memory session storage
-const sessions = new Map<string, { userId: string, createdAt: Date }>();
-
 function generateSessionId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 }
 
-// Simple authentication middleware
-function isAuthenticated(req: any, res: any, next: any) {
-  const sessionId = req.cookies?.session;
-  const session = sessions.get(sessionId);
-  
-  if (!session) {
-    return res.status(401).json({ message: "Non autenticato" });
-  }
-  
-  // Mock user object to match what would come from Replit Auth
-  req.user = {
-    claims: {
-      sub: session.userId
+function getSessionExpiryDate(): Date {
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 7); // Sessions last 7 days
+  return expiryDate;
+}
+
+// Database-backed authentication middleware
+async function isAuthenticated(req: any, res: any, next: any) {
+  try {
+    const sessionId = req.cookies?.session;
+    if (!sessionId) {
+      return res.status(401).json({ message: "Non autenticato" });
     }
-  };
-  
-  next();
+    
+    const session = await storage.getSession(sessionId);
+    
+    if (!session) {
+      return res.status(401).json({ message: "Non autenticato" });
+    }
+    
+    // Mock user object to match what would come from Replit Auth
+    req.user = {
+      claims: {
+        sub: session.userId
+      }
+    };
+    
+    next();
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return res.status(500).json({ message: "Errore di autenticazione" });
+  }
 }
 
 // Middleware to check if user has active subscription
@@ -117,15 +129,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("User created successfully:", user.username);
 
-      // Create session
+      // Create database session
       const sessionId = generateSessionId();
-      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+      const expiresAt = getSessionExpiryDate();
+      await storage.createSession(sessionId, user.id, expiresAt);
 
       // Set session cookie
       res.cookie('session', sessionId, { 
         httpOnly: true, 
         secure: false, // set to true in production with HTTPS
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - same as session expiry
         sameSite: 'lax'
       });
 
@@ -154,15 +167,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
-      // Create session
+      // Create database session
       const sessionId = generateSessionId();
-      sessions.set(sessionId, { userId: user.id, createdAt: new Date() });
+      const expiresAt = getSessionExpiryDate();
+      await storage.createSession(sessionId, user.id, expiresAt);
 
       // Set session cookie
       res.cookie('session', sessionId, { 
         httpOnly: true, 
         secure: false, // set to true in production with HTTPS
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - same as session expiry
         sameSite: 'lax'
       });
 
@@ -179,27 +193,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const sessionId = req.cookies?.session;
       
-      if (!sessionId || !sessions.has(sessionId)) {
+      if (!sessionId) {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      const session = sessions.get(sessionId);
+      const session = await storage.getSession(sessionId);
       if (!session) {
         return res.status(401).json({ message: "Non autenticato" });
-      }
-
-      // Check if session is expired (24 hours)
-      const isExpired = Date.now() - session.createdAt.getTime() > 24 * 60 * 60 * 1000;
-      if (isExpired) {
-        sessions.delete(sessionId);
-        res.clearCookie('session');
-        return res.status(401).json({ message: "Sessione scaduta" });
       }
 
       // Get user data
       const user = await storage.getUser(session.userId);
       if (!user) {
-        sessions.delete(sessionId);
+        await storage.deleteSession(sessionId);
         res.clearCookie('session');
         return res.status(401).json({ message: "Utente non trovato" });
       }
@@ -218,7 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionId = req.cookies?.session;
       
       if (sessionId) {
-        sessions.delete(sessionId);
+        await storage.deleteSession(sessionId);
         res.clearCookie('session');
       }
 
