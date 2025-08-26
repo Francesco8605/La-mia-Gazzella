@@ -1,11 +1,51 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, integer, real, json, timestamp, numeric } from "drizzle-orm/pg-core";
+import { 
+  index,
+  jsonb,
+  pgTable, 
+  text, 
+  varchar, 
+  integer, 
+  real, 
+  json, 
+  timestamp, 
+  numeric 
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Profili nutrizionali anonimi - senza utenti registrati
+// Session storage table for authentication
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table for authentication  
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  // Stripe integration fields
+  stripeCustomerId: varchar("stripe_customer_id").unique(),
+  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
+  subscriptionStatus: varchar("subscription_status"), // active, cancelled, trial
+  trialEndsAt: timestamp("trial_ends_at"),
+  hasUsedTrial: integer("has_used_trial").default(0), // 0 = no, 1 = yes
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Profili nutrizionali legati agli utenti autenticati
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   // Informazioni di contatto
   email: text("email"),
   phone: text("phone"),
@@ -39,9 +79,10 @@ export const userProfiles = pgTable("user_profiles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Piani alimentari pubblici - accessibili a tutti
+// Piani alimentari legati agli utenti autenticati
 export const mealPlans = pgTable("meal_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   description: text("description"),
   targetCalories: integer("target_calories"),
@@ -71,19 +112,20 @@ export const mealPlans = pgTable("meal_plans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Tracking peso - associato a un profilo specifico tramite profileId
+// Tracking peso - associato agli utenti autenticati
 export const weightEntries = pgTable("weight_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  profileId: varchar("profile_id"), // Riferimento a userProfiles invece di users
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
   weight: real("weight").notNull(), // peso in kg con decimali
   date: timestamp("date").notNull(),
   notes: text("notes"), // note opzionali
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Ricette pubbliche - accessibili a tutti
+// Ricette pubbliche - accessibili a tutti gli utenti abbonati
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }), // Chi ha generato la ricetta
   title: text("title").notNull(),
   description: text("description"),
   ingredients: json("ingredients").$type<string[]>(),
@@ -119,12 +161,23 @@ export type MealPlanDay = {
 };
 
 // Insert schemas per Zod validation
+export const insertUserSchema = createInsertSchema(users);
 export const insertUserProfileSchema = createInsertSchema(userProfiles);
 export const insertMealPlanSchema = createInsertSchema(mealPlans);
 export const insertWeightEntrySchema = createInsertSchema(weightEntries);
 export const insertRecipeSchema = createInsertSchema(recipes);
 
+// Update schema for users (for Stripe fields)
+export const updateUserSchema = createInsertSchema(users).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpsertUser = z.infer<typeof insertUserSchema>;
+
 export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
 

@@ -1,33 +1,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "./useAuth";
 
-export interface UserSubscription {
+interface SubscriptionData {
   hasActiveSubscription: boolean;
-  status: string | null;
-  plan: string | null;
-  startDate: string | null;
-  endDate: string | null;
-  trialEndDate: string | null;
   isInTrial: boolean;
-  isTestUser?: boolean;
+  subscriptionStatus: string | null;
+  trialEndsAt: string | null;
+  hasUsedTrial: boolean;
+  subscription: any;
 }
 
 export function useSubscription() {
-  const { user } = useAuth();
-  const { data: subscription, isLoading, error } = useQuery<UserSubscription>({
-    queryKey: ["/api/user/subscription"],
-    retry: false,
-    staleTime: 1000 * 60 * 1, // 1 minuto di cache per subscription status
+  const { isAuthenticated, user } = useAuth();
+
+  const { data: subscriptionData, isLoading } = useQuery<SubscriptionData>({
+    queryKey: ["/api/subscription/status"],
+    enabled: isAuthenticated && !!user,
+    refetchInterval: 30000, // Check every 30 seconds
   });
 
-
-
   return {
-    subscription,
+    hasActiveSubscription: subscriptionData?.hasActiveSubscription || false,
+    isInTrial: subscriptionData?.isInTrial || false,
+    subscriptionStatus: subscriptionData?.subscriptionStatus,
+    trialEndsAt: subscriptionData?.trialEndsAt ? new Date(subscriptionData.trialEndsAt) : null,
+    hasUsedTrial: subscriptionData?.hasUsedTrial || false,
+    subscription: subscriptionData?.subscription,
     isLoading,
-    hasActiveSubscription: subscription?.hasActiveSubscription || false,
-    isInTrial: subscription?.isInTrial || false,
-    subscriptionStatus: subscription?.status,
-    error,
   };
 }
