@@ -142,6 +142,27 @@ export default function SubscriptionPlans() {
     );
   }
 
+  // Debug: show what we have
+  console.log("Plans data:", plans);
+  console.log("Plans length:", plans.length);
+  
+  if (!plans || plans.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Nessun piano disponibile</h2>
+          <p className="text-gray-600">Stiamo caricando i piani di abbonamento...</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded"
+          >
+            Ricarica
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
