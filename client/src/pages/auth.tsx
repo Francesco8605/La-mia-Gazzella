@@ -94,15 +94,28 @@ export default function Auth() {
   const signupMutation = useMutation({
     mutationFn: async (data: SignupFormData) => {
       const { confirmPassword, ...signupData } = data;
+      console.log('Dati inviati per registrazione:', signupData);
+      
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(signupData),
         credentials: "include",
       });
+      
+      console.log('Risposta registrazione status:', response.status);
+      
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Errore di registrazione");
+        const errorText = await response.text();
+        console.log('Errore registrazione:', errorText);
+        let errorMessage = "Errore di registrazione";
+        try {
+          const error = JSON.parse(errorText);
+          errorMessage = error.message || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       return response.json();
     },
