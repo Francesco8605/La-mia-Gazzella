@@ -142,11 +142,8 @@ export default function SubscriptionPlans() {
     );
   }
 
-  // Debug: show what we have
-  console.log("Plans data:", plans);
-  console.log("Plans length:", plans.length);
-  
-  if (!plans || plans.length === 0) {
+  // Ensure plans is an array and has content
+  if (!Array.isArray(plans) || plans.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20 flex items-center justify-center">
         <div className="text-center">
@@ -389,7 +386,7 @@ export default function SubscriptionPlans() {
 
         {/* Subscription Plans */}
         <div className="grid md:grid-cols-3 gap-8">
-          {(plans as SubscriptionPlan[]).map((plan) => {
+          {plans.map((plan) => {
             const priceInfo = formatPrice(plan.priceEur, plan.duration);
             const isCurrentPlan = userSubscription?.hasActiveSubscription && userSubscription?.plan === plan.id;
             
@@ -453,7 +450,7 @@ export default function SubscriptionPlans() {
                   
                   {/* Features */}
                   <div className="space-y-3">
-                    {plan.features.map((feature, index) => (
+                    {(Array.isArray(plan.features) ? plan.features : []).map((feature, index) => (
                       <div key={index} className="flex items-center gap-3">
                         <CheckCircle className="h-5 w-5 text-green-500 flex-shrink-0" />
                         <span className="text-sm">{feature}</span>
