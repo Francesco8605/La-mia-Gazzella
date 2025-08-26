@@ -142,6 +142,15 @@ export default function SubscriptionPlans() {
     );
   }
 
+  // Debug logging for production
+  console.log("=== DEBUG PIANI ===");
+  console.log("plansLoading:", plansLoading);
+  console.log("plans:", plans);
+  console.log("plans type:", typeof plans);
+  console.log("is array:", Array.isArray(plans));
+  console.log("plans length:", plans?.length);
+  console.log("==================");
+
   // Ensure plans is an array and has content
   if (!Array.isArray(plans) || plans.length === 0) {
     return (
@@ -149,6 +158,11 @@ export default function SubscriptionPlans() {
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">Nessun piano disponibile</h2>
           <p className="text-gray-600">Stiamo caricando i piani di abbonamento...</p>
+          <p className="text-sm text-gray-500 mt-2">
+            Debug: plansLoading={String(plansLoading)}, 
+            plans={JSON.stringify(plans)}, 
+            length={plans?.length}
+          </p>
           <button 
             onClick={() => window.location.reload()} 
             className="mt-4 px-4 py-2 bg-emerald-500 text-white rounded"
