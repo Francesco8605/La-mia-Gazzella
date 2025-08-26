@@ -2,7 +2,14 @@
 
 "La Mia Gazzella" è una moderna applicazione web per la nutrizione e la pianificazione alimentare alimentata dall'IA, costruita con un'architettura TypeScript full-stack. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
 
-## Recent Major Updates (August 21, 2025)
+## Recent Major Updates (August 26, 2025)
+- **✅ AUTHENTICATION SYSTEM COMPLETELY FIXED**: Resolved critical session management issues causing "Non autenticato" errors - corrected database column types (has_used_trial from integer to text), fixed session handling inconsistencies, and synchronized all authentication middleware
+- **💳 STRIPE INTEGRATION FULLY OPERATIONAL**: Created subscription_plans table, populated with 3 tiers (Monthly €29, Quarterly €79, Annual €249), checkout session generation working perfectly with real Stripe URLs
+- **🔧 DATABASE SCHEMA CORRECTIONS**: Fixed type mismatches between Drizzle schema and PostgreSQL database, specifically has_used_trial column type alignment and session storage format
+- **🚫 REGISTRATION ERROR RESOLVED**: Original "Errore di Registrazione" was due to duplicate username conflict - system correctly prevents duplicate usernames and provides proper error messages
+- **🔐 SESSION SECURITY ENHANCED**: Implemented consistent session handling across all endpoints, proper cookie management, and secure authentication middleware
+
+## Previous Updates (August 21, 2025)
 - **🛡️ TRIAL ABUSE PREVENTION SYSTEM IMPLEMENTED**: Complete protection against free trial abuse with database tracking (`hasUsedTrial` field), automatic user marking on cancellation, intelligent checkout logic that removes trial periods for users who already used them, while still allowing paid subscriptions without trial access - **STRIPE PAYMENTS WORK CORRECTLY**: Users who already used trials are immediately charged without trial period
 - **📈 PERSUASIVE SALESLETTER IMPLEMENTED**: Completely redesigned subscription page with professional copywriting featuring detailed comparison table (traditional services vs webapp), testimonials, social proof, urgency elements, and value propositions highlighting €23.751 annual savings
 - **💰 COMPETITIVE PRICING ANALYSIS**: Added comprehensive comparison showing nutrizionist (€200-500/month) + chef (€800-2000/month) vs our webapp (€29/month) with detailed feature breakdown and ROI calculations

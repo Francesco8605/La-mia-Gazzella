@@ -203,8 +203,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      // Get user data
-      const user = await storage.getUser(session.userId);
+      // Get user data - extract userId from session.sess
+      const userId = (session.sess as any).userId;
+      const user = await storage.getUser(userId);
       if (!user) {
         await storage.deleteSession(sessionId);
         res.clearCookie('session');
@@ -285,13 +286,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch("/api/user-profile", async (req, res) => {
     try {
       const sessionId = req.cookies?.session;
-      const session = sessions.get(sessionId);
+      const session = await storage.getSession(sessionId);
       
       if (!session) {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      const userId = session.userId;
+      const userId = (session.sess as any).userId;
       const updateData = req.body;
       
       const updatedProfile = await storage.updateUserProfile(userId, updateData);
@@ -313,13 +314,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/user-profile", async (req, res) => {
     try {
       const sessionId = req.cookies?.session;
-      const session = sessions.get(sessionId);
+      const session = await storage.getSession(sessionId);
       
       if (!session) {
         return res.status(401).json({ message: "Non autenticato" });
       }
 
-      const userId = session.userId;
+      const userId = (session.sess as any).userId;
       const profile = await storage.getUserProfile(userId);
       
       if (!profile) {
