@@ -1148,6 +1148,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual sync endpoint for troubleshooting
+  app.post("/api/sync-user-subscription", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user || !user.stripeCustomerId) {
+        return res.status(404).json({ message: "User or Stripe customer not found" });
+      }
+
+      console.log(`🔄 Syncing subscriptions for user ${user.email} (${user.stripeCustomerId})`);
+
+      // Get all subscriptions for this customer
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: 'all',
+        limit: 10
+      });
+
+      console.log(`📊 Found ${subscriptions.data.length} subscriptions`);
+
+      if (subscriptions.data.length > 0) {
+        const activeSubscription = subscriptions.data.find(sub => 
+          sub.status === 'active' || sub.status === 'trialing'
+        ) || subscriptions.data[0];
+
+        console.log(`✅ Active subscription found: ${activeSubscription.id} (${activeSubscription.status})`);
+
+        const updateData: any = {
+          stripeSubscriptionId: activeSubscription.id,
+          subscriptionStatus: activeSubscription.status,
+          subscriptionStartDate: new Date(activeSubscription.start_date * 1000),
+        };
+
+        // Determine plan based on price
+        const priceId = activeSubscription.items.data[0]?.price.id;
+        const priceAmount = activeSubscription.items.data[0]?.price.unit_amount; // in cents
+        console.log(`💰 Price ID: ${priceId}, Amount: ${priceAmount} cents`);
+        
+        if (priceId === 'price_1QPNGdFFbqCkTHrmRqyRoNdq') {
+          updateData.subscriptionPlan = 'monthly';
+        } else if (priceId === 'price_1QPNGsFFbqCkTHrmd0J28nz8') {
+          updateData.subscriptionPlan = 'quarterly';
+        } else if (priceId === 'price_1QPNHAFFbqCkTHrm3uNWKgDZ') {
+          updateData.subscriptionPlan = 'annual';
+        } else {
+          // Map by amount if price ID doesn't match
+          if (priceAmount === 2900) updateData.subscriptionPlan = 'monthly';
+          else if (priceAmount === 7900) updateData.subscriptionPlan = 'quarterly';
+          else if (priceAmount === 24900) updateData.subscriptionPlan = 'annual';
+          else updateData.subscriptionPlan = 'monthly'; // fallback
+          
+          console.log(`⚠️ Unknown price ID ${priceId}, mapped by amount to: ${updateData.subscriptionPlan}`);
+        }
+
+        if (activeSubscription.status === 'trialing' && activeSubscription.trial_end) {
+          updateData.trialEndDate = new Date(activeSubscription.trial_end * 1000);
+          updateData.hasUsedTrial = 'yes';
+          console.log(`📅 Trial end: ${updateData.trialEndDate}`);
+        }
+
+        if (activeSubscription.status === 'active' && (activeSubscription as any).current_period_end) {
+          updateData.subscriptionEndDate = new Date((activeSubscription as any).current_period_end * 1000);
+          console.log(`📅 Subscription end: ${updateData.subscriptionEndDate}`);
+        }
+
+        console.log(`🔄 Updating user with:`, JSON.stringify(updateData, null, 2));
+        const updatedResult = await storage.updateUserStripeInfo(userId, updateData);
+        console.log(`🔄 Update result:`, JSON.stringify(updatedResult, null, 2));
+        
+        const updatedUser = await storage.getUser(userId);
+        console.log(`✅ User after update:`, JSON.stringify({
+          subscriptionPlan: updatedUser?.subscriptionPlan,
+          subscriptionStatus: updatedUser?.subscriptionStatus,
+          stripeSubscriptionId: updatedUser?.stripeSubscriptionId
+        }, null, 2));
+        
+        res.json({ 
+          success: true, 
+          message: 'Subscription synced successfully',
+          user: updatedUser
+        });
+      } else {
+        console.log(`❌ No subscriptions found for customer ${user.stripeCustomerId}`);
+        res.json({ 
+          success: false, 
+          message: 'No subscriptions found for this customer' 
+        });
+      }
+
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+      res.status(500).json({ error: 'Failed to sync subscription', details: error.message });
+    }
+  });
+
   // Handle Stripe webhooks with proper signature verification
   app.post("/api/stripe-webhook", express.raw({ type: 'application/json' }), async (req, res) => {
     console.log('🎯 WEBHOOK RECEIVED:', new Date().toISOString());

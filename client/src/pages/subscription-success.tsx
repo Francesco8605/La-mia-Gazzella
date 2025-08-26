@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, Home, CreditCard, User, Loader2, AlertTriangle } from "lucide-react";
+import { CheckCircle, Home, CreditCard, User, Loader2, AlertTriangle, RefreshCw } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
-import { queryClient } from "@/lib/queryClient";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
 
 export default function SubscriptionSuccess() {
   const [, setLocation] = useLocation();
@@ -12,6 +14,40 @@ export default function SubscriptionSuccess() {
   const [pollingCount, setPollingCount] = useState(0);
   const [showFullPage, setShowFullPage] = useState(false);
   const maxPollingAttempts = 12; // 12 tentativi x 3 secondi = 36 secondi massimo
+  const { toast } = useToast();
+
+  // Manual sync mutation
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("/api/sync-user-subscription", {}, "POST");
+      return response;
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Sincronizzazione riuscita!",
+          description: "Il tuo abbonamento è stato attivato correttamente.",
+        });
+        // Invalida la cache e refresh dei dati
+        queryClient.invalidateQueries({ queryKey: ["/api/user/subscription"] });
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+        setShowFullPage(true);
+      } else {
+        toast({
+          title: "Nessun abbonamento trovato",
+          description: "Prova ad aspettare qualche secondo in più o contatta il supporto.",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Errore di sincronizzazione",
+        description: error.message || "Si è verificato un errore. Riprova tra qualche secondo.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Get session ID from URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -126,6 +162,19 @@ export default function SubscriptionSuccess() {
 
               <div className="flex flex-col gap-3 justify-center">
                 <Button 
+                  onClick={() => syncMutation.mutate()}
+                  disabled={syncMutation.isPending}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold px-8 py-3"
+                >
+                  {syncMutation.isPending ? (
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="h-5 w-5 mr-2" />
+                  )}
+                  Sincronizza Abbonamento
+                </Button>
+
+                <Button 
                   onClick={() => window.location.reload()}
                   className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-semibold px-8 py-3"
                 >
@@ -134,7 +183,7 @@ export default function SubscriptionSuccess() {
                 </Button>
 
                 <Button 
-                  onClick={() => setLocation("/dashboard")}
+                  onClick={() => setLocation("/")}
                   variant="outline"
                   className="font-semibold px-8 py-3"
                 >
