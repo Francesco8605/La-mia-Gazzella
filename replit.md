@@ -1,68 +1,6 @@
 # Overview
 
-"La Mia Gazzella" è una moderna applicazione web per la nutrizione e la pianificazione alimentare alimentata dall'IA, costruita con un'architettura TypeScript full-stack. The application allows users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements using OpenAI's GPT models for content generation.
-
-## Recent Major Updates (August 26, 2025)
-- **✅ AUTHENTICATION SYSTEM COMPLETELY FIXED**: Resolved critical session management issues causing "Non autenticato" errors - corrected database column types (has_used_trial from integer to text), fixed session handling inconsistencies, and synchronized all authentication middleware
-- **💳 STRIPE INTEGRATION FULLY OPERATIONAL**: Created subscription_plans table, populated with 3 tiers (Monthly €29, Quarterly €79, Annual €249), checkout session generation working perfectly with real Stripe URLs
-- **🔧 DATABASE SCHEMA CORRECTIONS**: Fixed type mismatches between Drizzle schema and PostgreSQL database, specifically has_used_trial column type alignment and session storage format
-- **🚫 REGISTRATION ERROR RESOLVED**: Original "Errore di Registrazione" was due to duplicate username conflict - system correctly prevents duplicate usernames and provides proper error messages
-- **🔐 SESSION SECURITY ENHANCED**: Implemented consistent session handling across all endpoints, proper cookie management, and secure authentication middleware
-
-## Previous Updates (August 21, 2025)
-- **🛡️ TRIAL ABUSE PREVENTION SYSTEM IMPLEMENTED**: Complete protection against free trial abuse with database tracking (`hasUsedTrial` field), automatic user marking on cancellation, intelligent checkout logic that removes trial periods for users who already used them, while still allowing paid subscriptions without trial access - **STRIPE PAYMENTS WORK CORRECTLY**: Users who already used trials are immediately charged without trial period
-- **📈 PERSUASIVE SALESLETTER IMPLEMENTED**: Completely redesigned subscription page with professional copywriting featuring detailed comparison table (traditional services vs webapp), testimonials, social proof, urgency elements, and value propositions highlighting €23.751 annual savings
-- **💰 COMPETITIVE PRICING ANALYSIS**: Added comprehensive comparison showing nutrizionist (€200-500/month) + chef (€800-2000/month) vs our webapp (€29/month) with detailed feature breakdown and ROI calculations
-- **🎯 CONVERSION OPTIMIZATION**: Enhanced subscription page with psychological triggers, scarcity elements, social proof statistics, customer testimonials, and clear value propositions to maximize conversion rates
-- **🔧 STRIPE CHECKOUT FIXED**: Resolved TypeScript errors in checkout session creation - updated API version and fixed type casting issues
-- **✅ STRIPE INTEGRATION WORKING**: All three subscription plans (monthly €29, quarterly €79, annual €249) now generate valid checkout URLs successfully
-- **🛡️ SUBSCRIPTION PROTECTION COMPLETE**: Backend middleware and frontend guards block cancelled users from premium features
-- **📱 MOBILE NAVIGATION ENHANCED**: Added logout button and subscription status indicator to mobile menu
-- **🎯 CRITICAL API ERROR RESOLVED**: Fixed persistent "Method is not a valid HTTP token" error by correcting apiRequest parameter order across entire application
-- **✅ COMPREHENSIVE TESTING COMPLETED**: Full end-to-end testing confirms all systems operational - authentication, meal plans, weight tracking, recipes, AI assistant
-- **🔧 FRONTEND API FIXES**: Corrected apiRequest(method, url, data) to proper apiRequest(url, data, method) in meal-plan-generator.tsx, user-input-form.tsx, weight-tracker.tsx, update-profile.tsx
-- **🗃️ DATABASE VALIDATION**: Removed duplicate .json() calls causing response parsing errors, made userId optional in profile creation schema
-- **📱 MOBILE APP FUNCTIONAL**: All core features now working on mobile after API corrections - login, profile creation, meal plan generation tested successfully
-- **Database Storage Fixed**: Successfully migrated from MemStorage to PostgreSQL DatabaseStorage using Drizzle ORM
-- **AI Meal Plan Generation**: Fully functional OpenAI integration generating personalized 7-day meal plans following Gazzella protocol
-- **Authentication System**: Complete user registration and login with session management working with PostgreSQL
-- **Meal Plan API**: Endpoint `/api/meal-plans/generate` successfully creating and storing AI-generated meal plans in database
-- **Gazzella Protocol Integration**: Updated OpenAI service with authentic Manuale della Gazzella rules from provided text files
-- **Complete Italian Localization**: All UI elements, days of week, meals, and macronutrients fully translated to Italian
-- **Improved Responsive Layout**: Enhanced mobile/tablet viewing with better grid layout for 7-day meal plans
-- **CRITICAL RULE IMPLEMENTED**: Every meal (breakfast, snacks, lunch, dinner) now ALWAYS contains both protein + complex carbohydrates as required by Gazzella protocol
-- **Perfect Compliance**: Eliminated all forbidden foods (legumes, dairy, quinoa, oats, yogurt, smoothies) and ensured authentic Gazzella meal combinations
-- **Balanced Meal Structure**: Snacks now properly combine ingredients like "Mela con mandorle e gallette di riso" instead of separate items
-- **USER DATA ISOLATION FIXED**: Implemented proper authentication middleware ensuring each user sees only their own data
-- **Security Enhancement**: All meal plan and profile endpoints now require authentication and validate user ownership
-- **DASHBOARD INTEGRATION**: Added saved meal plans section to home dashboard with direct access to user's personalized plans
-- **COMPLETE PROFILE UPDATE FLOW**: Implemented /aggiorna-profilo page with weight and data update capabilities
-- **SAVED PLAN VISUALIZATION**: Created /piano-salvato/:id page showing full 7-day meal plan with all nutritional details
-- **SEAMLESS USER FLOW**: Plans now saved in "I Miei Piani Personalizzati" page with automatic redirect after generation
-- **NAVIGATION SIMPLIFIED**: Removed Personalizzazione page as requested - users manage profiles via "Il Mio Profilo" only
-- **PWA ICON CONFIGURATION**: Added Logo-gazzella.jpg as app icon for mobile home screen installation with complete PWA meta tags and manifest.json
-- **NAVIGATION STYLING**: Enhanced navigation bar with professional background and glassmorphism effects
-- **UI CLEANUP**: Removed unwanted sections "Processo di Generazione IA", "Creating Custom Recipes", "Service Temporarily Unavailable", "Ricette in Evidenza", and "Aggiorna il Tuo Piano Nutrizionale"
-- **SUPPORT CONTACT**: Added "Contatta Supporto" button in footer that opens email to ilmanualedellagazzella@gmail.com with pre-filled subject
-- **OFFICIAL GAZZELLA TABLE 2025**: Implemented exact weekly structure from official PDF including savory breakfasts
-- **AUTHENTIC MEAL COMBINATIONS**: System now follows precisely the 7-day table structure from Manuale della Gazzella
-- **SAVORY BREAKFASTS INCLUDED**: Added "Pane integrale + uova + olio EVO" (Wednesday) and "Pane integrale + prosciutto crudo + olio EVO" (Saturday)
-- **PERMITTED FOODS ONLY**: Yogurt greco, yogurt bianco, fiocchi di avena, and biscotti now allowed ONLY as specified in official table
-- **PERSONALIZED PORTIONS**: System calculates precise weights (grams) based on individual client data (weight, height, BMI, goals)
-- **BMI INTEGRATION**: Meal plans now display current BMI, target weight, and weight loss goals in personalized profile section
-- **DIET EXPLANATION SYSTEM**: Each plan includes comprehensive Gazzella method explanation with principles and expected results
-- **TIME ESTIMATION**: Realistic time predictions for reaching weight goals based on healthy 0.5-1kg/week loss rate
-- **ENHANCED VISUALIZATION**: Saved meal plan pages show complete client profile with BMI category and personalized targets
-- **AI PERSONALIZATION TESTED**: Confirmed system generates customized portion sizes for different weight categories (60kg, 60-70kg, >70kg)
-- **CRITICAL GAZZELLA COMPLIANCE FIX**: Eliminated patate/potatoes from AI generation - enforced strict adherence to official Gazzella table foods only
-- **ALIMENTI RIGOROSAMENTE CONTROLLATI**: Updated OpenAI prompts to use ONLY foods from official table (pasta integrale, riso nero, cous cous, pane integrale, fiocchi di avena) - NO potatoes ever
-- **RECIPE GENERATION CORRECTED**: Fixed AI to generate only authentic Gazzella-compliant recipes using table-approved ingredients
-- **UNIQUE RECIPE SYSTEM**: Implemented duplicate prevention - each user receives unique recipes every time, never repeating the same recipe
-- **USER-SPECIFIC RECIPES**: Added user authentication to recipe generation with personal recipe tracking and uniqueness validation
-- **🤖 AI CHAT ASSISTANT COMPLETED**: Fully functional intelligent assistant with complete Gazzella manual knowledge, client data access, automatic health disclaimers, and personalized nutrition advice
-- **🏆 FINAL TESTING VERIFICATION**: Complete webapp tested successfully - all 5 core systems operational: authentication, meal plans (1550 kcal/day personalized), weight tracking, recipe generation, AI assistant with 13-second response time
-
-The system features a React frontend with shadcn/ui components, an Express.js backend API, and PostgreSQL database integration through Drizzle ORM. The application provides an intuitive user interface for inputting health profiles, generating customized meal plans, and browsing recipe collections with detailed nutritional information.
+"La Mia Gazzella" is an AI-powered web application for nutrition and meal planning, built with a full-stack TypeScript architecture. It enables users to create personalized meal plans and recipes based on their dietary preferences, health goals, and nutritional requirements, leveraging OpenAI's GPT models for content generation. The project aims to provide an affordable and effective alternative to traditional nutrition services, offering personalized guidance and comprehensive meal solutions.
 
 # User Preferences
 
@@ -72,76 +10,71 @@ App name: "La Mia Gazzella" - nome ufficiale dell'applicazione web per la pianif
 # System Architecture
 
 ## Frontend Architecture
-- **Framework**: React with TypeScript and Vite for fast development and building
-- **UI Library**: shadcn/ui components built on Radix UI primitives for accessible, customizable interfaces
-- **Styling**: Tailwind CSS with custom design system including glass morphism effects and modern gradients
-- **State Management**: TanStack Query for server state management and caching
-- **Routing**: Wouter for lightweight client-side routing
-- **Forms**: React Hook Form with Zod validation for type-safe form handling
+- **Framework**: React with TypeScript and Vite.
+- **UI Library**: shadcn/ui components built on Radix UI.
+- **Styling**: Tailwind CSS with custom design system, including glassmorphism effects.
+- **State Management**: TanStack Query for server state management.
+- **Routing**: Wouter for client-side routing.
+- **Forms**: React Hook Form with Zod validation.
 
 ## Backend Architecture
-- **Runtime**: Node.js with Express.js web framework
-- **Language**: TypeScript with ES modules for modern JavaScript features
-- **API Design**: RESTful API structure with proper HTTP status codes and error handling
-- **Middleware**: Express middleware for JSON parsing, URL encoding, and request logging
-- **Development**: Hot module replacement with Vite integration for seamless development experience
+- **Runtime**: Node.js with Express.js.
+- **Language**: TypeScript with ES modules.
+- **API Design**: RESTful API with proper HTTP status codes.
+- **Middleware**: Express middleware for JSON parsing and URL encoding.
 
 ## Data Storage Solutions
-- **Database**: PostgreSQL as the primary relational database
-- **ORM**: Drizzle ORM for type-safe database operations and schema management
-- **Database Provider**: Neon Database (serverless PostgreSQL)
-- **Schema Management**: Drizzle Kit for database migrations and schema updates
-- **Development Storage**: In-memory storage implementation for development/testing purposes
+- **Database**: PostgreSQL.
+- **ORM**: Drizzle ORM for type-safe operations.
+- **Database Provider**: Neon Database (serverless PostgreSQL).
+- **Schema Management**: Drizzle Kit for database migrations.
 
 ## Database Schema Design
-The system uses four main entities:
-- **Users**: Basic authentication and user identification
-- **User Profiles**: Comprehensive health and dietary preference data (age, weight, dietary restrictions, health goals, activity levels)
-- **Meal Plans**: Complete meal plans with nutritional targets and daily meal structures
-- **Recipes**: Detailed recipe information including ingredients, instructions, and nutritional content
+The system manages:
+- **Users**: Authentication and identification.
+- **User Profiles**: Health and dietary data.
+- **Meal Plans**: Nutritional targets and daily meal structures.
+- **Recipes**: Detailed recipe information.
 
 ## Authentication and Authorization
-- **Session Management**: PostgreSQL-based session storage using connect-pg-simple
-- **User System**: Simple username/password authentication structure
-- **Profile Association**: User profiles linked to authenticated users for personalized experiences
+- **Session Management**: PostgreSQL-based session storage.
+- **User System**: Username/password authentication.
+- **Profile Association**: User profiles linked to authenticated users.
 
 ## AI Integration Architecture
-- **AI Provider**: OpenAI GPT-4o integration for meal plan and recipe generation
-- **Content Generation**: Structured prompts for creating personalized meal plans based on user profiles
-- **Nutritional Calculation**: AI-powered macronutrient distribution and calorie targeting
-- **Recipe Creation**: Dynamic recipe generation with dietary restriction compliance
+- **AI Provider**: OpenAI GPT-4o for meal plan and recipe generation.
+- **Content Generation**: Structured prompts for personalized meal plans and recipes.
+- **Nutritional Calculation**: AI-powered macronutrient distribution and calorie targeting.
+- **Gazzella Protocol**: AI adherence to the "Manuale della Gazzella" rules, ensuring specific food combinations, portion calculations, and exclusion of forbidden foods.
+- **Trial Abuse Prevention**: System to track and prevent free trial misuse for premium features.
+- **Subscription Management**: Integration for handling paid subscriptions and feature access.
 
 # External Dependencies
 
 ## Core Framework Dependencies
-- **React Ecosystem**: React 18 with React DOM for modern component architecture
-- **Vite**: Build tool and development server with hot module replacement
-- **Express.js**: Web application framework for the Node.js backend
-- **TypeScript**: Type safety across the entire application stack
+- **React Ecosystem**: React 18, React DOM.
+- **Vite**: Build tool and development server.
+- **Express.js**: Backend web framework.
+- **TypeScript**: Type safety across the stack.
 
 ## Database and ORM
-- **Drizzle ORM**: Modern TypeScript ORM with excellent developer experience
-- **Drizzle Kit**: Database migration and introspection tooling
-- **Neon Database**: Serverless PostgreSQL database provider
-- **PostgreSQL**: Relational database management system
+- **Drizzle ORM**: TypeScript ORM.
+- **Drizzle Kit**: Database migration tooling.
+- **Neon Database**: Serverless PostgreSQL provider.
+- **PostgreSQL**: Relational database.
 
 ## UI and Design System
-- **shadcn/ui**: Complete component library built on Radix UI
-- **Radix UI**: Unstyled, accessible UI primitives
-- **Tailwind CSS**: Utility-first CSS framework
-- **Lucide React**: Modern icon library with consistent design
-- **Class Variance Authority**: Utility for creating component variants
+- **shadcn/ui**: Component library.
+- **Radix UI**: Unstyled UI primitives.
+- **Tailwind CSS**: Utility-first CSS framework.
+- **Lucide React**: Icon library.
 
 ## State Management and Data Fetching
-- **TanStack Query**: Powerful data synchronization for server state
-- **React Hook Form**: Performant forms with easy validation
-- **Zod**: TypeScript-first schema validation library
+- **TanStack Query**: Data synchronization.
+- **React Hook Form**: Form management.
+- **Zod**: Schema validation.
 
 ## AI and External Services
-- **OpenAI**: GPT-4o integration for intelligent meal planning and recipe generation
-- **Date-fns**: Modern date utility library for meal plan scheduling
-
-## Development and Build Tools
-- **ESBuild**: Fast JavaScript bundler for production builds
-- **PostCSS**: CSS processing with Tailwind integration
-- **Autoprefixer**: Automatic CSS vendor prefixing
+- **OpenAI**: GPT-4o for AI functionalities.
+- **Stripe**: Payment processing for subscriptions.
+- **Date-fns**: Date utility library.

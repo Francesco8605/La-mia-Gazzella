@@ -98,57 +98,127 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Debug endpoint for production troubleshooting
+  app.get("/api/debug/status", async (req, res) => {
+    try {
+      const status: any = {
+        environment: process.env.NODE_ENV || 'development',
+        timestamp: new Date().toISOString(),
+        database: {
+          connected: !!process.env.DATABASE_URL,
+          urlPrefix: process.env.DATABASE_URL?.substring(0, 30) || 'N/A'
+        },
+        stripe: {
+          configured: !!process.env.STRIPE_SECRET_KEY,
+          keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10) || 'N/A'
+        }
+      };
+
+      // Test database connection
+      try {
+        const testUser = await storage.getUserByUsername('nonexistent-user-test');
+        status.database.queryTest = 'success';
+      } catch (error: any) {
+        status.database.queryTest = 'failed';
+        status.database.error = error?.message || 'Unknown error';
+      }
+
+      res.json(status);
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: 'Debug endpoint failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
+  
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
     try {
-      console.log("Registration request body:", req.body);
+      console.log("🔥 Registration attempt started");
+      console.log("📝 Request body:", req.body);
+      console.log("🌍 Environment check:", {
+        NODE_ENV: process.env.NODE_ENV,
+        hasDatabase: !!process.env.DATABASE_URL,
+        databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) || 'N/A'
+      });
       
       const { username, email, password } = req.body;
       
       // Validate input
       if (!username || !email || !password) {
+        console.log("❌ Missing required fields");
         return res.status(400).json({ message: "Username, email e password sono obbligatori" });
       }
       
-      // Check if user already exists
-      const existingUser = await storage.getUserByUsername(username);
-      if (existingUser) {
-        return res.status(400).json({ message: "Username già in uso" });
+      console.log("✅ Input validation passed");
+      
+      try {
+        // Check if user already exists
+        console.log("🔍 Checking for existing user:", username);
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser) {
+          console.log("❌ User already exists:", username);
+          return res.status(400).json({ message: "Username già in uso" });
+        }
+        console.log("✅ Username is available");
+      } catch (dbError: any) {
+        console.error("❌ Database check error:", dbError);
+        return res.status(500).json({ 
+          message: "Errore di connessione al database", 
+          details: dbError?.message || 'Database connection failed'
+        });
       }
 
-      // Hash password
-      const hashedPassword = await bcrypt.hash(password, 10);
-      
-      // Create user without automatic trial - users must subscribe with payment details
-      const user = await storage.createUser({
-        username,
-        email,
-        password: hashedPassword,
+      try {
+        // Hash password
+        console.log("🔐 Hashing password...");
+        const hashedPassword = await bcrypt.hash(password, 10);
+        console.log("✅ Password hashed successfully");
+        
+        // Create user without automatic trial - users must subscribe with payment details
+        console.log("👤 Creating user in database...");
+        const user = await storage.createUser({
+          username,
+          email,
+          password: hashedPassword,
+        });
+        console.log("✅ User created successfully:", user.username);
+
+        // Create database session
+        console.log("🍪 Creating session...");
+        const sessionId = generateSessionId();
+        const expiresAt = getSessionExpiryDate();
+        await storage.createSession(sessionId, user.id, expiresAt);
+        console.log("✅ Session created successfully");
+
+        // Set session cookie
+        const isProduction = req.get('host')?.includes('replit.app');
+        res.cookie('session', sessionId, { 
+          httpOnly: true, 
+          secure: isProduction, // HTTPS in production
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          sameSite: isProduction ? 'none' : 'lax' // different for production
+        });
+
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
+        console.log("✅ Registration completed successfully for:", username);
+        res.status(201).json(userWithoutPassword);
+      } catch (createError: any) {
+        console.error("❌ User creation error:", createError);
+        return res.status(500).json({ 
+          message: "Errore durante la creazione dell'utente", 
+          details: createError?.message || 'User creation failed'
+        });
+      }
+    } catch (error: any) {
+      console.error("❌ Registration error:", error);
+      res.status(500).json({ 
+        message: "Errore durante la registrazione",
+        details: error?.message || 'Registration failed',
+        stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
       });
-
-      // New users start without any subscription - they must go through Stripe checkout for trial
-
-      console.log("User created successfully:", user.username);
-
-      // Create database session
-      const sessionId = generateSessionId();
-      const expiresAt = getSessionExpiryDate();
-      await storage.createSession(sessionId, user.id, expiresAt);
-
-      // Set session cookie
-      res.cookie('session', sessionId, { 
-        httpOnly: true, 
-        secure: false, // set to true in production with HTTPS
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - same as session expiry
-        sameSite: 'lax'
-      });
-
-      // Remove password from response
-      const { password: _, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
-    } catch (error) {
-      console.error("Registration error:", error);
-      res.status(500).json({ message: "Errore durante la registrazione" });
     }
   });
 
@@ -1238,9 +1308,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Sync error:', error);
-      res.status(500).json({ error: 'Failed to sync subscription', details: error.message });
+      res.status(500).json({ error: 'Failed to sync subscription', details: error?.message || 'Sync failed' });
     }
   });
 
