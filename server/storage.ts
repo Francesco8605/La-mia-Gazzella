@@ -403,10 +403,9 @@ export class MemStorage implements IStorage {
 
   async createSession(sessionId: string, userId: string, expiresAt: Date): Promise<Session> {
     const session: Session = {
-      id: sessionId,
-      userId: userId,
-      createdAt: new Date(),
-      expiresAt: expiresAt
+      sid: sessionId,
+      sess: { userId },
+      expire: expiresAt
     };
     this.sessions.set(sessionId, { userId, expiresAt });
     return session;
@@ -423,10 +422,9 @@ export class MemStorage implements IStorage {
     }
     
     return {
-      id: sessionId,
-      userId: sessionData.userId,
-      createdAt: new Date(), // Mock creation date
-      expiresAt: sessionData.expiresAt
+      sid: sessionId,
+      sess: { userId: sessionData.userId },
+      expire: sessionData.expiresAt
     };
   }
 
@@ -436,7 +434,8 @@ export class MemStorage implements IStorage {
 
   async deleteExpiredSessions(): Promise<void> {
     const now = new Date();
-    for (const [sessionId, sessionData] of this.sessions.entries()) {
+    const entries = Array.from(this.sessions.entries());
+    for (const [sessionId, sessionData] of entries) {
       if (now > sessionData.expiresAt) {
         this.sessions.delete(sessionId);
       }
