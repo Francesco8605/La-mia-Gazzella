@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,16 +8,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { User, Scale, Activity, Clock, Apple, Droplets, Save, ArrowLeft } from "lucide-react";
+import { User, Scale, Activity, Clock, Apple, Droplets, Save, ArrowLeft, Plus } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Link } from "wouter";
+import { Link, useParams } from "wouter";
 import type { UserProfile } from "@shared/schema";
 
 export default function AggiornaProfiloPage() {
-  const { user } = useAuth();
+  const params = useParams<{ id?: string }>();
+  const profileId = params.id;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Load profile data
+  const { data: profile, isLoading } = useQuery({
+    queryKey: [`/api/profiles/${profileId}`],
+    enabled: !!profileId,
+  });
 
   // Form state
   const [formData, setFormData] = useState({

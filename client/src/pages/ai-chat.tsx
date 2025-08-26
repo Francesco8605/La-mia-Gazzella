@@ -7,13 +7,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Send, Bot, User, Heart, AlertTriangle, Loader2 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-// Check if error is unauthorized
-const isUnauthorizedError = (error: Error): boolean => {
-  return /^401: .*Unauthorized/.test(error.message);
-};
 
 interface ChatMessage {
   id: string;
@@ -31,7 +26,6 @@ interface ChatSession {
 }
 
 export default function AIChat() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -39,94 +33,77 @@ export default function AIChat() {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Accesso Richiesto",
-        description: "Effettua il login per accedere al tuo consulente nutrizionale personale.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, authLoading, toast]);
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
+  // Auto scroll to bottom when new messages arrive
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
   }, [messages]);
 
-  // Fetch user profile and meal plans for context
-  const { data: userProfile } = useQuery({
-    queryKey: ["/api/user-profiles/current"],
-    enabled: isAuthenticated,
-    retry: false,
-    staleTime: 1000 * 60 * 2, // 2 minuti di cache
-  });
+  // Initialize with welcome message
+  useEffect(() => {
+    const welcomeMessage: ChatMessage = {
+      id: "welcome-1",
+      role: "assistant",
+      content: "👋 Ciao! Sono il tuo consulente nutrizionale AI specializzato nel protocollo Gazzella. Posso aiutarti con:\n\n• Domande sulla nutrizione Gazzella\n• Consigli sui piani alimentari\n• Informazioni sui cibi permessi e vietati\n• Suggerimenti per il tuo percorso nutrizionale\n\n⚠️ **Importante**: I miei consigli sono solo educativi e non sostituiscono il parere di un medico professionale.\n\nCome posso aiutarti oggi?",
+      timestamp: new Date(),
+      containsHealthWarning: true
+    };
 
-  const { data: mealPlans } = useQuery({
-    queryKey: ["/api/meal-plans/user"],
-    enabled: isAuthenticated,
-    retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minuti di cache
-  });
+    setMessages([welcomeMessage]);
+  }, []);
 
-  const { data: recipes } = useQuery({
-    queryKey: ["/api/recipes/user"],
-    enabled: isAuthenticated,
-    retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minuti di cache
-  });
-
-  // Send message mutation
-  const sendMessageMutation = useMutation({
+  // Chat mutation for sending messages
+  const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      return await apiRequest("/api/ai-chat/message", {
+      console.log("🤖 Sending chat message:", message);
+      
+      return apiRequest("/api/ai-chat", {
         message,
-        userProfile,
-        mealPlans,
-        recipes
+        context: "gazzella_nutrition" 
       }, "POST");
     },
     onSuccess: (response) => {
-      const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+      console.log("✅ AI response received:", response);
+      
+      const aiMessage: ChatMessage = {
+        id: `ai-${Date.now()}`,
         role: "assistant",
         content: response.message,
         timestamp: new Date(),
-        containsHealthWarning: response.containsHealthWarning || false
+        containsHealthWarning: response.message.toLowerCase().includes("medico") || 
+                                 response.message.toLowerCase().includes("professionale") ||
+                                 response.message.toLowerCase().includes("consulta")
       };
-      
-      setMessages(prev => [...prev, assistantMessage]);
+
+      setMessages(prev => [...prev, aiMessage]);
       setIsTyping(false);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      console.error("❌ Chat error:", error);
       setIsTyping(false);
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Sessione Scaduta",
-          description: "La tua sessione è scaduta. Effettua nuovamente il login.",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
+      
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: "assistant", 
+        content: "Mi dispiace, c'è stato un problema nel processare la tua richiesta. Per favore riprova. Se il problema persiste, contatta il supporto.",
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, errorMessage]);
       
       toast({
-        title: "Errore",
-        description: "Impossibile inviare il messaggio. Riprova tra poco.",
+        title: "Errore di Connessione",
+        description: "Non riesco a elaborare la tua richiesta al momento. Riprova fra qualche istante.",
         variant: "destructive",
       });
-    },
+    }
   });
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || sendMessageMutation.isPending) return;
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isTyping) return;
 
     const userMessage: ChatMessage = {
       id: `user-${Date.now()}`,
@@ -135,216 +112,149 @@ export default function AIChat() {
       timestamp: new Date()
     };
 
+    // Add user message immediately
     setMessages(prev => [...prev, userMessage]);
+    
+    // Clear input and show typing
+    const messageToSend = inputMessage.trim();
     setInputMessage("");
     setIsTyping(true);
 
-    sendMessageMutation.mutate(inputMessage.trim());
+    // Send to AI
+    chatMutation.mutate(messageToSend);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage();
+      sendMessage();
     }
   };
 
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null; // Will redirect to login
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full text-white">
-            <Bot className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Consulente Nutrizionale Gazzella
-            </h1>
-            <p className="text-muted-foreground">
-              Il tuo consulente nutrizionale personale basato sul Manuale della Gazzella
-            </p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 pt-24 pb-12">
+      <div className="container mx-auto px-4 max-w-4xl h-[calc(100vh-8rem)]">
+        
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-2">
+            Consulente Nutrizionale AI
+          </h1>
+          <p className="text-lg text-slate-600">
+            Il tuo assistente specializzato nel protocollo Gazzella
+          </p>
         </div>
 
-        {/* User Context Summary */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Heart className="h-5 w-5 text-pink-500" />
-              Il Tuo Profilo Gazzella
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="font-medium text-muted-foreground">Dati Personali</p>
-                {userProfile ? (
-                  <div className="mt-1">
-                    <p>Peso: {(userProfile as any).weight}kg</p>
-                    <p>Altezza: {(userProfile as any).height}cm</p>
-                    <p>Età: {(userProfile as any).age} anni</p>
+        {/* Chat Interface */}
+        <Card className="glass-morphism h-[calc(100vh-16rem)] flex flex-col">
+          
+          {/* Messages Area */}
+          <CardContent className="flex-1 p-0 overflow-hidden">
+            <ScrollArea className="h-full px-6 py-4">
+              <div className="space-y-4">
+                {messages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] rounded-xl px-4 py-3 ${
+                        message.role === "user"
+                          ? "bg-gradient-to-r from-red-500 to-green-600 text-white ml-12"
+                          : "bg-white shadow-sm border border-slate-200 mr-12"
+                      }`}
+                    >
+                      <div className="flex items-start space-x-3">
+                        {message.role === "assistant" && (
+                          <Bot className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                        )}
+                        {message.role === "user" && (
+                          <User className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
+                        )}
+                        <div className="flex-1">
+                          <div 
+                            className={`text-sm leading-relaxed whitespace-pre-wrap ${
+                              message.role === "user" ? "text-white" : "text-slate-700"
+                            }`}
+                          >
+                            {message.content}
+                          </div>
+                          {message.containsHealthWarning && (
+                            <div className="flex items-center mt-2 pt-2 border-t border-orange-200">
+                              <Heart className="h-3 w-3 text-orange-500 mr-1" />
+                              <span className="text-xs text-orange-600">Consiglio educativo</span>
+                            </div>
+                          )}
+                          <div className={`text-xs mt-1 ${
+                            message.role === "user" ? "text-green-100" : "text-slate-400"
+                          }`}>
+                            {message.timestamp.toLocaleTimeString("it-IT", { 
+                              hour: "2-digit", 
+                              minute: "2-digit" 
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-muted-foreground mt-1">Profilo non completato</p>
+                ))}
+                
+                {/* Typing Indicator */}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white shadow-sm border border-slate-200 rounded-xl px-4 py-3 mr-12">
+                      <div className="flex items-center space-x-3">
+                        <Bot className="h-5 w-5 text-green-600" />
+                        <div className="flex space-x-1">
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{animationDelay: "0.1s"}}></div>
+                          <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{animationDelay: "0.2s"}}></div>
+                        </div>
+                        <span className="text-sm text-slate-500">Il consulente sta scrivendo...</span>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-              <div>
-                <p className="font-medium text-muted-foreground">Piani Nutrizionali</p>
-                <p className="mt-1">{(mealPlans as any)?.length || 0} piani salvati</p>
-              </div>
-              <div>
-                <p className="font-medium text-muted-foreground">Ricette Personali</p>
-                <p className="mt-1">{(recipes as any)?.length || 0} ricette generate</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Medical Disclaimer */}
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/10 mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="h-5 w-5 text-orange-500 mt-0.5 flex-shrink-0" />
-              <div className="text-sm">
-                <p className="font-medium text-orange-800 dark:text-orange-200 mb-1">
-                  Importante: Disclaimer Medico
-                </p>
-                <p className="text-orange-700 dark:text-orange-300">
-                  Questo assistente fornisce informazioni nutrizionali basate sul Manuale della Gazzella. 
-                  Non sostituisce il parere medico professionale. Per problemi di salute gravi o condizioni 
-                  mediche specifiche, consulta sempre un medico di persona.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chat Interface */}
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader>
-          <CardTitle className="text-lg">Chat con l'Assistente</CardTitle>
-          <Separator />
-        </CardHeader>
-        
-        <CardContent className="flex-1 flex flex-col p-0">
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.length === 0 && (
-                <div className="text-center py-12">
-                  <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Ciao! Sono il tuo Consulente Nutrizionale</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    Sono qui per aiutarti con domande sul Manuale della Gazzella, i tuoi piani nutrizionali, 
-                    ricette e tutto ciò che riguarda il tuo percorso di benessere.
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    <Badge variant="secondary" className="text-xs">Domande sui pasti</Badge>
-                    <Badge variant="secondary" className="text-xs">Consigli nutrizionali</Badge>
-                    <Badge variant="secondary" className="text-xs">Spiegazioni ricette</Badge>
-                    <Badge variant="secondary" className="text-xs">Modifiche al piano</Badge>
-                  </div>
-                </div>
-              )}
-              
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-                >
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
-                    message.role === "user" 
-                      ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white"
-                      : "bg-gradient-to-br from-pink-500 to-purple-600 text-white"
-                  }`}>
-                    {message.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                  </div>
-                  
-                  <div className={`flex-1 max-w-[80%] ${message.role === "user" ? "text-right" : ""}`}>
-                    <div className={`inline-block p-3 rounded-lg ${
-                      message.role === "user"
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white"
-                        : "bg-muted"
-                    }`}>
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.containsHealthWarning && (
-                        <div className="mt-2 p-2 bg-orange-100 dark:bg-orange-900/20 rounded text-orange-800 dark:text-orange-200 text-xs flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Consultare un medico per problemi di salute gravi
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {message.timestamp.toLocaleTimeString("it-IT", { 
-                        hour: "2-digit", 
-                        minute: "2-digit" 
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white">
-                    <Bot className="h-4 w-4" />
-                  </div>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
               <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          
+            </ScrollArea>
+          </CardContent>
+
           {/* Input Area */}
-          <div className="border-t p-4">
-            <div className="flex gap-2">
+          <Separator />
+          <div className="p-4">
+            <div className="flex items-center space-x-2">
               <Input
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Scrivi la tua domanda sul Manuale della Gazzella..."
-                disabled={sendMessageMutation.isPending}
-                className="flex-1"
-                data-testid="input-chat-message"
+                placeholder="Scrivi la tua domanda sulla nutrizione Gazzella..."
+                disabled={isTyping}
+                className="flex-1 border-slate-200 focus:border-green-500 focus:ring-green-500"
               />
               <Button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || sendMessageMutation.isPending}
-                size="icon"
-                className="bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-                data-testid="button-send-message"
+                onClick={sendMessage}
+                disabled={!inputMessage.trim() || isTyping}
+                className="bg-gradient-to-r from-red-500 to-green-600 hover:from-red-600 hover:to-green-700 text-white px-6"
               >
-                {sendMessageMutation.isPending ? (
+                {isTyping ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Send className="h-4 w-4" />
                 )}
               </Button>
             </div>
+            
+            {/* Disclaimer */}
+            <div className="flex items-center mt-3 px-1">
+              <AlertTriangle className="h-3 w-3 text-orange-500 mr-1 flex-shrink-0" />
+              <span className="text-xs text-slate-500">
+                I consigli forniti sono solo educativi. Per problemi di salute, consulta sempre un medico.
+              </span>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }

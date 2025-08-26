@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useLocation, useParams } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, RefreshCw, Scale, Target, CreditCard, Settings, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Save, RefreshCw, Scale, Target, Settings, AlertTriangle, Plus } from "lucide-react";
 import { Link } from "wouter";
-import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -17,8 +16,8 @@ import { insertUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { UserProfile } from "@shared/schema";
-import { SubscriptionSettings } from "@/components/subscription-settings";
 import CreateProfileForm from "@/components/create-profile-form";
+import WeightTracker from "@/components/weight-tracker";
 
 // Schema for weight update (simplified)
 const updateWeightSchema = z.object({
@@ -30,11 +29,12 @@ type UpdateWeightForm = z.infer<typeof updateWeightSchema>;
 export default function UpdateProfile() {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const { user } = useAuth();
+  const params = useParams<{ id?: string }>();
+  const profileId = params.id;
 
   const { data: userProfile, isLoading } = useQuery<UserProfile>({
-    queryKey: ["/api/user-profiles/current"],
-    enabled: !!user,
+    queryKey: [`/api/profiles/${profileId}`],
+    enabled: !!profileId,
     staleTime: 1000 * 60 * 2, // 2 minuti di cache
   });
 
@@ -54,23 +54,20 @@ export default function UpdateProfile() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: UpdateWeightForm) => {
-      return await apiRequest(`/api/user-profiles/current`, {
-        weight: data.weight,
-      }, "PATCH");
+      if (!profileId) throw new Error("Profile ID richiesto");
+      return apiRequest(`/api/profiles/${profileId}`, { weight: data.weight }, "PATCH");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/profiles/${profileId}`] });
       toast({
-        title: "Dati aggiornati!",
-        description: "I tuoi dati sono stati aggiornati con successo. Ora puoi generare un nuovo piano personalizzato.",
+        title: "Profilo aggiornato",
+        description: "I tuoi dati sono stati aggiornati con successo",
       });
-      // Redirect to meal plan generator
-      navigate("/genera-piano");
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({
-        title: "Errore nell'aggiornamento",
-        description: "Si è verificato un errore durante l'aggiornamento. Riprova.",
+        title: "Errore",
+        description: error.message || "Impossibile aggiornare il profilo",
         variant: "destructive",
       });
     },
@@ -80,209 +77,170 @@ export default function UpdateProfile() {
     updateMutation.mutate(data);
   };
 
+  // No profile ID provided - show create form
+  if (!profileId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 pt-24 pb-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-4">
+              Crea Profilo Nutrizionale
+            </h1>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+              Crea il tuo profilo per piani alimentari personalizzati seguendo il protocollo Gazzella
+            </p>
+          </div>
+          
+          <CreateProfileForm />
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-pink-600" />
-              <p className="text-lg text-gray-600 dark:text-gray-300">
-                Caricamento dei tuoi dati...
-              </p>
-            </div>
-          </div>
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center">
+        <div className="text-center">
+          <RefreshCw className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-slate-600">Caricamento profilo...</p>
         </div>
       </div>
     );
   }
 
   if (!userProfile) {
-    return <CreateProfileForm />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <AlertTriangle className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Profilo Non Trovato</h2>
+          <p className="text-slate-600 mb-6">
+            Il profilo richiesto non esiste o non è accessibile.
+          </p>
+          <Link href="/">
+            <Button>Torna alla Home</Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
-  // Calculate current BMI
-  const currentBMI = userProfile.weight && userProfile.height 
-    ? parseFloat(userProfile.weight.toString()) / Math.pow(userProfile.height / 100, 2)
-    : 0;
-  const idealWeight = userProfile.height 
-    ? Math.round(22 * Math.pow(userProfile.height / 100, 2))
-    : 0;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 pt-24 pb-12">
+      <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
-        <div className="mb-8">
+        <div className="flex items-center justify-between mb-8">
           <Link href="/">
-            <Button variant="ghost" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Torna alla Home
             </Button>
           </Link>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-            Il Mio Profilo
+        </div>
+
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-4">
+            Aggiorna Profilo
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mt-2">
-            Mantieni il tuo profilo sempre aggiornato per piani alimentari e consigli più precisi
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
+            Mantieni aggiornati i tuoi dati per piani alimentari sempre personalizzati
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Current Stats */}
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center text-gray-900 dark:text-white">
-                  <Scale className="w-5 h-5 mr-2 text-pink-600" />
-                  I tuoi dati attuali
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-pink-50 dark:bg-pink-900/20 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-pink-600">
-                      {userProfile.weight} kg
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">Peso attuale</div>
-                  </div>
-                  
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                    <div className="text-2xl font-bold text-purple-600">
-                      {currentBMI.toFixed(1)}
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">BMI attuale</div>
-                  </div>
-                </div>
+        {/* Profile Summary */}
+        <Card className="glass-morphism mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Settings className="mr-2 h-5 w-5 text-green-600" />
+              Dati Attuali del Profilo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-green-50 rounded-lg">
+                <Scale className="h-8 w-8 text-green-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-green-700">{userProfile.weight}kg</div>
+                <div className="text-sm text-green-600">Peso Attuale</div>
+              </div>
+              <div className="text-center p-4 bg-blue-50 rounded-lg">
+                <Target className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-blue-700">{userProfile.targetWeight || "Non impostato"}kg</div>
+                <div className="text-sm text-blue-600">Peso Obiettivo</div>
+              </div>
+              <div className="text-center p-4 bg-purple-50 rounded-lg">
+                <div className="text-2xl font-bold text-purple-700">{userProfile.age}</div>
+                <div className="text-sm text-purple-600">Anni</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-                <Separator />
+        {/* Weight Update Form */}
+        <Card className="glass-morphism mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Scale className="mr-2 h-5 w-5 text-green-600" />
+              Aggiorna Peso
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="weight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Peso Attuale (kg)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="75.5"
+                          {...field}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          value={field.value || ""}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <Button 
+                  type="submit" 
+                  disabled={updateMutation.isPending}
+                  className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold"
+                >
+                  {updateMutation.isPending ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      Aggiornamento...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" />
+                      Salva Modifiche
+                    </>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Altezza:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{userProfile.height} cm</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Peso ideale:</span>
-                    <span className="font-semibold text-green-600">{idealWeight} kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Peso obiettivo:</span>
-                    <span className="font-semibold text-blue-600">{userProfile.weight} kg</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 dark:text-gray-300">Età:</span>
-                    <span className="font-semibold text-gray-900 dark:text-white">{userProfile.age} anni</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Update Form */}
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center text-gray-900 dark:text-white">
-                  <Target className="w-5 h-5 mr-2 text-purple-600" />
-                  Aggiorna i tuoi dati
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Weight */}
-                    <FormField
-                      control={form.control}
-                      name="weight"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-700 dark:text-gray-300">
-                            Peso attuale (kg) *
-                          </FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              step="0.1"
-                              placeholder="65"
-                              className="bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600"
-                              data-testid="input-current-weight"
-                              {...field}
-                              onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <Separator />
-
-                    {/* Submit Button */}
-                    <div className="flex flex-col gap-3">
-                      <Button
-                        type="submit"
-                        size="lg"
-                        disabled={updateMutation.isPending}
-                        className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
-                        data-testid="button-save-updates"
-                      >
-                        {updateMutation.isPending ? (
-                          <>
-                            <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                            Salvataggio...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="w-5 h-5 mr-2" />
-                            Salva modifiche
-                          </>
-                        )}
-                      </Button>
-
-                      <p className="text-sm text-gray-600 dark:text-gray-300 text-center">
-                        Dopo aver aggiornato i dati, potrai generare un nuovo piano alimentare personalizzato
-                      </p>
-                    </div>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Subscription Management Section */}
-          <div className="mt-8">
-            <Card className="bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-0 shadow-xl">
-              <CardHeader>
-                <CardTitle className="flex items-center text-gray-900 dark:text-white">
-                  <CreditCard className="w-5 h-5 mr-2 text-emerald-600" />
-                  Gestione Abbonamento
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Link href="/piani-abbonamento" className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Visualizza Piani
-                      </Button>
-                    </Link>
-                    
-                    <Link href="/cancella-abbonamento" className="flex-1">
-                      <Button variant="destructive" className="w-full">
-                        <AlertTriangle className="h-4 w-4 mr-2" />
-                        Cancella Abbonamento
-                      </Button>
-                    </Link>
-                  </div>
-                  
-                  <p className="text-sm text-gray-600 dark:text-gray-400 text-center">
-                    Gestisci il tuo abbonamento o cancellalo quando vuoi
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        {/* Weight Tracking Chart */}
+        <Card className="glass-morphism">
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Scale className="mr-2 h-5 w-5 text-green-600" />
+              Tracciamento Peso
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <WeightTracker profileId={profileId} />
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
