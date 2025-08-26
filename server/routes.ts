@@ -1177,26 +1177,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('📋 PlanId from metadata:', planId);
         console.log('💳 Subscription ID:', session.subscription);
         
-        if (userId && planId && session.subscription) {
+        if (session.subscription) {
           try {
-            // Retrieve the actual subscription data from Stripe to get the real trial dates
+            // Retrieve Stripe subscription and customer data
             const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription);
+            const stripeCustomer = await stripe.customers.retrieve(stripeSubscription.customer as string);
             
             console.log('📊 Stripe subscription status:', stripeSubscription.status);
+            console.log('👤 Customer email:', (stripeCustomer as any).email);
             console.log('⏰ Trial start:', stripeSubscription.trial_start ? new Date(stripeSubscription.trial_start * 1000).toISOString() : 'No trial');
             console.log('⏰ Trial end:', stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000).toISOString() : 'No trial');
+            
+            let targetUserId = userId;
+            
+            // If no userId in metadata, try to find user by email or create one
+            if (!targetUserId) {
+              const customerEmail = (stripeCustomer as any).email;
+              if (customerEmail) {
+                console.log('🔍 No userId in metadata, searching by email:', customerEmail);
+                let existingUser = await storage.getUserByUsername(customerEmail);
+                
+                if (!existingUser) {
+                  console.log('👤 User not found in database, creating new user...');
+                  
+                  // Create new user automatically
+                  const defaultPassword = Math.random().toString(36).substring(2, 15);
+                  const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+                  
+                  existingUser = await storage.createUser({
+                    username: customerEmail,
+                    email: customerEmail,
+                    password: hashedPassword,
+                    stripeCustomerId: stripeSubscription.customer as string,
+                  });
+                  
+                  console.log('✅ New user created automatically:', existingUser.username);
+                  console.log('🔑 Temporary password:', defaultPassword);
+                }
+                
+                targetUserId = existingUser.id;
+                console.log('🎯 Target user ID:', targetUserId);
+              }
+            }
+            
+            if (!targetUserId) {
+              console.error('❌ Cannot determine target user for subscription');
+              return res.status(400).json({ error: 'Cannot determine target user' });
+            }
             
             const updateData: any = {
               stripeSubscriptionId: session.subscription,
               subscriptionStatus: stripeSubscription.status,
-              subscriptionPlan: planId,
+              subscriptionPlan: planId || 'monthly', // Default to monthly if no planId
               subscriptionStartDate: new Date(stripeSubscription.start_date * 1000),
             };
 
             // If it's a trial, set the trial end date and mark user as having used trial
             if (stripeSubscription.status === 'trialing' && stripeSubscription.trial_end) {
               updateData.trialEndDate = new Date(stripeSubscription.trial_end * 1000);
-              updateData.hasUsedTrial = 'yes'; // Mark that user has used their trial
+              updateData.hasUsedTrial = 'yes';
             }
 
             // Set subscription end date for active subscriptions
@@ -1207,16 +1246,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('💾 Updating user subscription info with real Stripe data...');
             console.log('📄 Update data:', JSON.stringify(updateData, null, 2));
             
-            await storage.updateUserStripeInfo(userId, updateData);
+            await storage.updateUserStripeInfo(targetUserId, updateData);
             
-            console.log('✅ User subscription updated successfully for userId:', userId);
+            console.log('✅ User subscription updated successfully for userId:', targetUserId);
           } catch (updateError) {
             console.error('❌ Error updating user subscription:', updateError);
             return res.status(500).json({ error: 'Failed to update subscription' });
           }
         } else {
-          console.error('❌ Missing required data:', { userId, planId, subscription: session.subscription });
-          return res.status(400).json({ error: 'Missing required metadata or subscription' });
+          console.error('❌ Missing subscription in checkout session');
+          return res.status(400).json({ error: 'Missing subscription data' });
         }
         break;
         
