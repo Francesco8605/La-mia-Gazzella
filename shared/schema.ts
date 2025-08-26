@@ -21,10 +21,9 @@ export const users = pgTable("users", {
 });
 
 export const sessions = pgTable("sessions", {
-  id: varchar("id").primaryKey(),
-  userId: varchar("user_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  expiresAt: timestamp("expires_at").notNull(),
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire").notNull(),
 });
 
 export const userProfiles = pgTable("user_profiles", {

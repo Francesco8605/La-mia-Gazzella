@@ -40,9 +40,10 @@ async function isAuthenticated(req: any, res: any, next: any) {
     }
     
     // Mock user object to match what would come from Replit Auth
+    const userId = (session.sess as any).userId;
     req.user = {
       claims: {
-        sub: session.userId
+        sub: userId
       }
     };
     

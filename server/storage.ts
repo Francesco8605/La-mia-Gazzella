@@ -678,9 +678,9 @@ export class DatabaseStorage implements IStorage {
     const [session] = await db
       .insert(sessions)
       .values({
-        id: sessionId,
-        userId: userId,
-        expiresAt: expiresAt
+        sid: sessionId,
+        sess: { userId },
+        expire: expiresAt
       })
       .returning();
     return session;
@@ -690,10 +690,10 @@ export class DatabaseStorage implements IStorage {
     const [session] = await db
       .select()
       .from(sessions)
-      .where(eq(sessions.id, sessionId));
+      .where(eq(sessions.sid, sessionId));
     
     // Check if session has expired
-    if (session && new Date() > session.expiresAt) {
+    if (session && new Date() > session.expire) {
       // Delete expired session
       await this.deleteSession(sessionId);
       return undefined;
@@ -703,13 +703,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSession(sessionId: string): Promise<boolean> {
-    const result = await db.delete(sessions).where(eq(sessions.id, sessionId));
+    const result = await db.delete(sessions).where(eq(sessions.sid, sessionId));
     return (result.rowCount || 0) > 0;
   }
 
   async deleteExpiredSessions(): Promise<void> {
     const now = new Date();
-    await db.delete(sessions).where(lt(sessions.expiresAt, now));
+    await db.delete(sessions).where(lt(sessions.expire, now));
   }
 }
 
