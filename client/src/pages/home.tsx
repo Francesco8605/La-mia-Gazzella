@@ -1,10 +1,12 @@
 import { Sparkles, Play, User, Mail, MessageCircle, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
   
   return (
     <div className="pt-24 pb-12">

@@ -1,109 +1,395 @@
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { User, Mail, Lock, UserPlus, LogIn, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Leaf, ArrowRight, Shield, Clock, Sparkles } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
+import { useLocation, Link } from "wouter";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
+const loginSchema = z.object({
+  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
+  password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
+});
+
+const signupSchema = z.object({
+  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
+  email: z.string().email("Email non valida"),
+  password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Le password non corrispondono",
+  path: ["confirmPassword"],
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+type SignupFormData = z.infer<typeof signupSchema>;
+
 export default function Auth() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      window.location.href = "/";
-    }
-  }, [isAuthenticated]);
+  const loginForm = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-slate-600">Verifica accesso...</p>
-        </div>
-      </div>
-    );
-  }
+  const signupForm = useForm<SignupFormData>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const loginMutation = useMutation({
+    mutationFn: async (data: LoginFormData) => {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore di login");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      toast({
+        title: "Benvenuto!",
+        description: `Accesso effettuato con successo come ${user.username}`,
+      });
+      // Invalida e aggiorna la cache dell'autenticazione
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.setQueryData(["/api/auth/user"], user);
+      
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla dashboard
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore di Accesso",
+        description: error instanceof Error ? error.message : "Credenziali non valide",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: async (data: SignupFormData) => {
+      const { confirmPassword, ...signupData } = data;
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signupData),
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Errore di registrazione");
+      }
+      return response.json();
+    },
+    onSuccess: (user) => {
+      toast({
+        title: "Registrazione Completata!",
+        description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
+      });
+      
+      // Invalida e aggiorna la cache dell'autenticazione
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      queryClient.setQueryData(["/api/auth/user"], user);
+      
+      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla pagina degli abbonamenti
+      setTimeout(() => {
+        setLocation("/piani-abbonamento");
+      }, 100);
+    },
+    onError: (error) => {
+      toast({
+        title: "Errore di Registrazione",
+        description: error instanceof Error ? error.message : "Errore durante la registrazione",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onLogin = (data: LoginFormData) => {
+    loginMutation.mutate(data);
+  };
+
+  const onSignup = (data: SignupFormData) => {
+    signupMutation.mutate(data);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="mb-6 flex justify-center">
-            <img 
-              src={logoGazzella} 
-              alt="Logo La Mia Gazzella" 
-              className="w-24 h-24 object-contain rounded-full shadow-2xl glass-morphism p-3"
-            />
+          <div className="w-20 h-20 mb-4 mx-auto">
+            <img src={logoGazzella} alt="Logo Gazzella" className="w-full h-full object-contain rounded-full" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-2">
-            Benvenuto
+            La Mia Gazzella
           </h1>
           <p className="text-slate-600">
-            Accedi per iniziare il tuo percorso nutrizionale personalizzato
+            Il tuo assistente nutrizionale personale
           </p>
         </div>
 
-        {/* Features Preview */}
-        <Card className="glass-morphism mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center text-lg">
-              <Sparkles className="mr-2 h-5 w-5 text-green-600" />
-              Cosa puoi fare con La Mia Gazzella
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center text-sm">
-              <Shield className="mr-3 h-4 w-4 text-green-500" />
-              Piani nutrizionali personalizzati AI
-            </div>
-            <div className="flex items-center text-sm">
-              <Clock className="mr-3 h-4 w-4 text-blue-500" />
-              Generatore ricette intelligente
-            </div>
-            <div className="flex items-center text-sm">
-              <Leaf className="mr-3 h-4 w-4 text-emerald-500" />
-              Consulente nutrizionale 24/7
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Login Card */}
         <Card className="glass-morphism">
-          <CardHeader>
-            <CardTitle className="text-center">Accesso Sicuro</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-slate-600 text-center">
-              Utilizza il tuo account Replit per accedere in modo sicuro
-            </p>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login" data-testid="tab-login">Accedi</TabsTrigger>
+              <TabsTrigger value="signup" data-testid="tab-signup">Registrati</TabsTrigger>
+            </TabsList>
             
-            <Button
-              onClick={() => window.location.href = "/api/login"}
-              className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold py-3"
-              size="lg"
-              data-testid="login-button"
-            >
-              <Shield className="mr-2 h-5 w-5" />
-              Accedi con Replit
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            {/* Login Tab */}
+            <TabsContent value="login">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <LogIn className="h-5 w-5" />
+                  Accedi al tuo Account
+                </CardTitle>
+                <CardDescription>
+                  Inserisci le tue credenziali per accedere alla piattaforma
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                placeholder="Il tuo username" 
+                                className="pl-10"
+                                {...field} 
+                                data-testid="input-login-username"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-            <div className="text-center">
-              <p className="text-xs text-slate-500">
-                Continuando accetti i nostri{" "}
-                <a href="/terms-of-service" className="text-green-600 hover:underline">
-                  Termini di Servizio
-                </a>{" "}
-                e{" "}
-                <a href="/privacy-policy" className="text-green-600 hover:underline">
-                  Privacy Policy
-                </a>
-              </p>
-            </div>
-          </CardContent>
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                type="password" 
+                                placeholder="La tua password"
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-login-password"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      disabled={loginMutation.isPending}
+                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                      data-testid="button-login"
+                    >
+                      {loginMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Accedendo...
+                        </>
+                      ) : (
+                        <>
+                          <LogIn className="mr-2 h-4 w-4" />
+                          Accedi
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </TabsContent>
+
+            {/* Signup Tab */}
+            <TabsContent value="signup">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Crea un Nuovo Account
+                </CardTitle>
+                <CardDescription>
+                  Registrati per iniziare il tuo percorso nutrizionale personalizzato
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                placeholder="Scegli un username" 
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-signup-username"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                type="email" 
+                                placeholder="tua@email.com"
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-signup-email"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                type="password" 
+                                placeholder="Crea una password sicura"
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-signup-password"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={signupForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Conferma Password</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                type="password" 
+                                placeholder="Ripeti la password"
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-signup-confirm-password"
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      disabled={signupMutation.isPending}
+                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                      data-testid="button-signup"
+                    >
+                      {signupMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                          Registrando...
+                        </>
+                      ) : (
+                        <>
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Registrati
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
         </Card>
+
+        {/* Footer */}
+        <div className="text-center mt-8">
+          <p className="text-sm text-slate-500">
+            Accedendo accetti i nostri{" "}
+            <Link href="/terms-of-service">
+              <span className="text-primary hover:underline cursor-pointer">
+                Termini di Servizio
+              </span>
+            </Link>{" "}
+            e{" "}
+            <Link href="/privacy-policy">
+              <span className="text-primary hover:underline cursor-pointer">
+                Privacy Policy
+              </span>
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

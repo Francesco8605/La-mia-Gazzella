@@ -4,17 +4,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import type { MealPlan } from "@shared/schema";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function MyMealPlans() {
+  const { user, isAuthenticated } = useAuth();
   
-  // Fetch all public meal plans
+  // Fetch user's meal plans
   const { data: mealPlans = [], isLoading, error } = useQuery<MealPlan[]>({
-    queryKey: ["/api/meal-plans"],
+    queryKey: ["/api/meal-plans", user?.id],
+    enabled: isAuthenticated && !!user?.id,
   });
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">
+            Accesso Richiesto
+          </h2>
+          <p className="text-slate-600 mb-6">
+            Devi effettuare l'accesso per visualizzare i tuoi piani personalizzati
+          </p>
+          <Link href="/auth">
+            <Button className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white">
+              Accedi
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 pt-24 pb-12">
@@ -29,10 +52,10 @@ export default function MyMealPlans() {
             />
           </div>
           <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-4">
-            Piani Alimentari Gazzella
+            I Miei Piani Personalizzati
           </h1>
           <p className="text-xl text-slate-600 max-w-3xl mx-auto leading-relaxed">
-            Tutti i piani alimentari creati seguendo il protocollo Gazzella. Accesso libero e gratuito per tutti.
+            Tutti i tuoi piani alimentari personalizzati, creati seguendo il protocollo Gazzella per il tuo benessere nutrizionale
           </p>
         </div>
 
@@ -60,99 +83,119 @@ export default function MyMealPlans() {
                   <div className="h-4 bg-slate-200 rounded w-3/4"></div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-4 bg-slate-200 rounded mb-2"></div>
-                  <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-slate-200 rounded"></div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="h-12 bg-slate-200 rounded"></div>
+                      <div className="h-12 bg-slate-200 rounded"></div>
+                      <div className="h-12 bg-slate-200 rounded"></div>
+                    </div>
+                    <div className="h-10 bg-slate-200 rounded"></div>
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-12">
-            <RefreshCw className="h-16 w-16 text-slate-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-slate-600 mb-2">
-              Errore nel caricamento
-            </h3>
-            <p className="text-slate-500 mb-4">
-              Non riusciamo a caricare i piani alimentari
-            </p>
-            <Button 
-              onClick={() => window.location.reload()}
-              variant="outline"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Riprova
-            </Button>
-          </div>
-        ) : mealPlans.length === 0 ? (
-          <div className="text-center py-16">
-            <Calendar className="h-20 w-20 text-slate-300 mx-auto mb-6" />
-            <h3 className="text-2xl font-semibold text-slate-600 mb-4">
-              Nessun piano creato ancora
-            </h3>
-            <p className="text-slate-500 mb-8 max-w-md mx-auto">
-              Inizia creando il tuo primo piano alimentare personalizzato seguendo il protocollo Gazzella
-            </p>
-            <Link href="/genera-piano">
-              <Button
-                size="lg"
-                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-8 py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+          <Card className="glass-morphism max-w-md mx-auto text-center">
+            <CardContent className="pt-8 pb-8">
+              <div className="text-red-500 mb-4">
+                <RefreshCw className="w-16 h-16 mx-auto" />
+              </div>
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                Errore di Caricamento
+              </h3>
+              <p className="text-slate-600 mb-6">
+                Impossibile caricare i tuoi piani. Riprova più tardi.
+              </p>
+              <Button 
+                onClick={() => window.location.reload()}
+                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white"
               >
-                <Plus className="mr-2 h-5 w-5" />
-                Crea il Primo Piano
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Riprova
               </Button>
-            </Link>
-          </div>
-        ) : (
+            </CardContent>
+          </Card>
+        ) : mealPlans.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mealPlans.map((plan) => (
-              <Card key={plan.id} className="glass-morphism hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-                <CardHeader>
-                  <CardTitle className="text-xl font-bold text-slate-800 mb-2">
-                    {plan.title || "Piano Alimentare Gazzella"}
-                  </CardTitle>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {plan.targetCalories && (
-                      <Badge variant="secondary" className="text-xs">
-                        {plan.targetCalories} kcal
-                      </Badge>
-                    )}
-                    {plan.currentWeight && plan.targetWeight && (
-                      <Badge variant="outline" className="text-xs">
-                        {plan.currentWeight}kg → {plan.targetWeight}kg
-                      </Badge>
-                    )}
+            {mealPlans.map((mealPlan) => (
+              <Card 
+                key={mealPlan.id} 
+                className="glass-morphism hover:shadow-xl transition-all duration-300 border-0 group"
+                data-testid={`meal-plan-card-${mealPlan.id}`}
+              >
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <CardTitle className="text-lg font-bold text-slate-800 group-hover:text-red-600 transition-colors">
+                      {mealPlan.title || "Piano Personalizzato"}
+                    </CardTitle>
+                    <Badge variant="secondary" className="bg-red-100 text-red-700">
+                      {mealPlan.targetCalories} kcal
+                    </Badge>
                   </div>
+                  <p className="text-sm text-slate-600">
+                    {mealPlan.description || "Piano alimentare personalizzato seguendo il protocollo Gazzella"}
+                  </p>
                 </CardHeader>
-                <CardContent>
-                  {plan.description && (
-                    <p className="text-slate-600 mb-4 text-sm line-clamp-3">
-                      {plan.description}
-                    </p>
-                  )}
-                  
-                  <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
-                    <span className="flex items-center">
-                      <Calendar className="h-3 w-3 mr-1" />
-                      {plan.createdAt ? format(new Date(plan.createdAt), "dd MMM yyyy", { locale: it }) : "Data non disponibile"}
-                    </span>
+                <CardContent className="pt-0">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center text-sm text-slate-500">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      {format(new Date(mealPlan.startDate || new Date()), 'dd MMM yyyy', { locale: it })}
+                    </div>
+                    <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                      7 giorni
+                    </div>
                   </div>
                   
-                  <div className="flex gap-2">
-                    <Link href={`/piano-salvato/${plan.id}`} className="flex-1">
-                      <Button 
-                        size="sm" 
-                        className="w-full bg-gradient-to-r from-red-500 to-green-600 hover:from-red-600 hover:to-green-700 text-white"
-                        data-testid={`view-plan-${plan.id}`}
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        Visualizza
-                      </Button>
-                    </Link>
+                  {/* Macronutrienti */}
+                  <div className="grid grid-cols-3 gap-2 mb-4 text-xs">
+                    <div className="text-center p-2 bg-white/50 rounded">
+                      <div className="font-semibold text-red-600">{mealPlan.targetProtein}g</div>
+                      <div className="text-slate-600">Proteine</div>
+                    </div>
+                    <div className="text-center p-2 bg-white/50 rounded">
+                      <div className="font-semibold text-green-600">{mealPlan.targetCarbs}g</div>
+                      <div className="text-slate-600">Carboidrati</div>
+                    </div>
+                    <div className="text-center p-2 bg-white/50 rounded">
+                      <div className="font-semibold text-green-600">{mealPlan.targetFat}g</div>
+                      <div className="text-slate-600">Grassi</div>
+                    </div>
                   </div>
+                  
+                  <Link href={`/piano-salvato/${mealPlan.id}`}>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white"
+                      data-testid={`view-meal-plan-${mealPlan.id}`}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Visualizza Piano Completo
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
           </div>
+        ) : (
+          <Card className="glass-morphism max-w-md mx-auto text-center">
+            <CardContent className="pt-8 pb-8">
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-slate-400" />
+              <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                Nessun Piano Creato
+              </h3>
+              <p className="text-slate-600 mb-6">
+                Crea il tuo primo piano alimentare personalizzato seguendo il protocollo Gazzella
+              </p>
+              <Link href="/genera-piano">
+                <Button className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Crea Primo Piano
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

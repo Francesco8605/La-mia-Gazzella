@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,21 +15,18 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { WeightEntry } from "@shared/schema";
 
-interface WeightTrackerProps {
-  profileId?: string; // Optional profile ID for linking weight entries
-}
-
-export default function WeightTracker({ profileId }: WeightTrackerProps) {
+export default function WeightTracker() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
   
   const [newWeight, setNewWeight] = useState("");
   const [isAddingWeight, setIsAddingWeight] = useState(false);
 
-  // Fetch weight entries for the profile
+  // Fetch weight entries
   const { data: weightEntries = [], isLoading, error, refetch } = useQuery<WeightEntry[]>({
-    queryKey: [`/api/profiles/${profileId}/weight-entries`],
-    enabled: !!profileId,
+    queryKey: ["/api/weight-entries"],
+    enabled: !!user?.id,
     refetchInterval: 5000, // Refresh every 5 seconds to show updates
   });
 
@@ -36,9 +34,7 @@ export default function WeightTracker({ profileId }: WeightTrackerProps) {
   const addWeightMutation = useMutation({
     mutationFn: async (weight: number) => {
       console.log("Adding weight:", weight);
-      if (!profileId) throw new Error("Profile ID richiesto");
-      
-      return apiRequest(`/api/profiles/${profileId}/weight-entries`, {
+      return apiRequest("/api/weight-entries", {
         weight,
         date: new Date().toISOString(),
         notes: ""
@@ -46,8 +42,8 @@ export default function WeightTracker({ profileId }: WeightTrackerProps) {
     },
     onSuccess: () => {
       // Invalidate multiple related queries to ensure full refresh
-      queryClient.invalidateQueries({ queryKey: [`/api/profiles/${profileId}/weight-entries`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/profiles/${profileId}`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/weight-entries"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/user-profiles/current"] });
       
       // Force refetch to immediately update chart
       refetch();

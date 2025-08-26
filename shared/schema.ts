@@ -1,51 +1,35 @@
 import { sql } from "drizzle-orm";
-import { 
-  index,
-  jsonb,
-  pgTable, 
-  text, 
-  varchar, 
-  integer, 
-  real, 
-  json, 
-  timestamp, 
-  numeric 
-} from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, integer, real, json, timestamp, numeric } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Session storage table for authentication
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
-
-// User storage table for authentication  
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  // Stripe integration fields
-  stripeCustomerId: varchar("stripe_customer_id").unique(),
-  stripeSubscriptionId: varchar("stripe_subscription_id").unique(),
-  subscriptionStatus: varchar("subscription_status"), // active, cancelled, trial
-  trialEndsAt: timestamp("trial_ends_at"),
-  hasUsedTrial: integer("has_used_trial").default(0), // 0 = no, 1 = yes
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  // Stripe subscription fields
+  stripeCustomerId: varchar("stripe_customer_id"),
+  stripeSubscriptionId: varchar("stripe_subscription_id"),
+  subscriptionStatus: varchar("subscription_status"), // "active", "trialing", "canceled", "expired"
+  subscriptionPlan: varchar("subscription_plan"), // "monthly", "quarterly", "annual"
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  trialEndDate: timestamp("trial_end_date"),
+  hasUsedTrial: text("has_used_trial").default("no"), // "yes" | "no" - tracks if user ever used a trial
   createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Profili nutrizionali legati agli utenti autenticati
+export const sessions = pgTable("sessions", {
+  id: varchar("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  expiresAt: timestamp("expires_at").notNull(),
+});
+
 export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull(),
   // Informazioni di contatto
   email: text("email"),
   phone: text("phone"),
@@ -79,10 +63,9 @@ export const userProfiles = pgTable("user_profiles", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Piani alimentari legati agli utenti autenticati
 export const mealPlans = pgTable("meal_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull(),
   title: text("title").notNull(),
   description: text("description"),
   targetCalories: integer("target_calories"),
@@ -112,20 +95,18 @@ export const mealPlans = pgTable("meal_plans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Tracking peso - associato agli utenti autenticati
 export const weightEntries = pgTable("weight_entries", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull(),
   weight: real("weight").notNull(), // peso in kg con decimali
   date: timestamp("date").notNull(),
   notes: text("notes"), // note opzionali
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Ricette pubbliche - accessibili a tutti gli utenti abbonati
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }), // Chi ha generato la ricetta
+  userId: varchar("user_id"), // Associate recipes with users - nullable for backward compatibility
   title: text("title").notNull(),
   description: text("description"),
   ingredients: json("ingredients").$type<string[]>(),
@@ -145,47 +126,128 @@ export const recipes = pgTable("recipes", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Types per la struttura dei giorni del meal plan
+// Stripe subscription plans table
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: varchar("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  priceMonthly: numeric("price_monthly", { precision: 8, scale: 2 }),
+  priceEur: numeric("price_eur", { precision: 8, scale: 2 }).notNull(),
+  duration: varchar("duration").notNull(), // "monthly", "quarterly", "annual"
+  stripePriceId: varchar("stripe_price_id").notNull(),
+  trialDays: integer("trial_days").default(3),
+  features: json("features").$type<string[]>(),
+  isActive: text("is_active").default("yes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Type definitions
 export type MealPlanDay = {
   day: string;
+  date: string;
   meals: {
-    [mealType: string]: {
-      items: string[];
-      calories?: number;
-      protein?: number;
-      carbs?: number;
-      fat?: number;
-      portions?: string;
-    };
+    breakfast: Meal;
+    lunch: Meal;
+    dinner: Meal;
+    snacks: Meal[];
   };
+  totalCalories: number;
 };
 
-// Insert schemas per Zod validation
-export const insertUserSchema = createInsertSchema(users);
-export const insertUserProfileSchema = createInsertSchema(userProfiles);
-export const insertMealPlanSchema = createInsertSchema(mealPlans);
-export const insertWeightEntrySchema = createInsertSchema(weightEntries);
-export const insertRecipeSchema = createInsertSchema(recipes);
+export type Meal = {
+  id: string;
+  name: string;
+  recipeId?: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+};
 
-// Update schema for users (for Stripe fields)
-export const updateUserSchema = createInsertSchema(users).omit({
+// Zod schemas
+export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
   createdAt: true,
 });
 
-// Types
-export type User = typeof users.$inferSelect;
+export const insertWeightEntrySchema = createInsertSchema(weightEntries).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  userId: z.string().min(1, "User ID è obbligatorio"),
+  weight: z.number().min(30, "Il peso deve essere almeno 30kg").max(300, "Il peso deve essere massimo 300kg"),
+  date: z.date(),
+  notes: z.string().nullable().optional(),
+});
+
+export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  userId: z.string().min(1, "User ID è obbligatorio").optional(),
+  // Informazioni di contatto (opzionali)
+  email: z.string().optional(),
+  phone: z.string().optional(),
+  // Dati fisici
+  age: z.number().min(13, "Età minima 13 anni").max(120, "Età massima 120 anni"),
+  weight: z.number().min(30, "Peso minimo 30 kg").max(300, "Peso massimo 300 kg"),
+  height: z.number().min(100, "Altezza minima 100 cm").max(250, "Altezza massima 250 cm"),
+  // Condizioni di salute
+  thyroidIssues: z.enum(["no", "si", "eutirox"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  intestinalIssues: z.enum(["mai", "qualche_volta", "spesso"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Abitudini di esercizio
+  weeklyExercise: z.number().min(0, "Minimo 0 volte").max(14, "Massimo 14 volte a settimana"),
+  // Orari dei pasti
+  breakfastTime: z.string().min(1, "Inserisci l'orario della colazione"),
+  lunchTime: z.string().min(1, "Inserisci l'orario del pranzo"),
+  dinnerTime: z.string().min(1, "Inserisci l'orario della cena"),
+  // Preferenze alimentari
+  excludedFoods: z.array(z.string()).default([]),
+  allergies: z.array(z.string()).default([]),
+  // Abitudini idriche
+  dailyWaterIntake: z.enum(["si", "no"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Comportamenti alimentari
+  cravingTimeFrame: z.string().min(1, "Inserisci la fascia oraria"),
+  preferredCheatFood: z.string().min(1, "Inserisci il tipo di cibo sgarro"),
+  // Integratori
+  takingFormulaGazzella: z.enum(["no", "si", "ho_iniziato"], {
+    errorMap: () => ({ message: "Seleziona un'opzione valida" })
+  }),
+  // Campi legacy per compatibilità
+  dietaryPreferences: z.array(z.string()).default([]),
+  healthGoal: z.enum(["weight_loss", "weight_gain", "muscle_building", "maintenance", "general_health"]).optional(),
+  activityLevel: z.enum(["sedentary", "moderate", "active", "very_active"]).optional(),
+});
+
+export const insertMealPlanSchema = createInsertSchema(mealPlans).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertRecipeSchema = createInsertSchema(recipes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
+
+// Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
-export type UpsertUser = z.infer<typeof insertUserSchema>;
-
-export type UserProfile = typeof userProfiles.$inferSelect;
+export type User = typeof users.$inferSelect;
 export type InsertUserProfile = z.infer<typeof insertUserProfileSchema>;
-
-export type MealPlan = typeof mealPlans.$inferSelect;
-export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
-
-export type WeightEntry = typeof weightEntries.$inferSelect;
+export type UserProfile = typeof userProfiles.$inferSelect;
 export type InsertWeightEntry = z.infer<typeof insertWeightEntrySchema>;
-
-export type Recipe = typeof recipes.$inferSelect;
+export type WeightEntry = typeof weightEntries.$inferSelect;
+export type InsertMealPlan = z.infer<typeof insertMealPlanSchema>;
+export type MealPlan = typeof mealPlans.$inferSelect;
 export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
+export type Recipe = typeof recipes.$inferSelect;
+export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
+export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
+export type Session = typeof sessions.$inferSelect;

@@ -1,122 +1,54 @@
-import { useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useToast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Crown, ArrowRight, Loader2 } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
+import { useEffect } from "react";
 
 interface SubscriptionGuardProps {
   children: React.ReactNode;
+  fallbackPath?: string;
 }
 
-export function SubscriptionGuard({ children }: SubscriptionGuardProps) {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { hasActiveSubscription, isLoading: subLoading } = useSubscription();
-  const { toast } = useToast();
+export function SubscriptionGuard({ children, fallbackPath = "/piani-abbonamento" }: SubscriptionGuardProps) {
+  const { subscription, isLoading, hasActiveSubscription } = useSubscription();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Accesso Richiesto",
-        description: "Effettua il login per accedere a questa funzionalità",
-        variant: "destructive",
-      });
+    // Se non stiamo caricando e non abbiamo un abbonamento attivo
+    if (!isLoading && !hasActiveSubscription && location !== fallbackPath) {
+      console.log("🚫 Abbonamento non attivo - reindirizzo a:", fallbackPath);
+      setLocation(fallbackPath);
     }
-  }, [isAuthenticated, authLoading, toast]);
+  }, [isLoading, hasActiveSubscription, location, fallbackPath, setLocation]);
 
-  // Show loading state
-  if (authLoading || subLoading) {
+  // Mostra loading mentre controlliamo lo stato dell'abbonamento
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-slate-600">Verifica abbonamento...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Controllo abbonamento...</p>
         </div>
       </div>
     );
   }
 
-  // Not authenticated - redirect to login
-  if (!isAuthenticated) {
+  // Se non ha abbonamento attivo e non siamo sulla pagina degli abbonamenti, mostra un messaggio
+  if (!hasActiveSubscription && location !== fallbackPath) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
-        <Card className="glass-morphism max-w-md w-full">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl font-bold text-slate-800">
-              Accesso Richiesto
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-6">
-            <p className="text-slate-600">
-              Devi effettuare l'accesso per utilizzare questa funzionalità
-            </p>
-            <Button
-              onClick={() => window.location.href = "/api/login"}
-              className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white"
-            >
-              Accedi
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-6">
+          <div className="text-red-600 text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-slate-800 mb-4">Abbonamento Richiesto</h2>
+          <p className="text-slate-600 mb-6">
+            Per accedere a questa funzionalità premium, è necessario un abbonamento attivo.
+          </p>
+          <p className="text-sm text-slate-500">
+            Reindirizzamento in corso...
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Authenticated but no subscription - show upgrade prompt
-  if (!hasActiveSubscription) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
-        <Card className="glass-morphism max-w-lg w-full">
-          <CardHeader className="text-center">
-            <Crown className="h-16 w-16 text-yellow-500 mx-auto mb-4" />
-            <CardTitle className="text-2xl font-bold text-slate-800 mb-2">
-              Premium Richiesto
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-6">
-            <p className="text-slate-600">
-              Questa funzionalità è riservata agli utenti Premium. 
-              Sblocca l'accesso completo a tutti gli strumenti di nutrizione personalizzata.
-            </p>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="text-sm text-yellow-800 space-y-1">
-                <div>✓ Piani nutrizionali illimitati</div>
-                <div>✓ Generatore ricette AI</div>
-                <div>✓ Consulente nutrizionale 24/7</div>
-                <div>✓ Tracciamento progressi avanzato</div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <Link href="/subscription-plans" className="block">
-                <Button
-                  className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold"
-                  size="lg"
-                >
-                  <Crown className="mr-2 h-5 w-5" />
-                  Diventa Premium
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-
-              <Link href="/" className="block">
-                <Button
-                  variant="outline"
-                  className="w-full border-slate-200 hover:bg-slate-50"
-                >
-                  Torna alla Dashboard
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Authenticated and has subscription - show content
+  // Mostra i contenuti se ha abbonamento attivo o è sulla pagina degli abbonamenti
   return <>{children}</>;
 }
