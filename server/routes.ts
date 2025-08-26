@@ -1121,8 +1121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updateData.hasUsedTrial = 'yes';
         }
 
-        if (activeSubscription.status === 'active' && activeSubscription.current_period_end) {
-          updateData.subscriptionEndDate = new Date(activeSubscription.current_period_end * 1000);
+        if (activeSubscription.status === 'active' && (activeSubscription as any).current_period_end) {
+          updateData.subscriptionEndDate = new Date((activeSubscription as any).current_period_end * 1000);
         }
 
         await storage.updateUserStripeInfo(newUser.id, updateData);
