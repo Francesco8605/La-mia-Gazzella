@@ -1045,6 +1045,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual sync endpoint for Stripe customers
+  app.post("/api/sync-stripe-customer", async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+
+      console.log(`🔍 Manual sync requested for: ${email}`);
+      
+      // Search for customer by email in Stripe
+      const customers = await stripe.customers.list({
+        email: email,
+        limit: 1
+      });
+
+      if (customers.data.length === 0) {
+        return res.status(404).json({ error: 'Customer not found in Stripe' });
+      }
+
+      const customer = customers.data[0];
+      console.log(`✅ Found customer in Stripe:`, {
+        id: customer.id,
+        email: customer.email,
+        created: new Date(customer.created * 1000).toISOString()
+      });
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByUsername(customer.email || 'unknown');
+      if (existingUser) {
+        return res.status(400).json({ 
+          error: 'User already exists', 
+          user: { id: existingUser.id, username: existingUser.username } 
+        });
+      }
+
+      // Get subscriptions
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customer.id,
+        status: 'all',
+        limit: 10
+      });
+
+      // Create user
+      const defaultPassword = Math.random().toString(36).substring(2, 15);
+      const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+
+      const userData = {
+        username: customer.email || `stripe_user_${customer.id}`,
+        email: customer.email || '',
+        password: hashedPassword,
+        stripeCustomerId: customer.id,
+      };
+
+      const newUser = await storage.createUser(userData);
+      console.log(`✅ User created: ${newUser.username}`);
+
+      // Update subscription data
+      if (subscriptions.data.length > 0) {
+        const activeSubscription = subscriptions.data.find(sub => 
+          sub.status === 'active' || sub.status === 'trialing'
+        ) || subscriptions.data[0];
+
+        const updateData: any = {
+          stripeSubscriptionId: activeSubscription.id,
+          subscriptionStatus: activeSubscription.status,
+          subscriptionPlan: 'monthly',
+          subscriptionStartDate: new Date(activeSubscription.start_date * 1000),
+        };
+
+        if (activeSubscription.status === 'trialing' && activeSubscription.trial_end) {
+          updateData.trialEndDate = new Date(activeSubscription.trial_end * 1000);
+          updateData.hasUsedTrial = 'yes';
+        }
+
+        if (activeSubscription.status === 'active' && activeSubscription.current_period_end) {
+          updateData.subscriptionEndDate = new Date(activeSubscription.current_period_end * 1000);
+        }
+
+        await storage.updateUserStripeInfo(newUser.id, updateData);
+        console.log(`✅ Subscription synced for ${customer.email}`);
+      }
+
+      res.json({ 
+        success: true, 
+        message: 'Customer synced successfully',
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          subscriptionStatus: newUser.subscriptionStatus,
+          temporaryPassword: defaultPassword
+        }
+      });
+
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+      res.status(500).json({ error: 'Failed to sync customer' });
+    }
+  });
+
   // Handle Stripe webhooks
   app.post("/api/stripe-webhook", async (req, res) => {
     console.log('🎯 WEBHOOK RECEIVED:', new Date().toISOString());
