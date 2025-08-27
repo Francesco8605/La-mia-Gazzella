@@ -1050,9 +1050,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ User found:", user.username);
 
       // Get subscription plan
+      console.log("🔍 === CHECKOUT DEBUG START ===");
       const plans = await storage.getSubscriptionPlans();
-      console.log("🔍 Available plans:", plans.map(p => ({ id: p.id, name: p.name })));
+      console.log("🔍 Raw plans from DB:", JSON.stringify(plans, null, 2));
+      console.log("🔍 Plans array length:", plans?.length);
+      console.log("🔍 Plans type:", typeof plans);
+      console.log("🔍 Is array:", Array.isArray(plans));
+      console.log("🔍 Available plan IDs:", plans?.map(p => p.id));
       console.log("🔍 Looking for planId:", planId);
+      console.log("🔍 PlanId type:", typeof planId);
+      console.log("🔍 === CHECKOUT DEBUG END ===");
       
       let selectedPlan = plans.find(plan => plan.id === planId);
       
@@ -1150,8 +1157,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
         ],
         mode: 'subscription',
-        success_url: `https://${req.get('host')}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `https://${req.get('host')}/piani-abbonamento`,
+        success_url: `https://lamiagazzella.replit.app/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `https://lamiagazzella.replit.app/piani-abbonamento`,
         metadata: {
           userId: userId,
           planId: planId,
