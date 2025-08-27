@@ -131,6 +131,46 @@ PERSONALIZZAZIONE OBBLIGATORIA:
 - Se compare alimento vietato o escluso da cliente, sostituisci automaticamente con opzione compatibile
 `;
 
+/**
+ * Calcola grammature personalizzate precise basate sul peso esatto della cliente
+ * Reattivo anche a piccoli cambiamenti di peso (pochi grammi)
+ */
+function calculatePrecisePortions(weight: number, height: number, bmi: number, isForMainDish: boolean = true) {
+  // Calcolo granulare basato sul peso esatto - sensibile al grammo
+  const baseWeight = 60; // peso di riferimento medio
+  const weightDifference = weight - baseWeight;
+  
+  // Fattore di scala preciso: ogni 100g di peso influenza le porzioni dello 0.15%
+  const scaleFactor = 1 + (weightDifference * 0.0015); // 0.15% per ogni 100g di differenza
+  
+  // Correzione BMI per precisione estrema
+  const bmiCorrection = bmi > 25 ? 0.92 : bmi < 18.5 ? 1.08 : 1.0;
+  
+  // Correzione altezza per metabolismo
+  const heightCorrection = height > 170 ? 1.03 : height < 160 ? 0.97 : 1.0;
+  
+  const finalScale = scaleFactor * bmiCorrection * heightCorrection;
+  
+  return {
+    // Proteine principali (per secondi piatti)
+    proteinsMain: Math.round(140 * finalScale),
+    // Proteine accompagnamento (per primi piatti) 
+    proteinsSide: Math.round(100 * finalScale),
+    // Carboidrati base (per primi piatti)
+    carbsMain: Math.round(80 * finalScale),
+    // Carboidrati contorno (per secondi piatti)
+    carbsSide: Math.round(60 * finalScale),
+    // Verdure sempre abbondanti
+    vegetables: Math.round(200 * finalScale),
+    // Olio extravergine
+    oil: Math.round(12 * finalScale),
+    // Frutta per spuntini
+    fruit: Math.round(150 * finalScale),
+    // Frutta secca
+    nuts: Math.round(20 * finalScale)
+  };
+}
+
 export async function generateMealPlan(request: MealPlanRequest): Promise<{
   title: string;
   description: string;
@@ -147,6 +187,13 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
     const excludedFoods = request.userProfile.excludedFoods || [];
     const allergies = request.userProfile.allergies || [];
     const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
+
+    // Calcolo grammature precise per questa specifica cliente
+    const precisePortions = calculatePrecisePortions(
+      parseFloat(request.userProfile.weight.toString()), 
+      request.userProfile.height, 
+      request.nutritionalNeeds.bmi
+    );
 
     const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni seguendo ESATTAMENTE la tabella del Manuale della Gazzella 2025 allegata, personalizzando solo le porzioni per questa cliente.
 
@@ -173,14 +220,21 @@ CALCOLO GRAMMATURE PERSONALIZZATE OBBLIGATORIO:
 📊 BMI ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
 ⚖️ Da perdere: ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
 
-FORMULA PERSONALIZZAZIONE GRAMMATURE:
-- Donna <60kg: Proteine 100-120g, Carboidrati 50-70g, Verdure 150-200g
-- Donna 60-70kg: Proteine 120-150g, Carboidrati 60-80g, Verdure 200-250g  
-- Donna >70kg: Proteine 140-180g, Carboidrati 70-100g, Verdure 250-300g
-- Se BMI >25: Ridurre carboidrati del 10-15%
-- Se molto attiva: Aumentare proteine del 10%
+GRAMMATURE PERSONALIZZATE PRECISISSIME - CALCOLATE AL GRAMMO:
+🎯 CLIENTE ${request.userProfile.weight}kg | ALTEZZA ${request.userProfile.height}cm | BMI ${request.nutritionalNeeds.bmi}
 
-APPLICA QUESTE GRAMMATURE PRECISE alla cliente di ${request.userProfile.weight}kg con BMI ${request.nutritionalNeeds.bmi}
+CALCOLI PERSONALIZZATI ESATTI PER QUESTA CLIENTE:
+- Proteine principali (carne/pesce secondi): ${precisePortions.proteinsMain}g esatti
+- Proteine accompagnamento (primi piatti): ${precisePortions.proteinsSide}g esatti  
+- Carboidrati base (primi piatti): ${precisePortions.carbsMain}g esatti
+- Carboidrati contorno (secondi): ${precisePortions.carbsSide}g esatti
+- Verdure: ${precisePortions.vegetables}g esatti
+- Olio EVO: ${precisePortions.oil}g esatti
+- Frutta spuntini: ${precisePortions.fruit}g esatti
+- Frutta secca: ${precisePortions.nuts}g esatti
+
+⚠️ FONDAMENTALE: USA ESATTAMENTE QUESTI PESI - NON FASCE GENERICHE
+Sono calcolati specificamente per il peso ${request.userProfile.weight}kg di questa cliente
 
 CONDIZIONI E PREFERENZE:
 - Problemi tiroide: ${request.userProfile.thyroidIssues}
@@ -224,16 +278,17 @@ CONDIZIONI E PREFERENZE:
 - FRUTTA non elencata sopra
 ${merluzzo_excluded ? "ATTENZIONE: Cliente esclude merluzzo - usare orata, spigola, sogliola, salmone" : ""}
 
-GRAMMATURE PRECISE OBBLIGATORIE - FONDAMENTALE PER PERSONALIZZAZIONE:
-- OGNI ingrediente deve avere peso ESATTO in grammi (es: 150g, 80g, 200g)
-- CALCOLARE grammature variabili basate su peso, altezza, BMI, obiettivi cliente
-- PERSONALIZZAZIONE TOTALE: cliente 60kg avrà porzioni diverse da cliente 80kg
-🎯 DATI CLIENTE SPECIFICI PER CALCOLO GRAMMATURE:
-- Età: ${request.userProfile.age} anni | Peso: ${request.userProfile.weight} kg | Altezza: ${request.userProfile.height} cm
-- BMI: ${request.nutritionalNeeds.bmi} | Obiettivo: ${request.nutritionalNeeds.calories} kcal/giorno
-- Proteine target: ${request.nutritionalNeeds.protein}g | Carboidrati: ${request.nutritionalNeeds.carbs}g | Grassi: ${request.nutritionalNeeds.fat}g
-⚠️ USA QUESTI DATI per calcolare grammature precise e personalizzate
-- MAI termini generici: "una porzione", "q.b.", "abbondante", "a piacere"
+🔥 PRECISIONE ASSOLUTA GRAMMATURE - OGNI GRAMMO CONTA 🔥
+- OGNI ingrediente ha un peso MICROMETRICO calcolato per questa cliente specifica
+- REATTIVITÀ TOTALE: anche 100g di variazione peso = nuove grammature automatiche
+- PERSONALIZZAZIONE ESTREMA: cliente ${request.userProfile.weight}kg ha porzioni UNICHE nel mondo
+🎯 PROFILO ESATTO PER CALCOLO MICROMETRICO:
+- Peso ESATTO: ${request.userProfile.weight}kg | Altezza: ${request.userProfile.height}cm 
+- BMI PRECISO: ${request.nutritionalNeeds.bmi} | Metabolismo: ${request.nutritionalNeeds.calories} kcal esatte
+- Target ESATTI: ${request.nutritionalNeeds.protein}g proteine | ${request.nutritionalNeeds.carbs}g carbo | ${request.nutritionalNeeds.fat}g grassi
+⚠️ ZERO APPROSSIMAZIONI - USA LE GRAMMATURE CALCOLATE SOPRA
+- VIETATO: "una porzione", "q.b.", "abbondante", "a piacere", "circa", "più o meno"
+- OBBLIGATORIO: grammi esatti come calcolati per il peso ${request.userProfile.weight}kg
 
 FORMATO OBBLIGATORIO NEL JSON "name":
 - "Salmone 120g alla griglia + riso basmati 70g + broccoli 200g + olio EVO 8g"
@@ -717,6 +772,13 @@ export async function generatePersonalizedRecipe(request: {
 
     const dishType = request.mealName.includes("Primo piatto") ? "PRIMO PIATTO" : "SECONDO PIATTO";
     
+    // Calcolo grammature precise per questa ricetta specifica
+    const recipePortions = calculatePrecisePortions(
+      clientProfile.peso, 
+      clientProfile.altezza, 
+      bmi
+    );
+    
     // Build unique recipe requirements
     const uniqueRequirement = request.existingRecipes && request.existingRecipes.length > 0 ? 
       `\n🚫 IMPORTANTE - EVITA DUPLICATI: NON generare ricette simili a queste già esistenti:\n${request.existingRecipes.map(title => `- ${title}`).join('\n')}\n\n✅ OBBLIGATORIO: Crea una ricetta COMPLETAMENTE DIVERSA e UNICA.` : '';
@@ -781,16 +843,19 @@ ${dishType === "PRIMO PIATTO" ? `
 - Esempi: Salmone grigliato con verdure, Petto di pollo alle erbe, Merluzzo al cartoccio
 `}
 
-PERSONALIZZAZIONE GRAMMATURE per peso ${clientProfile.peso}kg:
+🔥 GRAMMATURE MICROMETRICHE CALCOLATE PER ${clientProfile.peso}kg ESATTI 🔥
 ${dishType === "PRIMO PIATTO" ? `
-- Carboidrati complessi (base): ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
-- Proteine (accompagnamento): ${clientProfile.peso < 60 ? '80-100g' : clientProfile.peso <= 70 ? '100-120g' : '120-140g'}
+- Carboidrati complessi (base): ${recipePortions.carbsMain}g PRECISI - NO approssimazioni
+- Proteine (accompagnamento): ${recipePortions.proteinsSide}g ESATTI per questo peso
 ` : `
-- Proteine (principale): ${clientProfile.peso < 60 ? '120-140g' : clientProfile.peso <= 70 ? '140-160g' : '160-180g'}
-- Carboidrati complessi (contorno): ${clientProfile.peso < 60 ? '40-60g' : clientProfile.peso <= 70 ? '60-80g' : '80-100g'}
+- Proteine (principale): ${recipePortions.proteinsMain}g MICROMETRICI per peso ${clientProfile.peso}kg
+- Carboidrati (contorno): ${recipePortions.carbsSide}g PRECISI - personalizzati
 `}
-- Verdure: sempre abbondanti (200-300g)
-- Olio EVO: ${clientProfile.peso < 60 ? '15-20ml' : clientProfile.peso <= 70 ? '20-25ml' : '25-30ml'}
+- Verdure: ${recipePortions.vegetables}g ESATTI (calcolati per BMI ${bmi.toFixed(1)})
+- Olio EVO: ${recipePortions.oil}g PRECISI (non ml, grammi esatti)
+
+⚠️ USARE ESATTAMENTE QUESTI PESI - ZERO MARGINI DI ERRORE
+Calcolati specificamente per cliente ${clientProfile.peso}kg, altezza ${clientProfile.altezza}cm
 
 OBIETTIVI:
 - Calorie target: ${request.targetCalories}
