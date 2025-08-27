@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail, sendEmailVerificationEmail } from "./services/email";
+import { sendPasswordRecoveryEmail } from "./services/email";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -17,10 +17,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function generateSessionId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-}
-
-function generateVerificationToken(): string {
-  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
 }
 
 function getSessionExpiryDate(): Date {
@@ -188,44 +184,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log("✅ Password hashed successfully");
         
-        // Generate email verification token
-        console.log("🎯 Generating email verification token...");
-        const verificationToken = generateVerificationToken();
-        console.log("✅ Verification token generated");
-        
-        // Create user with email verification - NO automatic session
+        // Create user without automatic trial - users must subscribe with payment details
         console.log("👤 Creating user in database...");
         const user = await storage.createUser({
           username,
           email,
           password: hashedPassword,
-          emailVerified: 'no',
-          emailVerificationToken: verificationToken,
         });
         console.log("✅ User created successfully:", user.username);
 
-        try {
-          // Send email verification
-          console.log("📧 Sending email verification...");
-          await sendEmailVerificationEmail(email, username, verificationToken);
-          console.log("✅ Verification email sent successfully");
-          
-          console.log("✅ Registration completed successfully for:", username);
-          res.status(201).json({
-            message: "Account creato con successo! Controlla la tua email per verificare l'account.",
-            requiresEmailVerification: true,
-            email: email
-          });
-        } catch (emailError: any) {
-          console.error("❌ Email sending failed:", emailError);
-          // Still return success but inform about email issue
-          res.status(201).json({
-            message: "Account creato, ma errore nell'invio dell'email di verifica. Contattaci per assistenza.",
-            requiresEmailVerification: true,
-            emailError: true,
-            email: email
-          });
-        }
+        // Create database session
+        console.log("🍪 Creating session...");
+        const sessionId = generateSessionId();
+        const expiresAt = getSessionExpiryDate();
+        await storage.createSession(sessionId, user.id, expiresAt);
+        console.log("✅ Session created successfully");
+
+        // Set session cookie
+        const isProduction = req.get('host')?.includes('replit.app');
+        res.cookie('session', sessionId, { 
+          httpOnly: true, 
+          secure: isProduction, // HTTPS in production
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          sameSite: isProduction ? 'none' : 'lax' // different for production
+        });
+
+        // Remove password from response
+        const { password: _, ...userWithoutPassword } = user;
+        console.log("✅ Registration completed successfully for:", username);
+        res.status(201).json(userWithoutPassword);
       } catch (createError: any) {
         console.error("❌ User creation error:", createError);
         return res.status(500).json({ 
@@ -239,63 +226,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Errore durante la registrazione",
         details: error?.message || 'Registration failed',
         stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
-      });
-    }
-  });
-
-  // Email verification endpoint
-  app.post("/api/auth/verify-email", async (req, res) => {
-    try {
-      const { token } = req.body;
-      
-      if (!token) {
-        return res.status(400).json({ message: "Token di verifica richiesto" });
-      }
-      
-      // Find user by verification token
-      const user = await storage.getUserByEmailVerificationToken(token);
-      if (!user) {
-        return res.status(400).json({ message: "Token di verifica non valido o scaduto" });
-      }
-      
-      // Check if email is already verified
-      if (user.emailVerified === 'yes') {
-        return res.status(400).json({ message: "Email già verificata" });
-      }
-      
-      // Update user's email verification status
-      const updatedUser = await storage.updateUserEmailVerification(user.id, 'yes', null);
-      if (!updatedUser) {
-        return res.status(500).json({ message: "Errore durante la verifica dell'email" });
-      }
-      
-      // Create session for the user (auto-login after verification)
-      const sessionId = generateSessionId();
-      const expiresAt = getSessionExpiryDate();
-      await storage.createSession(sessionId, user.id, expiresAt);
-
-      // Set session cookie
-      const isProduction = req.get('host')?.includes('replit.app');
-      res.cookie('session', sessionId, { 
-        httpOnly: true, 
-        secure: isProduction, // HTTPS in production
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: isProduction ? 'none' : 'lax' // different for production
-      });
-      
-      // Remove sensitive data from response
-      const { password: _, emailVerificationToken: __, ...userWithoutSensitive } = updatedUser;
-      
-      res.json({
-        message: "Email verificata con successo! Benvenuto in La Mia Gazzella!",
-        user: userWithoutSensitive
-      });
-      
-    } catch (error: any) {
-      console.error("Email verification error:", error);
-      res.status(500).json({ 
-        message: "Errore durante la verifica dell'email",
-        details: error?.message || 'Verification failed'
       });
     }
   });
@@ -314,15 +244,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Credenziali non valide" });
-      }
-
-      // Check if email is verified
-      if (user.emailVerified !== 'yes') {
-        return res.status(401).json({ 
-          message: "Devi verificare la tua email prima di accedere. Controlla la tua casella di posta.",
-          requiresEmailVerification: true,
-          email: user.email
-        });
       }
 
       // Create database session
