@@ -11,23 +11,15 @@ export default function EmailVerification() {
 
   useEffect(() => {
     const verifyEmail = async () => {
-      console.log('🔍 Current URL:', window.location.href);
-      console.log('🔍 Search params:', window.location.search);
-      
       const urlParams = new URLSearchParams(window.location.search);
       const token = urlParams.get('token');
       
-      console.log('🎯 Token found:', token);
-      
       if (!token) {
-        console.log('❌ No token found in URL');
         setStatus('error');
         setMessage('Token di verifica mancante. Assicurati di aver cliccato sul link corretto dall\'email.');
         return;
       }
 
-      console.log('📧 Starting email verification with token:', token);
-      
       try {
         const response = await fetch('/api/auth/verify-email', {
           method: 'POST',
@@ -38,9 +30,7 @@ export default function EmailVerification() {
           credentials: 'include'
         });
 
-        console.log('📡 Response status:', response.status);
         const result = await response.json();
-        console.log('📡 Response data:', result);
         
         if (response.ok) {
           setStatus('success');
@@ -60,7 +50,7 @@ export default function EmailVerification() {
           }
         }
       } catch (error: any) {
-        console.error('❌ Verification error:', error);
+        console.error('Verification error:', error);
         setStatus('error');
         setMessage('Errore di connessione durante la verifica');
       }

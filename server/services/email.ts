@@ -20,11 +20,8 @@ export async function sendEmailVerificationEmail(email: string, username: string
   try {
     const transporter = createTransporter();
     
-    // Use dynamic URL based on environment
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? 'https://lamiagazzella.replit.app' 
-      : 'http://localhost:5000';
-    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+    // Always use production URL for email links since we're deployed
+    const verificationUrl = `https://lamiagazzella.replit.app/verify-email?token=${verificationToken}`;
     
     console.log('📧 Sending verification email to:', email);
     console.log('🔗 Verification URL:', verificationUrl);
