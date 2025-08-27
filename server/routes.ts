@@ -12,7 +12,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2025-07-30.basil",
+  apiVersion: "2024-06-20",
 });
 
 function generateSessionId(): string {
@@ -1018,25 +1018,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create Stripe checkout session for subscription
   app.post("/api/create-checkout-session", isAuthenticated, async (req, res) => {
     try {
+      console.log("🏪 Creating checkout session...");
       const userId = (req as any).user.claims.sub;
       const { planId } = req.body;
       
+      console.log("👤 User ID:", userId);
+      console.log("📦 Plan ID:", planId);
+      
       if (!planId) {
+        console.log("❌ Missing plan ID");
         return res.status(400).json({ message: "Plan ID è obbligatorio" });
       }
 
       // Get user details
       const user = await storage.getUser(userId);
       if (!user) {
+        console.log("❌ User not found");
         return res.status(404).json({ message: "Utente non trovato" });
       }
+      console.log("✅ User found:", user.username);
 
       // Get subscription plan
       const plans = await storage.getSubscriptionPlans();
       const selectedPlan = plans.find(plan => plan.id === planId);
       if (!selectedPlan) {
+        console.log("❌ Plan not found");
         return res.status(404).json({ message: "Piano di abbonamento non trovato" });
       }
+      console.log("✅ Plan found:", selectedPlan.name, selectedPlan.priceEur);
 
       // If user has already used trial, remove trial period from this plan
       let sessionParams: Stripe.Checkout.SessionCreateParams;
@@ -1108,12 +1117,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sessionParams.subscription_data.trial_period_days = trialDaysValue;
       }
       
+      console.log("🔄 Creating Stripe session with params:", JSON.stringify(sessionParams, null, 2));
       const session = await stripe.checkout.sessions.create(sessionParams);
+      console.log("✅ Stripe session created:", session.id);
 
       res.json({ url: session.url });
     } catch (error) {
-      console.error("Error creating checkout session:", error);
-      res.status(500).json({ message: "Errore nella creazione della sessione di pagamento" });
+      console.error("❌ Error creating checkout session:", error);
+      console.error("Error details:", error instanceof Error ? error.message : "Unknown error");
+      if (error instanceof Error && 'type' in error) {
+        console.error("Stripe error type:", (error as any).type);
+        console.error("Stripe error code:", (error as any).code);
+      }
+      res.status(500).json({ message: "Errore nella creazione della sessione di pagamento", details: error instanceof Error ? error.message : "Unknown error" });
     }
   });
 
