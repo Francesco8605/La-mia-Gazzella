@@ -171,6 +171,82 @@ function calculatePrecisePortions(weight: number, height: number, bmi: number, i
   };
 }
 
+/**
+ * Calcola il peso ideale basato su altezza ed età della cliente
+ * Utilizzando formule specifiche per donne
+ */
+function calculateIdealWeight(height: number, age: number): number {
+  // Formula di Robinson per donne (più accurata)
+  let idealWeight = 49 + (1.7 * (height - 152.4) / 2.54);
+  
+  // Correzione per età: metabolismo rallenta dopo i 30 anni
+  if (age > 30) {
+    const ageCorrection = (age - 30) * 0.1; // -0.1kg per ogni anno oltre i 30
+    idealWeight = idealWeight - ageCorrection;
+  }
+  
+  // Limite minimo e massimo ragionevole
+  idealWeight = Math.max(45, Math.min(idealWeight, 70));
+  
+  return Math.round(idealWeight * 10) / 10; // Arrotonda a 1 decimale
+}
+
+/**
+ * Crea step intermedi progressivi per raggiungere l'obiettivo finale
+ */
+function createProgressiveSteps(currentWeight: number, idealWeight: number): Array<{
+  stepNumber: number;
+  targetWeight: number;
+  weeksDuration: number;
+  description: string;
+}> {
+  const weightToLose = currentWeight - idealWeight;
+  
+  if (weightToLose <= 0) {
+    return [{
+      stepNumber: 1,
+      targetWeight: currentWeight,
+      weeksDuration: 4,
+      description: "Mantenimento peso ideale raggiunto"
+    }];
+  }
+  
+  const steps: any[] = [];
+  let remainingWeight = weightToLose;
+  let currentStepWeight = currentWeight;
+  let stepNumber = 1;
+  
+  // Strategia progressiva: perdere circa 2-3kg per step iniziale, poi 1-2kg
+  while (remainingWeight > 0.5) {
+    let stepWeightLoss: number;
+    
+    if (remainingWeight > 6) {
+      stepWeightLoss = 3; // Prima fase: perdita più consistente
+    } else if (remainingWeight > 3) {
+      stepWeightLoss = 2; // Fase intermedia
+    } else {
+      stepWeightLoss = remainingWeight; // Fase finale: tutto il residuo
+    }
+    
+    stepWeightLoss = Math.min(stepWeightLoss, remainingWeight);
+    const targetWeight = currentStepWeight - stepWeightLoss;
+    const weeksDuration = Math.ceil(stepWeightLoss / 0.5); // Circa 0.5kg/settimana
+    
+    steps.push({
+      stepNumber,
+      targetWeight: Math.round(targetWeight * 10) / 10,
+      weeksDuration,
+      description: `Fase ${stepNumber}: Perdere ${stepWeightLoss.toFixed(1)}kg in ${weeksDuration} settimane`
+    });
+    
+    currentStepWeight = targetWeight;
+    remainingWeight -= stepWeightLoss;
+    stepNumber++;
+  }
+  
+  return steps;
+}
+
 export async function generateMealPlan(request: MealPlanRequest): Promise<{
   title: string;
   description: string;
@@ -194,6 +270,18 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
       request.userProfile.height, 
       request.nutritionalNeeds.bmi
     );
+    
+    // Calcolo peso ideale personalizzato basato su altezza ed età
+    const calculatedIdealWeight = calculateIdealWeight(
+      request.userProfile.height,
+      request.userProfile.age
+    );
+    
+    // Creazione step intermedi progressivi
+    const progressiveSteps = createProgressiveSteps(
+      parseFloat(request.userProfile.weight.toString()),
+      calculatedIdealWeight
+    );
 
     const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni seguendo ESATTAMENTE la tabella del Manuale della Gazzella 2025 allegata, personalizzando solo le porzioni per questa cliente.
 
@@ -214,6 +302,40 @@ DATI METABOLICI TARGET PERSONALIZZATI:
 - Proteine target: ${request.nutritionalNeeds.protein}g
 - Carboidrati target: ${request.nutritionalNeeds.carbs}g
 - Grassi target: ${request.nutritionalNeeds.fat}g
+
+🎯 ANALISI PESO IDEALE E OBIETTIVI PROGRESSIVI:
+- PESO IDEALE CALCOLATO per altezza ${request.userProfile.height}cm ed età ${request.userProfile.age} anni: ${calculatedIdealWeight}kg
+- Formula utilizzata: Robinson per donne con correzione età-metabolismo
+- OBIETTIVO CLIENTE CORRENTE: ${request.nutritionalNeeds.weightGoal}kg
+${calculatedIdealWeight !== request.nutritionalNeeds.weightGoal ? 
+  `- SUGGERIMENTO: Il tuo peso ideale scientificamente calcolato è ${calculatedIdealWeight}kg` : 
+  '- PERFETTO: Il tuo obiettivo coincide con il peso ideale calcolato'
+}
+
+🚀 PERCORSO PROGRESSIVO PERSONALIZZATO - STEP INTERMEDI:
+${progressiveSteps.map(step => 
+  `FASE ${step.stepNumber}: Obiettivo ${step.targetWeight}kg in ${step.weeksDuration} settimane
+  ${step.description}
+  ⏱️ Durata stimata: ${step.weeksDuration} settimane (perdita sana e sostenibile)`
+).join('\n\n')}
+
+📢 ISTRUZIONI FONDAMENTALI PER LA CLIENTE:
+⚠️ IMPORTANTE: Ogni volta che raggiungi un obiettivo intermedio, DEVI aggiornare i tuoi dati personali nell'app!
+
+QUANDO AGGIORNARE I DATI:
+✅ Appena raggiungi il peso dell'obiettivo intermedio
+✅ Ogni 2-3 settimane per monitorare i progressi  
+✅ Se cambi abitudini alimentari o livello di attività fisica
+✅ Se hai variazioni significative di peso (anche 500g)
+
+COSA AGGIORNARE:
+📊 Peso attuale (fondamentale per ricalcolo grammature)
+🏃‍♀️ Frequenza esercizio settimanale
+⏰ Orari dei pasti se cambiati
+🥗 Preferenze alimentari o esclusioni
+
+💡 PERCHÉ È IMPORTANTE:
+Il sistema Gazzella ricalcola automaticamente le grammature precise per il tuo nuovo peso, garantendo la massima efficacia e personalizzazione. Anche 100g di differenza possono richiedere aggiustamenti nelle porzioni!
 
 CALCOLO GRAMMATURE PERSONALIZZATE OBBLIGATORIO:
 🎯 PESO ${request.userProfile.weight}kg → OBIETTIVO ${request.nutritionalNeeds.weightGoal}kg
