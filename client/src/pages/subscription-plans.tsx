@@ -232,14 +232,6 @@ export default function SubscriptionPlans() {
   // Use API plans if available, otherwise use fallback
   const displayPlans = (Array.isArray(plans) && plans.length > 0) ? plans : fallbackPlans;
 
-  if (plansLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20 flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20">
       <div className="container mx-auto px-4 py-12 max-w-6xl">
