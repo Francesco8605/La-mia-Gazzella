@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -102,7 +103,13 @@ export default function ForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-50">
       <Card className="w-full max-w-md glass-effect" data-testid="forgot-password-card">
         <CardHeader className="text-center">
-          <div className="text-4xl mb-4">🦌</div>
+          <div className="flex justify-center mb-4">
+            <img 
+              src={logoGazzella} 
+              alt="Logo La Mia Gazzella" 
+              className="w-16 h-16 object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl text-green-800 mb-2">
             La Mia Gazzella
           </CardTitle>

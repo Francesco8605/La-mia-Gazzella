@@ -58,13 +58,13 @@ export default function AggiornaProfiloPage() {
   // Fetch current profile
   const { data: profile, isLoading } = useQuery<UserProfile>({
     queryKey: ["/api/user-profiles/current"],
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 
   // Fetch latest weight entry
   const { data: weightEntries = [] } = useQuery<any[]>({
     queryKey: ["/api/weight-entries"],
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 
   const latestWeight = weightEntries.length > 0 ? weightEntries[weightEntries.length - 1]?.weight : undefined;
