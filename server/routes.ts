@@ -91,7 +91,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.createUser({
         username,
         email,
-        passwordHash,
+        password: passwordHash,
       });
       
       // Create session
@@ -107,7 +107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Return user without sensitive data
-      const { passwordHash: _, ...userResponse } = user;
+      const { password: _, ...userResponse } = user;
       res.status(201).json(userResponse);
       
     } catch (error) {
@@ -139,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.passwordHash);
+      const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
@@ -157,7 +157,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       // Return user without sensitive data
-      const { passwordHash: _, ...userResponse } = user;
+      const { password: _, ...userResponse } = user;
       res.json(userResponse);
       
     } catch (error) {
@@ -189,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Utente non trovato" });
       }
       
-      const { passwordHash: _, ...userResponse } = user;
+      const { password: _, ...userResponse } = user;
       res.json(userResponse);
       
     } catch (error) {
