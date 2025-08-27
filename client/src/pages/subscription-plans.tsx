@@ -65,8 +65,19 @@ export default function SubscriptionPlans() {
   // Create checkout session mutation
   const createCheckoutMutation = useMutation({
     mutationFn: async (planId: string) => {
-      const response = await apiRequest("/api/create-checkout-session", { planId }, "POST");
-      return response;
+      console.log("=== CHECKOUT MUTATION DEBUG ===");
+      console.log("Calling apiRequest with planId:", planId);
+      console.log("User authenticated:", isAuthenticated);
+      console.log("User data:", user);
+      
+      try {
+        const response = await apiRequest("/api/create-checkout-session", { planId }, "POST");
+        console.log("Checkout response:", response);
+        return response;
+      } catch (error) {
+        console.error("Checkout error:", error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       // Redirect to Stripe checkout
@@ -106,18 +117,26 @@ export default function SubscriptionPlans() {
   });
 
   const handleSubscribe = (planId: string) => {
+    console.log("=== CHECKOUT DEBUG ===");
+    console.log("isAuthenticated:", isAuthenticated);
+    console.log("user:", user);
+    console.log("planId:", planId);
+    console.log("==================");
+    
     if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to login");
       toast({
         title: "Accesso richiesto",
         description: "Devi essere connesso per abbonarti.",
         variant: "destructive",
       });
       setTimeout(() => {
-        window.location.href = "/accedi";
+        window.location.href = "/auth";
       }, 2000);
       return;
     }
     
+    console.log("User authenticated, proceeding with checkout");
     createCheckoutMutation.mutate(planId);
   };
 
