@@ -86,6 +86,12 @@ export default function SubscriptionPlans() {
       }
     },
     onError: (error: any) => {
+      console.error("=== CHECKOUT ERROR DETAILS ===");
+      console.error("Error object:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error status:", error?.status);
+      console.error("Full error:", JSON.stringify(error, null, 2));
+      
       if (isUnauthorizedError(error)) {
         toast({
           title: "Accesso richiesto",
@@ -110,7 +116,7 @@ export default function SubscriptionPlans() {
       
       toast({
         title: "Errore",
-        description: "Impossibile creare la sessione di pagamento. Riprova.",
+        description: `Impossibile creare la sessione di pagamento. Dettagli: ${error?.message || 'Errore sconosciuto'}`,
         variant: "destructive",
       });
     },
