@@ -14,16 +14,36 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validation check
+    if (!email || email.trim() === '') {
+      toast({
+        title: "Errore",
+        description: "Inserisci un indirizzo email valido",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
-      await apiRequest('/api/auth/forgot-password', {
+      console.log('Sending email:', email); // Debug log
+      
+      const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.trim() }),
+        credentials: 'include'
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Errore nella richiesta');
+      }
 
       setIsSubmitted(true);
       toast({
@@ -32,6 +52,7 @@ export default function ForgotPassword() {
         duration: 5000,
       });
     } catch (error: any) {
+      console.error('Error sending forgot password:', error); // Debug log
       toast({
         title: "Errore",
         description: error.message || "Errore durante il recupero della password",
