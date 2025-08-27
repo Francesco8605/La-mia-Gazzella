@@ -1,23 +1,21 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, Menu, X, LogOut, Crown, AlertTriangle } from "lucide-react";
+import { Leaf, Menu, X } from "lucide-react";
 import { useState } from "react";
-import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { InstallPWAButton } from "./install-pwa-button";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { hasActiveSubscription, isInTrial, subscriptionStatus } = useSubscription();
 
   const navItems = [
     { href: "/", label: "Dashboard" },
     { href: "/recipe-generator", label: "Genera Ricette" },
-    { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
-    { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
+    { href: "/genera-piano", label: "Genera Piano Alimentare" },
     { href: "/recipes", label: "Ricette" },
-    { href: "/assistente-nutrizionale", label: "Consulente Nutrizionale" },
-    { href: "/piani-abbonamento", label: "Abbonamenti" },
+    { href: "/piani-personalizzati", label: "I Miei Piani" },
+    { href: "/assistente-nutrizionale", label: "Assistente Nutrizionale" },
+    { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
   ];
 
   return (
@@ -37,156 +35,57 @@ export default function Navigation() {
               className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium ${
                 location === item.href ? "text-primary" : ""
               }`}
-              data-testid={`nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
+              data-testid={`nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
             >
               {item.label}
             </Link>
           ))}
           
-          {/* Subscription Status Indicator */}
-          <div className="flex items-center">
-            {hasActiveSubscription ? (
-              <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">
-                {isInTrial ? (
-                  <>
-                    <AlertTriangle className="h-3 w-3" />
-                    <span>Trial</span>
-                  </>
-                ) : (
-                  <>
-                    <Crown className="h-3 w-3" />
-                    <span>Premium</span>
-                  </>
-                )}
-              </div>
-            ) : (
-              <Link href="/piani-abbonamento">
-                <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium hover:bg-orange-200 cursor-pointer transition-colors">
-                  <AlertTriangle className="h-3 w-3" />
-                  <span>Riattiva</span>
-                </div>
-              </Link>
-            )}
-          </div>
-          
           {/* Install PWA Button */}
           <InstallPWAButton 
             variant="ghost" 
             size="sm"
-            className="text-slate-700 hover:text-primary transition-colors duration-300"
+            className="text-slate-700 hover:text-primary"
           />
-          
-          {/* Logout Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              try {
-                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-                // Pulisci la cache
-                window.location.reload();
-              } catch (error) {
-                console.error("Logout error:", error);
-                window.location.reload();
-              }
-            }}
-            className="text-slate-700 hover:text-red-600 transition-colors duration-300"
-            data-testid="logout-button"
-          >
-            <LogOut className="h-4 w-4 mr-1" />
-            Esci
-          </Button>
         </div>
-        
-        {/* Mobile Menu Button */}
+
+        {/* Mobile menu button */}
         <div className="md:hidden">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-slate-700 hover:text-primary transition-colors duration-300"
-            data-testid="mobile-menu-button"
+            className="text-slate-700"
           >
-            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </Button>
         </div>
       </div>
-      
-      {/* Mobile Menu */}
+
+      {/* Mobile Navigation */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
-          <div className="flex flex-col space-y-3">
-            {/* Subscription Status in Mobile */}
-            <div className="py-2 border-b border-slate-200">
-              {hasActiveSubscription ? (
-                <div className="flex items-center space-x-2 text-emerald-700">
-                  {isInTrial ? (
-                    <>
-                      <AlertTriangle className="h-4 w-4" />
-                      <span className="text-sm font-medium">Prova Gratuita Attiva</span>
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="h-4 w-4" />
-                      <span className="text-sm font-medium">Abbonamento Premium</span>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <Link href="/piani-abbonamento" onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className="flex items-center space-x-2 text-orange-700 hover:text-orange-800 transition-colors">
-                    <AlertTriangle className="h-4 w-4" />
-                    <span className="text-sm font-medium">Riattiva Abbonamento</span>
-                  </div>
-                </Link>
-              )}
-            </div>
-            
+        <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg border border-white/20 rounded-lg mt-2 shadow-lg">
+          <div className="flex flex-col space-y-2 p-4">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 ${
-                  location === item.href ? "text-primary" : ""
-                }`}
                 onClick={() => setIsMobileMenuOpen(false)}
-                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
+                className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 px-3 rounded ${
+                  location === item.href ? "text-primary bg-primary/10" : ""
+                }`}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
                 {item.label}
               </Link>
             ))}
             
-            {/* Mobile Actions */}
-            <div className="pt-2 border-t border-slate-200 space-y-2">
-              {/* Install PWA Button in Mobile */}
+            <div className="pt-2 border-t border-gray-200">
               <InstallPWAButton 
-                variant="ghost" 
+                variant="outline" 
                 size="sm"
-                className="text-slate-700 hover:text-primary transition-colors duration-300 w-full justify-start"
-              >
-                📱 Installa App
-              </InstallPWAButton>
-              
-              {/* Mobile Logout Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={async () => {
-                  setIsMobileMenuOpen(false);
-                  try {
-                    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
-                    window.location.reload();
-                  } catch (error) {
-                    console.error("Logout error:", error);
-                    window.location.reload();
-                  }
-                }}
-                className="text-slate-700 hover:text-red-600 transition-colors duration-300 w-full justify-start"
-                data-testid="mobile-logout-button"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Esci
-              </Button>
+                className="w-full justify-center"
+              />
             </div>
           </div>
         </div>
