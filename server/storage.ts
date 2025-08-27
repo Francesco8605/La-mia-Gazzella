@@ -661,16 +661,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getSubscriptionPlans(): Promise<SubscriptionPlan[]> {
-    try {
-      console.log("📋 Executing getSubscriptionPlans query...");
-      const result = await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, "yes"));
-      console.log("📋 Query successful, results:", result.length, "plans");
-      console.log("📋 Plans:", result.map(p => ({ id: p.id, name: p.name })));
-      return result;
-    } catch (error) {
-      console.error("❌ Error in getSubscriptionPlans:", error);
-      throw error;
-    }
+    return await db.select().from(subscriptionPlans).where(eq(subscriptionPlans.isActive, "yes"));
   }
 
   async createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan> {

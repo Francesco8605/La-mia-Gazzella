@@ -1050,12 +1050,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ User found:", user.username);
 
       // Get subscription plan
-      console.log("🔍 Calling storage.getSubscriptionPlans()...");
       const plans = await storage.getSubscriptionPlans();
-      console.log("🔍 Raw plans result:", plans);
-      console.log("🔍 Plans type:", typeof plans);
-      console.log("🔍 Plans length:", plans?.length);
-      console.log("🔍 Available plans:", plans?.map(p => ({ id: p.id, name: p.name })));
+      console.log("🔍 Available plans:", plans.map(p => ({ id: p.id, name: p.name })));
       console.log("🔍 Looking for planId:", planId);
       
       let selectedPlan = plans.find(plan => plan.id === planId);
