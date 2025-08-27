@@ -1,262 +1,257 @@
-import express, { type Express } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
-import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { z } from "zod";
+import { setupAuth, isAuthenticated } from "./replitAuth";
+import OpenAI from "openai";
+import { 
+  insertUserProfileSchema, 
+  insertMealPlanSchema, 
+  insertRecipeSchema, 
+  insertWeightEntrySchema,
+  type User 
+} from "@shared/schema";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  
-  // Debug endpoint for production troubleshooting
-  app.get("/api/debug/status", async (req, res) => {
-    try {
-      const status: any = {
-        environment: process.env.NODE_ENV || 'development',
-        timestamp: new Date().toISOString(),
-        database: {
-          connected: !!process.env.DATABASE_URL,
-          urlPrefix: process.env.DATABASE_URL?.substring(0, 30) || 'N/A'
-        },
-        openai: {
-          configured: !!process.env.OPENAI_API_KEY,
-          keyPrefix: process.env.OPENAI_API_KEY?.substring(0, 10) || 'N/A'
-        }
-      };
+  // Auth middleware
+  await setupAuth(app);
 
-      res.json(status);
-    } catch (error: any) {
-      res.status(500).json({ 
-        error: 'Debug endpoint failed', 
-        details: error?.message || 'Unknown error'
-      });
-    }
-  });
-
-  // User Profile Routes (no authentication needed)
-  app.post("/api/user-profile", async (req, res) => {
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
-      const profileData = insertUserProfileSchema.parse(req.body);
-      
-      // Create temporary user ID for session (no real user needed)
-      const tempUserId = Date.now().toString();
-      
-      const profile = await storage.createUserProfile({
-        ...profileData,
-        userId: tempUserId
-      });
-      
-      res.status(201).json(profile);
-    } catch (error: any) {
-      console.error("Profile creation error:", error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Dati del profilo non validi", errors: error.errors });
+      const userId = req.user?.claims?.sub;
+      if (!userId) {
+        return res.status(401).json({ message: "User ID not found" });
       }
-      res.status(500).json({ message: "Errore durante la creazione del profilo" });
-    }
-  });
-
-  app.get("/api/user-profile", async (req, res) => {
-    try {
-      // Return empty profile - user can create one
-      res.json(null);
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      console.error("Profile fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero del profilo" });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  app.put("/api/user-profile", async (req, res) => {
+  // Public route for status
+  app.get("/api/debug/status", async (req, res) => {
+    res.json({
+      environment: process.env.NODE_ENV || "development",
+      timestamp: new Date().toISOString(),
+      database: {
+        connected: !!process.env.DATABASE_URL,
+        urlPrefix: process.env.DATABASE_URL?.substring(0, 20) + "..."
+      },
+      openai: {
+        configured: !!process.env.OPENAI_API_KEY,
+        keyPrefix: process.env.OPENAI_API_KEY?.substring(0, 8) + "..."
+      }
+    });
+  });
+
+  // User Profiles routes
+  app.get("/api/user-profiles/current", async (req, res) => {
     try {
-      const profileData = insertUserProfileSchema.parse(req.body);
-      const tempUserId = Date.now().toString();
+      // For now, we'll create a simple session-based profile
+      const sessionId = req.sessionID || 'anonymous';
+      let profile = await storage.getUserProfile(sessionId);
       
-      const profile = await storage.createUserProfile({
-        ...profileData,
-        userId: tempUserId
-      });
+      if (!profile) {
+        profile = await storage.createUserProfile({
+          userId: sessionId,
+          createdAt: new Date()
+        });
+      }
       
       res.json(profile);
-    } catch (error: any) {
-      console.error("Profile update error:", error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Dati del profilo non validi", errors: error.errors });
-      }
-      res.status(500).json({ message: "Errore durante l'aggiornamento del profilo" });
-    }
-  });
-
-  // Weight Tracking Routes
-  app.post("/api/weight-entries", async (req, res) => {
-    try {
-      const entryData = insertWeightEntrySchema.parse(req.body);
-      const tempUserId = Date.now().toString();
-      
-      const entry = await storage.createWeightEntry({
-        ...entryData,
-        userId: tempUserId
-      });
-      
-      res.status(201).json(entry);
-    } catch (error: any) {
-      console.error("Weight entry creation error:", error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ message: "Dati del peso non validi", errors: error.errors });
-      }
-      res.status(500).json({ message: "Errore durante il salvataggio del peso" });
-    }
-  });
-
-  app.get("/api/weight-entries", async (req, res) => {
-    try {
-      // Return empty array - no user-specific data
-      res.json([]);
     } catch (error) {
-      console.error("Weight entries fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero dei pesi" });
+      console.error("Error fetching profile:", error);
+      res.status(500).json({ message: "Failed to fetch profile" });
     }
   });
 
-  // Recipe Generation Routes
-  app.post("/api/generate-recipe", async (req, res) => {
+  app.post("/api/user-profiles", async (req, res) => {
     try {
-      const { preferences, servings = 2, cookingTime, difficulty } = req.body;
+      const validatedData = insertUserProfileSchema.parse(req.body);
+      const sessionId = req.sessionID || 'anonymous';
       
-      if (!preferences || preferences.length === 0) {
-        return res.status(400).json({ message: "Le preferenze sono obbligatorie" });
-      }
-
-      const recipe = await generateRecipe(preferences, servings, cookingTime, difficulty);
-      
-      // Save recipe to database with temporary user
-      const tempUserId = Date.now().toString();
-      const savedRecipe = await storage.createRecipe({
-        title: recipe.title,
-        ingredients: recipe.ingredients,
-        instructions: recipe.instructions,
-        cookingTime: recipe.cookingTime,
-        servings: recipe.servings,
-        difficulty: recipe.difficulty,
-        calories: recipe.nutrition.calories,
-        protein: recipe.nutrition.protein,
-        carbs: recipe.nutrition.carbs,
-        fat: recipe.nutrition.fat,
-        fiber: recipe.nutrition.fiber,
-        tags: recipe.tags,
-        userId: tempUserId
-      });
-
-      res.json(savedRecipe);
-    } catch (error: any) {
-      console.error("Recipe generation error:", error);
-      res.status(500).json({ 
-        message: "Errore durante la generazione della ricetta", 
-        details: error.message 
-      });
-    }
-  });
-
-  // Meal Plan Generation Routes
-  app.post("/api/generate-meal-plan", async (req, res) => {
-    try {
-      const { preferences, days = 7, targetCalories, restrictions } = req.body;
-      
-      if (!preferences || preferences.length === 0) {
-        return res.status(400).json({ message: "Le preferenze sono obbligatorie" });
-      }
-
-      const mealPlan = await generateMealPlan(
-        preferences, 
-        days, 
-        targetCalories || 1800, 
-        restrictions || []
-      );
-      
-      // Save meal plan with temporary user
-      const tempUserId = Date.now().toString();
-      const savedPlan = await storage.createMealPlan({
-        title: mealPlan.title,
-        description: mealPlan.description,
-        targetCalories: mealPlan.targetCalories,
-        duration: mealPlan.duration,
-        meals: mealPlan.meals,
-        shoppingList: mealPlan.shoppingList,
-        userId: tempUserId
-      });
-
-      res.json(savedPlan);
-    } catch (error: any) {
-      console.error("Meal plan generation error:", error);
-      res.status(500).json({ 
-        message: "Errore durante la generazione del piano alimentare", 
-        details: error.message 
-      });
-    }
-  });
-
-  // AI Chat Routes
-  app.post("/api/ai-chat", async (req, res) => {
-    try {
-      const { message, context } = req.body;
-      
-      if (!message) {
-        return res.status(400).json({ message: "Il messaggio è obbligatorio" });
-      }
-
-      const response = await generateAIChatResponse(message, context);
-      res.json({ response });
-    } catch (error: any) {
-      console.error("AI chat error:", error);
-      res.status(500).json({ 
-        message: "Errore durante la comunicazione con l'assistente AI", 
-        details: error.message 
-      });
-    }
-  });
-
-  // Recipe and Meal Plan Retrieval Routes
-  app.get("/api/recipes", async (req, res) => {
-    try {
-      // Return empty array - no user-specific data
-      res.json([]);
+      const profile = await storage.upsertUserProfile(sessionId, validatedData);
+      res.json(profile);
     } catch (error) {
-      console.error("Recipes fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero delle ricette" });
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   });
 
-  app.get("/api/recipe/:id", async (req, res) => {
+  // Meal Plans routes
+  app.get("/api/meal-plans/user", async (req: any, res) => {
     try {
-      const recipe = await storage.getRecipe(req.params.id);
-      if (!recipe) {
-        return res.status(404).json({ message: "Ricetta non trovata" });
-      }
-      res.json(recipe);
+      const userId = req.user?.claims?.sub || req.sessionID || 'anonymous';
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      res.json(mealPlans);
     } catch (error) {
-      console.error("Recipe fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero della ricetta" });
+      console.error("Error fetching meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
     }
   });
 
-  app.get("/api/meal-plans", async (req, res) => {
+  app.post("/api/meal-plans", async (req, res) => {
     try {
-      // Return empty array - no user-specific data  
-      res.json([]);
-    } catch (error) {
-      console.error("Meal plans fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero dei piani alimentari" });
-    }
-  });
-
-  app.get("/api/meal-plan/:id", async (req, res) => {
-    try {
-      const mealPlan = await storage.getMealPlan(req.params.id);
-      if (!mealPlan) {
-        return res.status(404).json({ message: "Piano alimentare non trovato" });
-      }
+      const userId = req.user?.claims?.sub || req.sessionID || 'anonymous';
+      const mealPlanData = { ...req.body, userId };
+      
+      const validatedData = insertMealPlanSchema.parse(mealPlanData);
+      const mealPlan = await storage.createMealPlan(validatedData);
+      
       res.json(mealPlan);
     } catch (error) {
-      console.error("Meal plan fetch error:", error);
-      res.status(500).json({ message: "Errore durante il recupero del piano alimentare" });
+      console.error("Error creating meal plan:", error);
+      res.status(500).json({ message: "Failed to create meal plan" });
+    }
+  });
+
+  // Recipes routes
+  app.get("/api/recipes", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const recipes = await storage.getRecipes(limit, offset);
+      res.json(recipes);
+    } catch (error) {
+      console.error("Error fetching recipes:", error);
+      res.status(500).json({ message: "Failed to fetch recipes" });
+    }
+  });
+
+  app.post("/api/recipes", async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.sessionID || 'anonymous';
+      const recipeData = { ...req.body, userId };
+      
+      const validatedData = insertRecipeSchema.parse(recipeData);
+      const recipe = await storage.createRecipe(validatedData);
+      
+      res.json(recipe);
+    } catch (error) {
+      console.error("Error creating recipe:", error);
+      res.status(500).json({ message: "Failed to create recipe" });
+    }
+  });
+
+  // AI Generation routes
+  app.post("/api/generate-meal-plan", async (req, res) => {
+    try {
+      const { profile } = req.body;
+      
+      const prompt = `Crea un piano alimentare personalizzato secondo il Protocollo Gazzella per una persona con queste caratteristiche:
+      - Età: ${profile.age} anni
+      - Peso: ${profile.weight} kg
+      - Altezza: ${profile.height} cm
+      - Attività fisica: ${profile.weeklyExercise} volte a settimana
+      - Problemi tiroide: ${profile.thyroidIssues}
+      - Problemi intestinali: ${profile.intestinalIssues}
+      - Cibi esclusi: ${profile.excludedFoods?.join(', ')}
+      - Allergie: ${profile.allergies?.join(', ')}
+      
+      Crea un piano di 7 giorni con colazione, pranzo, cena e spuntini, seguendo rigorosamente il Protocollo Gazzella.
+      
+      Restituisci SOLO un JSON valido con questa struttura:
+      {
+        "title": "Piano Alimentare Personalizzato",
+        "description": "Descrizione del piano",
+        "targetCalories": numero,
+        "targetProtein": numero,
+        "targetCarbs": numero,
+        "targetFat": numero,
+        "days": [array di 7 giorni con struttura completa dei pasti]
+      }`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      });
+
+      const responseText = completion.choices[0].message.content;
+      const mealPlan = JSON.parse(responseText || '{}');
+      
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error generating meal plan:", error);
+      res.status(500).json({ message: "Failed to generate meal plan" });
+    }
+  });
+
+  app.post("/api/generate-recipe", async (req, res) => {
+    try {
+      const { preferences, ingredients, type } = req.body;
+      
+      const prompt = `Crea una ricetta seguendo il Protocollo Gazzella con questi parametri:
+      - Tipo: ${type}
+      - Ingredienti disponibili: ${ingredients}
+      - Preferenze: ${preferences}
+      
+      La ricetta deve seguire le regole del Protocollo Gazzella per le combinazioni alimentari.
+      
+      Restituisci SOLO un JSON valido con questa struttura:
+      {
+        "title": "Nome ricetta",
+        "description": "Descrizione",
+        "ingredients": ["ingrediente 1", "ingrediente 2"],
+        "instructions": ["passo 1", "passo 2"],
+        "calories": numero,
+        "protein": numero,
+        "carbs": numero,
+        "fat": numero,
+        "servings": numero,
+        "prepTime": numero,
+        "cookTime": numero,
+        "difficulty": "facile|medio|difficile",
+        "cuisine": "italiana",
+        "dietaryTags": ["tag1", "tag2"]
+      }`;
+
+      const completion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      });
+
+      const responseText = completion.choices[0].message.content;
+      const recipe = JSON.parse(responseText || '{}');
+      
+      res.json(recipe);
+    } catch (error) {
+      console.error("Error generating recipe:", error);
+      res.status(500).json({ message: "Failed to generate recipe" });
+    }
+  });
+
+  // Weight tracking routes
+  app.get("/api/weight-entries", async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.sessionID || 'anonymous';
+      const entries = await storage.getWeightEntriesByUserId(userId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching weight entries:", error);
+      res.status(500).json({ message: "Failed to fetch weight entries" });
+    }
+  });
+
+  app.post("/api/weight-entries", async (req, res) => {
+    try {
+      const userId = req.user?.claims?.sub || req.sessionID || 'anonymous';
+      const entryData = { ...req.body, userId };
+      
+      const validatedData = insertWeightEntrySchema.parse(entryData);
+      const entry = await storage.createWeightEntry(validatedData);
+      
+      res.json(entry);
+    } catch (error) {
+      console.error("Error creating weight entry:", error);
+      res.status(500).json({ message: "Failed to create weight entry" });
     }
   });
 

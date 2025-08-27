@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Navigation from "@/components/navigation";
 import { InstallPWABanner } from "@/components/install-pwa-banner";
+import { useAuth } from "@/hooks/useAuth";
+import Landing from "@/pages/landing";
 import Home from "@/pages/home";
 import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
@@ -20,36 +22,44 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 
 function Router() {
+  const { isAuthenticated, isLoading } = useAuth();
+
   return (
     <div className="min-h-screen">
       <Navigation />
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/recipe-generator" component={RecipeGenerator} />
-        <Route path="/recipes" component={Recipes} />
-        <Route path="/ricette" component={Recipes} />
-        <Route path="/genera-piano" component={MealPlanGenerator} />
-        <Route path="/meal-plan-generator" component={MealPlanGenerator} />
-        <Route path="/piani-personalizzati" component={MyMealPlans} />
-        <Route path="/piano-salvato/:id" component={SavedMealPlan} />
-        <Route path="/aggiorna-profilo">
-          {() => {
-            const AggiornaProfiloPage = React.lazy(() => import("./pages/aggiorna-profilo"));
-            return (
-              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-              </div>}>
-                <AggiornaProfiloPage />
-              </React.Suspense>
-            );
-          }}
-        </Route>
-        <Route path="/meal-plan/:id" component={MealPlan} />
-        <Route path="/recipe/:id" component={RecipeDetail} />
-        <Route path="/ai-chat" component={AIChat} />
-        <Route path="/assistente-nutrizionale" component={AIChat} />
-        <Route path="/privacy-policy" component={PrivacyPolicy} />
-        <Route path="/terms-of-service" component={TermsOfService} />
+        {isLoading || !isAuthenticated ? (
+          <Route path="/" component={Landing} />
+        ) : (
+          <>
+            <Route path="/" component={Home} />
+            <Route path="/recipe-generator" component={RecipeGenerator} />
+            <Route path="/recipes" component={Recipes} />
+            <Route path="/ricette" component={Recipes} />
+            <Route path="/genera-piano" component={MealPlanGenerator} />
+            <Route path="/meal-plan-generator" component={MealPlanGenerator} />
+            <Route path="/piani-personalizzati" component={MyMealPlans} />
+            <Route path="/piano-salvato/:id" component={SavedMealPlan} />
+            <Route path="/aggiorna-profilo">
+              {() => {
+                const AggiornaProfiloPage = React.lazy(() => import("./pages/aggiorna-profilo"));
+                return (
+                  <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+                  </div>}>
+                    <AggiornaProfiloPage />
+                  </React.Suspense>
+                );
+              }}
+            </Route>
+            <Route path="/meal-plan/:id" component={MealPlan} />
+            <Route path="/recipe/:id" component={RecipeDetail} />
+            <Route path="/ai-chat" component={AIChat} />
+            <Route path="/assistente-nutrizionale" component={AIChat} />
+            <Route path="/privacy-policy" component={PrivacyPolicy} />
+            <Route path="/terms-of-service" component={TermsOfService} />
+          </>
+        )}
         <Route component={NotFound} />
       </Switch>
     </div>

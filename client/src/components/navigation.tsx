@@ -1,12 +1,15 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, Menu, X } from "lucide-react";
+import { Leaf, Menu, X, User, LogOut } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { InstallPWAButton } from "./install-pwa-button";
+import { useAuth } from "@/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const navItems = [
     { href: "/", label: "Dashboard" },
@@ -41,12 +44,50 @@ export default function Navigation() {
             </Link>
           ))}
           
-          {/* Install PWA Button */}
-          <InstallPWAButton 
-            variant="ghost" 
-            size="sm"
-            className="text-slate-700 hover:text-primary"
-          />
+          {/* Auth Section */}
+          <div className="flex items-center space-x-2">
+            <InstallPWAButton 
+              variant="ghost" 
+              size="sm"
+              className="text-slate-700 hover:text-primary"
+            />
+            
+            {!isLoading && (
+              <>
+                {isAuthenticated && user ? (
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="w-8 h-8">
+                      <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
+                      <AvatarFallback>
+                        {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-sm font-medium text-slate-700">
+                      {user.firstName || user.email}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.location.href = '/api/logout'}
+                      className="text-slate-700 hover:text-red-600"
+                    >
+                      <LogOut size={16} />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => window.location.href = '/api/login'}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    <User size={16} className="mr-2" />
+                    Accedi
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Mobile menu button */}
@@ -80,12 +121,50 @@ export default function Navigation() {
               </Link>
             ))}
             
-            <div className="pt-2 border-t border-gray-200">
+            <div className="pt-2 border-t border-gray-200 space-y-2">
               <InstallPWAButton 
                 variant="outline" 
                 size="sm"
                 className="w-full justify-center"
               />
+              
+              {!isLoading && (
+                <>
+                  {isAuthenticated && user ? (
+                    <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                      <div className="flex items-center space-x-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
+                          <AvatarFallback className="text-xs">
+                            {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium text-slate-700">
+                          {user.firstName || user.email}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.location.href = '/api/logout'}
+                        className="text-slate-700 hover:text-red-600 h-auto p-1"
+                      >
+                        <LogOut size={14} />
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => window.location.href = '/api/login'}
+                      className="w-full bg-primary hover:bg-primary/90"
+                    >
+                      <User size={16} className="mr-2" />
+                      Accedi
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>

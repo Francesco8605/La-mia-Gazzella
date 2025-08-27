@@ -42,10 +42,12 @@ The system manages:
 - **Nutritional Calculation**: AI-powered macronutrient distribution and calorie targeting.
 - **Gazzella Protocol**: AI adherence to the "Manuale della Gazzella" rules, ensuring specific food combinations, portion calculations, and exclusion of forbidden foods.
 
-## Application Access
-- **Authentication**: Removed - all features are publicly accessible.
-- **Subscription System**: Removed - no payment or user restrictions.
-- **Session Management**: Temporary session-based data storage only.
+## Authentication and Authorization
+- **Authentication System**: Replit Auth (OpenID Connect) for secure user login
+- **Session Management**: PostgreSQL-based session storage with automatic cleanup
+- **User Experience**: Landing page for visitors, full dashboard for authenticated users
+- **Data Persistence**: User profiles and data linked to authenticated accounts
+- **Access Control**: Optional authentication - app works for guests with session-based storage
 
 # External Dependencies
 
