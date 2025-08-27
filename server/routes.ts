@@ -199,13 +199,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.createSession(sessionId, user.id, expiresAt);
         console.log("✅ Session created successfully");
 
-        // Set session cookie
-        const isProduction = req.get('host')?.includes('replit.app');
+        // Set session cookie with production compatibility
+        const isProduction = req.get('host')?.includes('replit.app') || process.env.NODE_ENV === 'production';
+        console.log("🍪 Setting cookie for production:", isProduction);
+        console.log("🌐 Host:", req.get('host'));
+        
         res.cookie('session', sessionId, { 
           httpOnly: true, 
-          secure: isProduction, // HTTPS in production
+          secure: false, // Try false for debugging
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          sameSite: isProduction ? 'none' : 'lax' // different for production
+          sameSite: 'lax', // Use lax for both
+          domain: undefined // Let browser decide
         });
 
         // Remove password from response
