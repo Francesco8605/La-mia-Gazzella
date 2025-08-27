@@ -1111,28 +1111,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create Stripe checkout session (with or without trial based on user history)
       sessionParams = {
         customer: customerId,
+        client_reference_id: userId,
         payment_method_types: ['card'],
         line_items: [
           {
-            price_data: {
-              currency: 'eur',
-              product_data: {
-                name: selectedPlan.name,
-                description: selectedPlan.description || undefined,
-              },
-              unit_amount: Math.round(parseFloat(selectedPlan.priceEur) * 100), // Convert to cents
-              recurring: {
-                interval: selectedPlan.duration === 'quarterly' ? 'month' : 
-                         selectedPlan.duration === 'monthly' ? 'month' :
-                         selectedPlan.duration === 'annual' ? 'year' : 'month',
-                interval_count: selectedPlan.duration === 'quarterly' ? 3 : 1,
-              },
-            },
+            price: selectedPlan.stripePriceId,
             quantity: 1,
           },
         ],
         mode: 'subscription',
-        success_url: `${req.protocol}://${req.get('host')}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `https://${req.get('host') || 'lamiagazzella.replit.app'}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.protocol}://${req.get('host')}/piani-abbonamento`,
         metadata: {
           userId: userId,
