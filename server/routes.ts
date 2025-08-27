@@ -1017,11 +1017,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/create-checkout-session", isAuthenticated, async (req, res) => {
     try {
       console.log("🏪 Creating checkout session...");
+      console.log("🔑 Stripe Secret Key exists:", !!process.env.STRIPE_SECRET_KEY);
+      console.log("🔑 Stripe Secret Key starts with:", process.env.STRIPE_SECRET_KEY?.substring(0, 7));
+      
       const userId = (req as any).user.claims.sub;
       const { planId } = req.body;
       
       console.log("👤 User ID:", userId);
       console.log("📦 Plan ID:", planId);
+      console.log("📋 Request body:", JSON.stringify(req.body));
       
       if (!planId) {
         console.log("❌ Missing plan ID");
@@ -1044,6 +1048,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Piano di abbonamento non trovato" });
       }
       console.log("✅ Plan found:", selectedPlan.name, selectedPlan.priceEur);
+      console.log("💳 Stripe Price ID:", selectedPlan.stripePriceId);
+      console.log("🌐 Request origin:", req.headers.origin);
+      console.log("🌐 Request host:", req.headers.host);
 
       // If user has already used trial, remove trial period from this plan
       let sessionParams: Stripe.Checkout.SessionCreateParams;
