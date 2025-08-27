@@ -201,14 +201,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Set session cookie with production compatibility
         const isProduction = req.get('host')?.includes('replit.app') || process.env.NODE_ENV === 'production';
+        const isHTTPS = req.get('host')?.includes('replit.app') || req.protocol === 'https';
         console.log("🍪 Setting cookie for production:", isProduction);
         console.log("🌐 Host:", req.get('host'));
+        console.log("🔒 HTTPS detected:", isHTTPS);
         
         res.cookie('session', sessionId, { 
           httpOnly: true, 
-          secure: false, // Try false for debugging
+          secure: isHTTPS, // Use HTTPS for production
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-          sameSite: 'lax', // Use lax for both
+          sameSite: isProduction ? 'none' : 'lax', // 'none' for cross-site in production
           domain: undefined // Let browser decide
         });
 
@@ -254,12 +256,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const expiresAt = getSessionExpiryDate();
       await storage.createSession(sessionId, user.id, expiresAt);
 
-      // Set session cookie
+      // Set session cookie with production compatibility
+      const isProduction = req.get('host')?.includes('replit.app') || process.env.NODE_ENV === 'production';
+      const isHTTPS = req.get('host')?.includes('replit.app') || req.protocol === 'https';
+      console.log("🍪 Login cookie - Production:", isProduction, "HTTPS:", isHTTPS);
+      
       res.cookie('session', sessionId, { 
         httpOnly: true, 
-        secure: false, // set to true in production with HTTPS
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days - same as session expiry
-        sameSite: 'lax'
+        secure: isHTTPS, // Use HTTPS for production
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        sameSite: isProduction ? 'none' : 'lax' // 'none' for cross-site in production
       });
 
       // Remove password from response
