@@ -31,23 +31,23 @@ App name: "La Mia Gazzella" - nome ufficiale dell'applicazione web per la pianif
 
 ## Database Schema Design
 The system manages:
-- **User Profiles**: Health and dietary data (temporary session-based).
+- **Users**: Authentication and identification.
+- **User Profiles**: Health and dietary data.
 - **Meal Plans**: Nutritional targets and daily meal structures.
 - **Recipes**: Detailed recipe information.
-- **Weight Entries**: Weight tracking data.
+
+## Authentication and Authorization
+- **Session Management**: PostgreSQL-based session storage.
+- **User System**: Username/password authentication.
+- **Profile Association**: User profiles linked to authenticated users.
 
 ## AI Integration Architecture
 - **AI Provider**: OpenAI GPT-4o for meal plan and recipe generation.
 - **Content Generation**: Structured prompts for personalized meal plans and recipes.
 - **Nutritional Calculation**: AI-powered macronutrient distribution and calorie targeting.
 - **Gazzella Protocol**: AI adherence to the "Manuale della Gazzella" rules, ensuring specific food combinations, portion calculations, and exclusion of forbidden foods.
-
-## Authentication and Authorization
-- **Authentication System**: Replit Auth (OpenID Connect) for secure user login
-- **Session Management**: PostgreSQL-based session storage with automatic cleanup
-- **User Experience**: Landing page for visitors, full dashboard for authenticated users
-- **Data Persistence**: User profiles and data linked to authenticated accounts
-- **Access Control**: Optional authentication - app works for guests with session-based storage
+- **Trial Abuse Prevention**: System to track and prevent free trial misuse for premium features.
+- **Subscription Management**: Integration for handling paid subscriptions and feature access.
 
 # External Dependencies
 

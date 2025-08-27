@@ -268,22 +268,6 @@ export default function SubscriptionPlans() {
             </div>
           </div>
 
-          {!isAuthenticated && (
-            <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-400 p-4 max-w-3xl mx-auto mb-8">
-              <p className="text-blue-800 dark:text-blue-200 font-semibold text-lg">
-                🔐 Per iniziare la tua trasformazione, accedi o registrati gratuitamente
-              </p>
-              <div className="mt-3">
-                <Button 
-                  onClick={() => window.location.href = '/auth'}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Accedi / Registrati
-                </Button>
-              </div>
-            </div>
-          )}
-          
           <div className="bg-red-50 dark:bg-red-900/20 border-l-4 border-red-400 p-4 max-w-3xl mx-auto mb-8">
             <p className="text-red-800 dark:text-red-200 font-semibold text-lg">
               ⚠️ STOP a diete fallimentari, consulenze costose e risultati temporanei
@@ -549,14 +533,14 @@ export default function SubscriptionPlans() {
                   {/* Subscribe Button */}
                   <Button
                     onClick={() => handleSubscribe(plan.id)}
-                    disabled={createCheckoutMutation.isPending || isCurrentPlan || !isAuthenticated}
+                    disabled={createCheckoutMutation.isPending || isCurrentPlan}
                     className={`w-full text-white font-semibold py-3 ${
                       plan.duration === 'annual'
                         ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
                         : plan.duration === 'quarterly'
                         ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
                         : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                    } disabled:opacity-50`}
                     data-testid={`subscribe-button-${plan.id}`}
                   >
                     {createCheckoutMutation.isPending ? (
@@ -564,8 +548,6 @@ export default function SubscriptionPlans() {
                         <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                         Caricamento...
                       </div>
-                    ) : !isAuthenticated ? (
-                      "Accedi per Continuare"
                     ) : isCurrentPlan ? (
                       "Piano Attuale"
                     ) : userSubscription && userSubscription.hasUsedTrial ? (

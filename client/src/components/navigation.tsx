@@ -1,24 +1,23 @@
 import { Link, useLocation } from "wouter";
-import { Leaf, Menu, X, User, LogOut } from "lucide-react";
+import { Leaf, Menu, X, LogOut, Crown, AlertTriangle } from "lucide-react";
 import { useState } from "react";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { InstallPWAButton } from "./install-pwa-button";
-import { useAuth } from "@/hooks/useAuth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { hasActiveSubscription, isInTrial, subscriptionStatus } = useSubscription();
 
   const navItems = [
     { href: "/", label: "Dashboard" },
     { href: "/recipe-generator", label: "Genera Ricette" },
-    { href: "/genera-piano", label: "Genera Piano Alimentare" },
-    { href: "/recipes", label: "Ricette" },
-    { href: "/piani-personalizzati", label: "I Miei Piani" },
-    { href: "/assistente-nutrizionale", label: "Assistente Nutrizionale" },
+    { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
+    { href: "/recipes", label: "Ricette" },
+    { href: "/assistente-nutrizionale", label: "Consulente Nutrizionale" },
+    { href: "/piani-abbonamento", label: "Abbonamenti" },
   ];
 
   return (
@@ -38,153 +37,156 @@ export default function Navigation() {
               className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium ${
                 location === item.href ? "text-primary" : ""
               }`}
-              data-testid={`nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              data-testid={`nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
             >
               {item.label}
             </Link>
           ))}
           
-          {/* Auth Section */}
-          <div className="flex items-center space-x-2">
-            <InstallPWAButton 
-              variant="ghost" 
-              size="sm"
-              className="text-slate-700 hover:text-primary"
-            />
-            
-            {!isLoading && (
-              <>
-                {isAuthenticated && user ? (
-                  <div className="flex items-center space-x-2">
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
-                      <AvatarFallback>
-                        {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="text-sm font-medium text-slate-700">
-                      {user.firstName || user.email}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.location.href = '/api/logout'}
-                      className="text-slate-700 hover:text-red-600"
-                    >
-                      <LogOut size={16} />
-                    </Button>
-                  </div>
+          {/* Subscription Status Indicator */}
+          <div className="flex items-center">
+            {hasActiveSubscription ? (
+              <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">
+                {isInTrial ? (
+                  <>
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Trial</span>
+                  </>
                 ) : (
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.location.href = '/login'}
-                      className="text-slate-700 hover:text-primary"
-                    >
-                      Accedi
-                    </Button>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => window.location.href = '/signup'}
-                      className="bg-primary hover:bg-primary/90"
-                    >
-                      <User size={16} className="mr-2" />
-                      Registrati
-                    </Button>
-                  </div>
+                  <>
+                    <Crown className="h-3 w-3" />
+                    <span>Premium</span>
+                  </>
                 )}
-              </>
+              </div>
+            ) : (
+              <Link href="/piani-abbonamento">
+                <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium hover:bg-orange-200 cursor-pointer transition-colors">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Riattiva</span>
+                </div>
+              </Link>
             )}
           </div>
+          
+          {/* Install PWA Button */}
+          <InstallPWAButton 
+            variant="ghost" 
+            size="sm"
+            className="text-slate-700 hover:text-primary transition-colors duration-300"
+          />
+          
+          {/* Logout Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={async () => {
+              try {
+                await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                // Pulisci la cache
+                window.location.reload();
+              } catch (error) {
+                console.error("Logout error:", error);
+                window.location.reload();
+              }
+            }}
+            className="text-slate-700 hover:text-red-600 transition-colors duration-300"
+            data-testid="logout-button"
+          >
+            <LogOut className="h-4 w-4 mr-1" />
+            Esci
+          </Button>
         </div>
-
-        {/* Mobile menu button */}
+        
+        {/* Mobile Menu Button */}
         <div className="md:hidden">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="text-slate-700"
+            className="text-slate-700 hover:text-primary transition-colors duration-300"
+            data-testid="mobile-menu-button"
           >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </Button>
         </div>
       </div>
-
-      {/* Mobile Navigation */}
+      
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-lg border border-white/20 rounded-lg mt-2 shadow-lg">
-          <div className="flex flex-col space-y-2 p-4">
+        <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
+          <div className="flex flex-col space-y-3">
+            {/* Subscription Status in Mobile */}
+            <div className="py-2 border-b border-slate-200">
+              {hasActiveSubscription ? (
+                <div className="flex items-center space-x-2 text-emerald-700">
+                  {isInTrial ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Prova Gratuita Attiva</span>
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      <span className="text-sm font-medium">Abbonamento Premium</span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <Link href="/piani-abbonamento" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="flex items-center space-x-2 text-orange-700 hover:text-orange-800 transition-colors">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Riattiva Abbonamento</span>
+                  </div>
+                </Link>
+              )}
+            </div>
+            
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 px-3 rounded ${
-                  location === item.href ? "text-primary bg-primary/10" : ""
+                className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 ${
+                  location === item.href ? "text-primary" : ""
                 }`}
-                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                onClick={() => setIsMobileMenuOpen(false)}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
               >
                 {item.label}
               </Link>
             ))}
             
-            <div className="pt-2 border-t border-gray-200 space-y-2">
+            {/* Mobile Actions */}
+            <div className="pt-2 border-t border-slate-200 space-y-2">
+              {/* Install PWA Button in Mobile */}
               <InstallPWAButton 
-                variant="outline" 
+                variant="ghost" 
                 size="sm"
-                className="w-full justify-center"
-              />
+                className="text-slate-700 hover:text-primary transition-colors duration-300 w-full justify-start"
+              >
+                📱 Installa App
+              </InstallPWAButton>
               
-              {!isLoading && (
-                <>
-                  {isAuthenticated && user ? (
-                    <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarImage src={user.profileImageUrl} alt={user.firstName || "User"} />
-                          <AvatarFallback className="text-xs">
-                            {user.firstName?.charAt(0) || user.email?.charAt(0) || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium text-slate-700">
-                          {user.firstName || user.email}
-                        </span>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => window.location.href = '/api/logout'}
-                        className="text-slate-700 hover:text-red-600 h-auto p-1"
-                      >
-                        <LogOut size={14} />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.location.href = '/login'}
-                        className="w-full"
-                      >
-                        Accedi
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => window.location.href = '/signup'}
-                        className="w-full bg-primary hover:bg-primary/90"
-                      >
-                        <User size={16} className="mr-2" />
-                        Registrati
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
+              {/* Mobile Logout Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  setIsMobileMenuOpen(false);
+                  try {
+                    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("Logout error:", error);
+                    window.location.reload();
+                  }
+                }}
+                className="text-slate-700 hover:text-red-600 transition-colors duration-300 w-full justify-start"
+                data-testid="mobile-logout-button"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Esci
+              </Button>
             </div>
           </div>
         </div>
