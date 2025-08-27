@@ -31,39 +31,19 @@ export default function SubscriptionPlans() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
-  // Fallback plans in case API fails
-  const fallbackPlans = [
-    {
-      id: "monthly-29",
-      name: "Piano Mensile",
-      description: "Accesso completo al sistema nutrizionale personalizzato La Mia Gazzella",
-      priceEur: "29.00",
-      duration: "monthly",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
-    },
-    {
-      id: "quarterly-79",
-      name: "Piano Trimestrale", 
-      description: "Piano trimestrale con risparmio del 10% - il più popolare",
-      priceEur: "79.00",
-      duration: "quarterly",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "10% di risparmio"]
-    },
-    {
-      id: "annual-249",
-      name: "Piano Annuale",
-      description: "Piano annuale con massimo risparmio del 29%", 
-      priceEur: "249.00",
-      duration: "annual",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "29% di risparmio", "Accesso anticipato alle nuove funzionalità"]
-    }
-  ];
+  // Fallback plan in case API fails
+  const fallbackPlan = {
+    id: "monthly-29",
+    name: "Piano Mensile",
+    description: "Accesso completo al sistema nutrizionale personalizzato La Mia Gazzella",
+    priceEur: "29.00",
+    duration: "monthly",
+    trialDays: 3,
+    features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
+  };
 
   // Fetch subscription plans with custom queryFn
-  const { data: plans = fallbackPlans, isLoading: plansLoading, error: plansError } = useQuery<SubscriptionPlan[]>({
+  const { data: plans = [fallbackPlan], isLoading: plansLoading, error: plansError } = useQuery<SubscriptionPlan[]>({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
       console.log("Fetching subscription plans...");
@@ -77,8 +57,8 @@ export default function SubscriptionPlans() {
         console.error("API Error:", response.status, response.statusText);
         const text = await response.text();
         console.error("Error body:", text);
-        console.log("Using fallback plans");
-        return fallbackPlans;
+        console.log("Using fallback plan");
+        return [fallbackPlan];
       }
       
       const data = await response.json();
@@ -230,7 +210,7 @@ export default function SubscriptionPlans() {
 
 
   // Use API plans if available, otherwise use fallback
-  const displayPlans = (Array.isArray(plans) && plans.length > 0) ? plans : fallbackPlans;
+  const displayPlans = (Array.isArray(plans) && plans.length > 0) ? plans : [fallbackPlan];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 dark:from-gray-900 dark:via-emerald-900/20 dark:to-teal-900/20">
@@ -456,50 +436,40 @@ export default function SubscriptionPlans() {
           </div>
         )}
 
-        {/* Subscription Plans */}
-        <div className="grid md:grid-cols-3 gap-8">
-          {displayPlans.map((plan) => {
+        {/* Subscription Plan */}
+        <div className="flex justify-center">
+          <div className="max-w-md w-full">
+            {displayPlans.map((plan) => {
             const priceInfo = formatPrice(plan.priceEur, plan.duration);
             const isCurrentPlan = userSubscription?.hasActiveSubscription && userSubscription?.plan === plan.id;
             
             return (
               <Card 
                 key={plan.id} 
-                className={`relative overflow-hidden transition-all hover:scale-105 ${
-                  plan.duration === 'annual' 
-                    ? 'ring-2 ring-yellow-500 shadow-xl' 
-                    : 'shadow-lg hover:shadow-xl'
-                } ${isCurrentPlan ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
+                className={`relative overflow-hidden transition-all hover:scale-105 shadow-xl ring-2 ring-emerald-500 ${isCurrentPlan ? 'bg-emerald-50 dark:bg-emerald-900/20' : ''}`}
                 data-testid={`plan-card-${plan.id}`}
               >
                 {/* Plan Badge */}
-                {getPlanBadge(plan.duration) && (
-                  <div className="absolute top-4 right-4">
-                    {getPlanBadge(plan.duration)}
-                  </div>
-                )}
+                <div className="absolute top-4 right-4">
+                  <Badge className="bg-emerald-500 text-white">PIANO UNICO</Badge>
+                </div>
                 
                 <CardHeader className="text-center pb-4">
                   <div className="flex justify-center mb-4">
-                    {getPlanIcon(plan.duration)}
+                    <CheckCircle className="h-12 w-12 text-emerald-500" />
                   </div>
-                  <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
-                  <CardDescription className="text-base">{plan.description}</CardDescription>
+                  <CardTitle className="text-3xl font-bold">{plan.name}</CardTitle>
+                  <CardDescription className="text-lg">{plan.description}</CardDescription>
                 </CardHeader>
                 
                 <CardContent className="space-y-6">
                   {/* Pricing */}
                   <div className="text-center">
-                    <div className="text-4xl font-bold text-emerald-600 dark:text-emerald-400">
-                      {priceInfo.main}
+                    <div className="text-6xl font-bold text-emerald-600 dark:text-emerald-400">
+                      €29
                     </div>
-                    {priceInfo.monthly && (
-                      <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        {priceInfo.monthly}
-                      </div>
-                    )}
-                    <div className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                      ogni {plan.duration === 'quarterly' ? 'trimestre' : plan.duration === 'annual' ? 'anno' : 'mese'}
+                    <div className="text-xl text-gray-500 dark:text-gray-400 mt-2">
+                      al mese
                     </div>
                   </div>
 
@@ -534,13 +504,7 @@ export default function SubscriptionPlans() {
                   <Button
                     onClick={() => handleSubscribe(plan.id)}
                     disabled={createCheckoutMutation.isPending || isCurrentPlan}
-                    className={`w-full text-white font-semibold py-3 ${
-                      plan.duration === 'annual'
-                        ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600'
-                        : plan.duration === 'quarterly'
-                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700'
-                        : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
-                    } disabled:opacity-50`}
+                    className="w-full text-white font-semibold py-4 text-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50"
                     data-testid={`subscribe-button-${plan.id}`}
                   >
                     {createCheckoutMutation.isPending ? (
@@ -559,7 +523,8 @@ export default function SubscriptionPlans() {
                 </CardContent>
               </Card>
             );
-          })}
+            })}
+          </div>
         </div>
 
         {/* Testimonials */}
