@@ -1,187 +1,147 @@
-import { useAuth } from "@/hooks/useAuth";
-import { useLocation } from "wouter";
+import { Sparkles, Play, User, Mail, MessageCircle, Settings } from "lucide-react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Heart, Clock } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+
+import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 export default function Home() {
-  const { isAuthenticated, user } = useAuth();
-  const [, setLocation] = useLocation();
-
-  if (isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100 py-12 px-4">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-emerald-800 mb-4">
-              Benvenuto, {(user as any)?.username}!
-            </h1>
-            <p className="text-lg text-emerald-600">
-              Pronto per il tuo percorso nutrizionale personalizzato con La Mia Gazzella?
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center text-emerald-800">
-                  <Sparkles className="h-6 w-6 mr-2" />
-                  Piano Personalizzato
-                </CardTitle>
-                <CardDescription>
-                  Crea un piano nutrizionale basato sui tuoi obiettivi e preferenze
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setLocation("/piani-abbonamento")}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                  data-testid="button-subscription-plans"
-                >
-                  Inizia Ora
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <CardTitle className="flex items-center text-emerald-800">
-                  <Heart className="h-6 w-6 mr-2" />
-                  Supporto Esperto
-                </CardTitle>
-                <CardDescription>
-                  Ricevi consigli nutrizionali personalizzati dalla nostra IA specializzata
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button 
-                  onClick={() => setLocation("/piani-abbonamento")}
-                  variant="outline"
-                  className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-                  data-testid="button-ai-support"
-                >
-                  Scopri di Più
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="text-center">
-            <Button 
-              onClick={() => setLocation("/api/auth/logout")}
-              variant="ghost"
-              className="text-gray-600 hover:text-gray-800"
-              data-testid="button-logout"
-            >
-              Esci
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Landing page for non-authenticated users
+  const { isAuthenticated } = useAuth();
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-green-100">
+    <div className="pt-24 pb-12">
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-emerald-800 mb-6">
-            La Mia Gazzella
+      <section className="container mx-auto px-4 mb-16">
+        <div className="text-center max-w-4xl mx-auto animate-slide-up">
+          {/* Logo Image */}
+          <div className="mb-8 flex justify-center">
+            <img 
+              src={logoGazzella} 
+              alt="Logo La Mia Gazzella - Assistente Nutrizionale Personalizzato per la pianificazione alimentare" 
+              className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full shadow-2xl glass-morphism p-4 animate-float"
+              data-testid="hero-logo"
+              role="img"
+            />
+          </div>
+          <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-red-600 via-green-600 to-emerald-600 bg-clip-text text-transparent mb-6 leading-tight" role="banner">
+            Il Tuo Assistente
+            <br />
+            Nutrizionale Personale
           </h1>
-          <p className="text-xl text-emerald-700 mb-8 max-w-3xl mx-auto">
-            Il tuo assistente nutrizionale personalizzato basato sull'IA. 
-            Piani alimentari su misura per il tuo benessere e i tuoi obiettivi di salute.
+          <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto">
+            Pianificazione alimentare avanzata che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              onClick={() => setLocation("/auth")}
-              size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3"
-              data-testid="button-get-started"
-            >
-              Inizia Subito
-            </Button>
-            <Button 
-              onClick={() => setLocation("/piani-abbonamento")}
-              variant="outline"
-              size="lg"
-              className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 px-8 py-3"
-              data-testid="button-view-plans"
-            >
-              Vedi i Piani
-            </Button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 justify-center items-center max-w-5xl mx-auto">
+            <Link href="/genera-piano" className="group">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 text-shadow-sm flex flex-col items-center gap-2"
+                data-testid="genera-piano-button"
+                aria-label="Genera il tuo piano nutrizionale personalizzato"
+              >
+                <Play className="h-6 w-6" />
+                <span className="text-white drop-shadow-lg text-sm font-bold">Genera Piano</span>
+              </Button>
+            </Link>
+            <Link href="/piani-personalizzati" className="group">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
+                data-testid="i-miei-piani-button"
+              >
+                <User className="h-6 w-6 text-white" />
+                <span className="text-white drop-shadow-lg font-bold text-sm">I Miei Piani</span>
+              </Button>
+            </Link>
+            <Link href="/assistente-nutrizionale" className="group">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
+                data-testid="ai-assistant-button"
+              >
+                <MessageCircle className="h-6 w-6 text-white" />
+                <span className="text-white drop-shadow-lg font-bold text-sm text-center">Consulente Nutrizionale</span>
+              </Button>
+            </Link>
+            <Link href="/aggiorna-profilo" className="group">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
+                data-testid="il-mio-profilo-button"
+              >
+                <Settings className="h-6 w-6 text-white" />
+                <span className="text-white drop-shadow-lg font-bold text-sm">Il Mio Profilo</span>
+              </Button>
+            </Link>
+            <Link href="/recipe-generator" className="group">
+              <Button
+                size="lg"
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
+                data-testid="genera-ricette-button"
+              >
+                <Sparkles className="h-6 w-6 text-white" />
+                <span className="text-white drop-shadow-lg font-bold text-sm">Genera Ricette</span>
+              </Button>
+            </Link>
           </div>
         </div>
+      </section>
 
-        {/* Features Section */}
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-center mb-4">
-                <Sparkles className="h-12 w-12 text-emerald-600" />
-              </div>
-              <CardTitle className="text-emerald-800">Piani Personalizzati</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Ricevi piani alimentari creati specificamente per te, 
-                basati sui tuoi obiettivi e preferenze alimentari.
-              </p>
-            </CardContent>
-          </Card>
 
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-center mb-4">
-                <Heart className="h-12 w-12 text-emerald-600" />
-              </div>
-              <CardTitle className="text-emerald-800">Supporto IA</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Chat con la nostra IA nutrizionale per ricevere consigli, 
-                modifiche ai piani e risposte alle tue domande.
-              </p>
-            </CardContent>
-          </Card>
 
-          <Card className="text-center hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-center mb-4">
-                <Clock className="h-12 w-12 text-emerald-600" />
-              </div>
-              <CardTitle className="text-emerald-800">Risultati Rapidi</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600">
-                Inizia a vedere risultati in pochi giorni con i nostri 
-                piani nutrizionali scientificamente validati.
+
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-white">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center space-y-6">
+            <div className="flex items-center justify-center space-x-2 mb-4">
+              <Sparkles className="text-secondary text-2xl" />
+              <span className="font-bold text-2xl">La Mia Gazzella</span>
+            </div>
+            <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
+              Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale avanzata. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
+            </p>
+            <div className="flex justify-center gap-4">
+              <Button
+                onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
+                className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="contact-support-button"
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                Contatta Supporto
+              </Button>
+              
+              <Link href="/cancella-abbonamento">
+                <Button
+                  variant="outline"
+                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  data-testid="manage-subscription-button"
+                >
+                  <Settings className="mr-2 h-4 w-4" />
+                  Gestisci Abbonamento
+                </Button>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="border-t border-slate-800 mt-8 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center text-center md:text-left space-y-4 md:space-y-0">
+              <p className="text-slate-400">
+                &copy; 2025 La Mia Gazzella. Tutti i diritti riservati.
               </p>
-            </CardContent>
-          </Card>
+              <div className="flex space-x-6">
+                <Link href="/privacy-policy" className="text-slate-400 hover:text-white transition-colors text-sm">
+                  Privacy Policy
+                </Link>
+                <Link href="/terms-of-service" className="text-slate-400 hover:text-white transition-colors text-sm">
+                  Termini di Servizio
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-
-        {/* CTA Section */}
-        <div className="text-center bg-white rounded-lg shadow-lg p-8">
-          <h2 className="text-3xl font-bold text-emerald-800 mb-4">
-            Pronto a Trasformare la Tua Alimentazione?
-          </h2>
-          <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
-            Unisciti a migliaia di persone che hanno già migliorato la loro salute 
-            con La Mia Gazzella. Inizia la tua prova gratuita oggi stesso.
-          </p>
-          <Button 
-            onClick={() => setLocation("/auth")}
-            size="lg"
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-12 py-4"
-            data-testid="button-start-trial"
-          >
-            Inizia la Prova Gratuita
-          </Button>
-        </div>
-      </div>
+      </footer>
     </div>
   );
 }

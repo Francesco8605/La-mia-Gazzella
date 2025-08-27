@@ -1,20 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 
 export function useAuth() {
-  const { data: user, isLoading, error } = useQuery({
+  const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     retry: false,
-    refetchOnWindowFocus: false,
-    refetchInterval: false,
+    staleTime: 1000 * 60 * 1, // 1 minuto di cache per auth status
   });
-
-  // If we get a null response (401 error), consider user as not authenticated
-  const isAuthenticated = user !== null && user !== undefined;
 
   return {
     user,
     isLoading,
-    isAuthenticated,
-    error,
+    isAuthenticated: !!user,
   };
 }
