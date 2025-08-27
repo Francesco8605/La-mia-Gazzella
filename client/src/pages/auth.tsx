@@ -82,7 +82,17 @@ export default function Auth() {
         setLocation("/");
       }, 100);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // Check if it's email verification error
+      if (error.message?.includes("verificare la tua email")) {
+        toast({
+          title: "📧 Verifica Email Richiesta",
+          description: error.message,
+          duration: 8000,
+        });
+        return;
+      }
+      
       toast({
         title: "Errore di Accesso",
         description: error instanceof Error ? error.message : "Credenziali non valide",
@@ -119,15 +129,28 @@ export default function Auth() {
       }
       return response.json();
     },
-    onSuccess: (user) => {
+    onSuccess: (response) => {
+      // Check if email verification is required
+      if (response.requiresEmailVerification) {
+        toast({
+          title: "📧 Controlla la tua Email!",
+          description: response.message || "Ti abbiamo inviato un'email di verifica. Clicca sul link per attivare il tuo account.",
+          duration: 8000, // Longer duration for important message
+        });
+        
+        // Don't redirect to subscription plans, user needs to verify email first
+        return;
+      }
+      
+      // Original logic for users who don't need email verification
       toast({
         title: "Registrazione Completata!",
-        description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
+        description: `Account creato con successo per ${response.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
       });
       
       // Invalida e aggiorna la cache dell'autenticazione
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      queryClient.setQueryData(["/api/auth/user"], user);
+      queryClient.setQueryData(["/api/auth/user"], response);
       
       // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla pagina degli abbonamenti
       setTimeout(() => {

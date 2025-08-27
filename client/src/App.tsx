@@ -23,6 +23,7 @@ import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
 import ChangePassword from "@/pages/change-password";
+import EmailVerification from "@/pages/email-verification";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
 import CancelSubscription from "@/pages/cancel-subscription";
@@ -220,6 +221,10 @@ function Router() {
         {/* Password Management */}
         <Route path="/change-password" component={ChangePassword} />
         <Route path="/cambia-password" component={ChangePassword} />
+        
+        {/* Email Verification */}
+        <Route path="/verify-email" component={EmailVerification} />
+        <Route path="/verifica-email" component={EmailVerification} />
         
         <Route component={NotFound} />
       </Switch>

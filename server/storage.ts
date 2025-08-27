@@ -9,7 +9,9 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByEmailVerificationToken(token: string): Promise<User | undefined>;
   updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined>;
+  updateUserEmailVerification(id: string, emailVerified: string, emailVerificationToken?: string | null): Promise<User | undefined>;
   getAllUsers?(): Promise<User[]>;
   createUser(user: InsertUser): Promise<User>;
   
@@ -87,6 +89,12 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getUserByEmailVerificationToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.emailVerificationToken === token,
+    );
+  }
+
   async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
@@ -96,11 +104,26 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  async updateUserEmailVerification(id: string, emailVerified: string, emailVerificationToken?: string | null): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { 
+      ...user, 
+      emailVerified,
+      emailVerificationToken: emailVerificationToken !== undefined ? emailVerificationToken : null
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
       ...insertUser,
       id,
+      emailVerified: insertUser.emailVerified ?? "no",
+      emailVerificationToken: insertUser.emailVerificationToken ?? null,
       stripeCustomerId: insertUser.stripeCustomerId ?? null,
       stripeSubscriptionId: insertUser.stripeSubscriptionId ?? null,
       subscriptionStatus: insertUser.subscriptionStatus ?? null,
@@ -478,10 +501,27 @@ export class DatabaseStorage implements IStorage {
     return user || undefined;
   }
 
+  async getUserByEmailVerificationToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.emailVerificationToken, token));
+    return user || undefined;
+  }
+
   async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
     const [user] = await db
       .update(users)
       .set({ password: hashedPassword })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserEmailVerification(id: string, emailVerified: string, emailVerificationToken?: string | null): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        emailVerified,
+        emailVerificationToken: emailVerificationToken !== undefined ? emailVerificationToken : null
+      })
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
