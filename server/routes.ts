@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
+import { sendPasswordRecoveryEmail } from "./services/email";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -311,6 +312,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Logout error:", error);
       res.status(500).json({ message: "Errore durante il logout" });
+    }
+  });
+
+  // Password Recovery
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: "Email è richiesta" });
+      }
+
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // For security, return success even if user doesn't exist
+        return res.json({ message: "Se l'email esiste, riceverai la password a breve" });
+      }
+
+      // Send email with current password (unhashed from database would require storing it)
+      // Since we hash passwords, we'll need to generate a temporary password
+      const tempPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8).toUpperCase();
+      
+      // Update user with new password
+      const hashedPassword = await bcrypt.hash(tempPassword, 10);
+      await storage.updateUserPassword(user.id, hashedPassword);
+
+      // Send recovery email
+      await sendPasswordRecoveryEmail(user.email, user.username, tempPassword);
+
+      res.json({ message: "Se l'email esiste, riceverai la password a breve" });
+    } catch (error) {
+      console.error("Password recovery error:", error);
+      res.status(500).json({ message: "Errore durante il recupero della password" });
     }
   });
   

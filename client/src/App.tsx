@@ -21,6 +21,7 @@ import SavedMealPlan from "@/pages/saved-meal-plan";
 import MyMealPlans from "@/pages/my-meal-plans";
 import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
+import ForgotPassword from "@/pages/forgot-password";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
 import CancelSubscription from "@/pages/cancel-subscription";
@@ -47,6 +48,10 @@ function Router() {
     return (
       <Switch>
         <Route path="/auth" component={Auth} />
+        <Route path="/login" component={Auth} />
+        <Route path="/register" component={Auth} />
+        <Route path="/forgot-password" component={ForgotPassword} />
+        <Route path="/recupera-password" component={ForgotPassword} />
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
         <Route component={Auth} />
