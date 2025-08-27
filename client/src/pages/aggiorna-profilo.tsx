@@ -53,9 +53,6 @@ export default function AggiornaProfiloPage() {
     // Integratori
     takingFormulaGazzella: "",
     
-    // Contatti
-    email: "",
-    phone: "",
   });
 
   // Fetch current profile
@@ -91,8 +88,6 @@ export default function AggiornaProfiloPage() {
         cravingTimeFrame: profile.cravingTimeFrame || "",
         preferredCheatFood: profile.preferredCheatFood || "",
         takingFormulaGazzella: profile.takingFormulaGazzella || "",
-        email: profile.email || "",
-        phone: profile.phone || "",
       });
     }
   }, [profile, latestWeight]);
@@ -420,39 +415,6 @@ export default function AggiornaProfiloPage() {
           </CardContent>
         </Card>
 
-        {/* Informazioni di Contatto */}
-        <Card className="glass-morphism">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl text-slate-800">
-              <User className="w-6 h-6 text-blue-600" />
-              Informazioni di Contatto
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="la-tua-email@esempio.com"
-                />
-              </div>
-              <div>
-                <Label htmlFor="phone">Telefono</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  placeholder="+39 123 456 7890"
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Submit Button */}
         <div className="flex justify-center">
