@@ -1100,7 +1100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
         mode: 'subscription',
         success_url: `${req.protocol}://${req.get('host')}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.protocol}://${req.get('host')}/subscription-canceled`,
+        cancel_url: `${req.protocol}://${req.get('host')}/piani-abbonamento`,
         metadata: {
           userId: userId,
           planId: planId,
