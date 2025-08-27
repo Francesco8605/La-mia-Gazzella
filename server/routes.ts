@@ -1068,17 +1068,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
 
 
-      // Create or get Stripe customer
+      // Create or get Stripe customer - force sync in production
       let customerId = user.stripeCustomerId;
+      console.log("🔍 Current Stripe Customer ID:", customerId);
+      
+      // Always verify customer exists in Stripe, especially for production
+      if (customerId) {
+        try {
+          const existingCustomer = await stripe.customers.retrieve(customerId);
+          console.log("✅ Stripe customer verified:", existingCustomer.id);
+          if (existingCustomer.deleted) {
+            console.log("⚠️ Customer was deleted, creating new one");
+            customerId = null; // Force recreation
+          }
+        } catch (error) {
+          console.log("❌ Stripe customer not found, creating new one:", error);
+          customerId = null; // Force recreation
+        }
+      }
+      
       if (!customerId) {
+        console.log("🆕 Creating new Stripe customer...");
         const customer = await stripe.customers.create({
           email: user.email,
           name: user.username,
           metadata: {
-            userId: userId
+            userId: userId,
+            environment: process.env.NODE_ENV || 'development'
           }
         });
         customerId = customer.id;
+        console.log("✅ New Stripe customer created:", customerId);
         
         // Update user with Stripe customer ID
         await storage.updateUserStripeInfo(userId, { stripeCustomerId: customerId });
