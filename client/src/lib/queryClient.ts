@@ -17,16 +17,31 @@ export async function apiRequest(
   console.log("Method:", method);
   console.log("Data being sent:", data);
   console.log("JSON stringified data:", JSON.stringify(data));
+  console.log("Current domain:", window.location.hostname);
+  console.log("User agent:", navigator.userAgent);
   
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    },
     body: data ? JSON.stringify(data) : undefined,
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
-  return await res.json();
+  console.log("Response status:", res.status);
+  console.log("Response headers:", Object.fromEntries(res.headers.entries()));
+  
+  if (!res.ok) {
+    const errorText = await res.text();
+    console.error("Error response body:", errorText);
+    throw new Error(`${res.status}: ${errorText}`);
+  }
+  
+  const responseData = await res.json();
+  console.log("Response data:", responseData);
+  return responseData;
 }
 
 type UnauthorizedBehavior = "returnNull" | "throw";

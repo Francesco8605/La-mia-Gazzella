@@ -11,6 +11,7 @@ import Stripe from "stripe";
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
+console.log("🔧 Stripe initialized with key:", process.env.STRIPE_SECRET_KEY?.substring(0, 12) + "...");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function generateSessionId(): string {
@@ -26,19 +27,27 @@ function getSessionExpiryDate(): Date {
 // Database-backed authentication middleware
 async function isAuthenticated(req: any, res: any, next: any) {
   try {
+    console.log("🔐 Authentication check for:", req.url);
+    console.log("🍪 All cookies:", req.cookies);
+    console.log("🔍 Session cookie:", req.cookies?.session);
+    
     const sessionId = req.cookies?.session;
     if (!sessionId) {
+      console.log("❌ No session cookie found");
       return res.status(401).json({ message: "Non autenticato" });
     }
     
     const session = await storage.getSession(sessionId);
+    console.log("🗂️ Session found:", !!session);
     
     if (!session) {
+      console.log("❌ Invalid session ID");
       return res.status(401).json({ message: "Non autenticato" });
     }
     
     // Mock user object to match what would come from Replit Auth
     const userId = (session.sess as any).userId;
+    console.log("✅ User authenticated:", userId);
     req.user = {
       claims: {
         sub: userId
