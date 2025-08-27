@@ -476,28 +476,59 @@ OBBLIGATORIO INCLUDERE NEL JSON FINALE:
     "height": ${request.userProfile.height},
     "currentBMI": ${request.nutritionalNeeds.bmi},
     "bmiCategory": "${request.nutritionalNeeds.healthStatus}",
-    "idealWeight": ${request.nutritionalNeeds.idealWeight},
+    "scientificIdealWeight": ${calculatedIdealWeight},
     "targetWeight": ${request.nutritionalNeeds.weightGoal},
     "weightToLose": ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)},
     "estimatedTimeWeeks": ${Math.ceil((parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal) / 0.75)}
   },
+  "progressiveGoals": {
+    "idealWeightCalculation": "Peso ideale calcolato con formula Robinson per donne (altezza ${request.userProfile.height}cm, età ${request.userProfile.age} anni): ${calculatedIdealWeight}kg",
+    "comparisonMessage": "${calculatedIdealWeight !== request.nutritionalNeeds.weightGoal ? 
+      'Il tuo peso ideale scientificamente calcolato è ' + calculatedIdealWeight + 'kg, diverso dal tuo obiettivo attuale di ' + request.nutritionalNeeds.weightGoal + 'kg' : 
+      'Perfetto! Il tuo obiettivo coincide con il peso ideale calcolato'}",
+    "progressiveSteps": [
+${progressiveSteps.map(step => `
+      {
+        "phaseNumber": ${step.stepNumber},
+        "targetWeight": "${step.targetWeight}kg",
+        "duration": "${step.weeksDuration} settimane", 
+        "description": "${step.description}",
+        "advice": "Quando raggiungi ${step.targetWeight}kg, aggiorna immediatamente il tuo peso nell'app per ricalcolare le grammature precise!"
+      }`).join(',')}
+    ]
+  },
+  "dataUpdateInstructions": {
+    "importance": "FONDAMENTALE: Aggiorna i tuoi dati personali ogni volta che raggiungi un obiettivo intermedio per mantenere le grammature micrometriche sempre precise.",
+    "whenToUpdate": [
+      "Appena raggiungi il peso dell'obiettivo intermedio",
+      "Ogni 2-3 settimane per monitorare i progressi",
+      "Se cambi abitudini alimentari o livello di attività fisica",
+      "Se hai variazioni significative di peso (anche 500g)"
+    ],
+    "whatToUpdate": [
+      "Peso attuale (fondamentale per ricalcolo grammature)",
+      "Frequenza esercizio settimanale",
+      "Orari dei pasti se cambiati",
+      "Preferenze alimentari o esclusioni"
+    ],
+    "whyImportant": "Il sistema Gazzella ricalcola automaticamente le grammature precise per il tuo nuovo peso, garantendo la massima efficacia e personalizzazione. Anche 100g di differenza possono richiedere aggiustamenti nelle porzioni!"
+  },
   "dietExplanation": {
-    "method": "Metodo Gazzella - Tabella Ufficiale 2025",
+    "method": "Protocollo Gazzella basato sulla tabella ufficiale 2025",
     "principles": [
-      "Proteine + carboidrati complessi in ogni pasto principale",
-      "Colazioni salate mercoledì e sabato con pane integrale",
-      "5 pasti al giorno con grammature personalizzate",
-      "Combinazioni alimentari specifiche della tabella ufficiale",
-      "Cotture semplici e alimenti non processati"
+      "Ogni pasto contiene sempre proteine + carboidrati complessi",
+      "Colazioni salate incluse (mercoledì e sabato) come da tabella",
+      "Grammature personalizzate per BMI ${request.nutritionalNeeds.bmi} e peso ${request.userProfile.weight}kg",
+      "Eliminazione totale di legumi, latticini non previsti, alimenti processati",
+      "Cotture semplici e naturali per massima digeribilità"
     ],
     "expectedResults": [
-      "Perdita di peso graduale e sostenibile (0.5-1kg/settimana)",
-      "Miglioramento della composizione corporea",
+      "Perdita di peso graduale e sostenibile, miglioramento della composizione corporea",
       "Stabilizzazione dell'energia durante la giornata",
-      "Riduzione delle voglie e degli attacchi di fame",
-      "Ottimizzazione del metabolismo"
-    ],
-    "timeToGoal": "${Math.ceil((parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal) / 0.75)} settimane per raggiungere ${request.nutritionalNeeds.weightGoal}kg (perdita sana 0.75kg/settimana)"
+      "Riduzione significativa delle voglie e degli attacchi di fame",
+      "Ottimizzazione del metabolismo e miglioramento della digestione",
+      "Raggiungimento progressivo degli obiettivi intermedi"
+    ]
   },
   "days": [...]
 }
