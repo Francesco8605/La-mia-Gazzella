@@ -22,6 +22,7 @@ import MyMealPlans from "@/pages/my-meal-plans";
 import UpdateProfile from "@/pages/update-profile";
 import Auth from "@/pages/auth";
 import ForgotPassword from "@/pages/forgot-password";
+import ChangePassword from "@/pages/change-password";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
 import CancelSubscription from "@/pages/cancel-subscription";
@@ -215,6 +216,10 @@ function Router() {
         
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
+        
+        {/* Password Management */}
+        <Route path="/change-password" component={ChangePassword} />
+        <Route path="/cambia-password" component={ChangePassword} />
         
         <Route component={NotFound} />
       </Switch>

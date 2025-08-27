@@ -348,6 +348,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore durante il recupero della password" });
     }
   });
+
+  // Change Password
+  app.post("/api/auth/change-password", isAuthenticated, async (req: any, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: "Password corrente e nuova password sono obbligatorie" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "La nuova password deve essere almeno 6 caratteri" });
+      }
+
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      // Check current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isCurrentPasswordValid) {
+        return res.status(400).json({ message: "Password corrente non corretta" });
+      }
+
+      // Hash new password and update
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      await storage.updateUserPassword(userId, hashedNewPassword);
+
+      res.json({ message: "Password aggiornata con successo" });
+    } catch (error) {
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Errore durante il cambio password" });
+    }
+  });
   
   // User Profiles
   app.get("/api/user-profiles/current", isAuthenticated, async (req: any, res) => {
