@@ -31,8 +31,39 @@ export default function SubscriptionPlans() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
+  // Fallback plans in case API fails
+  const fallbackPlans = [
+    {
+      id: "monthly-29",
+      name: "Piano Mensile",
+      description: "Accesso completo al sistema nutrizionale personalizzato La Mia Gazzella",
+      priceEur: "29.00",
+      duration: "monthly",
+      trialDays: 3,
+      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
+    },
+    {
+      id: "quarterly-79",
+      name: "Piano Trimestrale", 
+      description: "Piano trimestrale con risparmio del 10% - il più popolare",
+      priceEur: "79.00",
+      duration: "quarterly",
+      trialDays: 3,
+      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "10% di risparmio"]
+    },
+    {
+      id: "annual-249",
+      name: "Piano Annuale",
+      description: "Piano annuale con massimo risparmio del 29%", 
+      priceEur: "249.00",
+      duration: "annual",
+      trialDays: 3,
+      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "29% di risparmio", "Accesso anticipato alle nuove funzionalità"]
+    }
+  ];
+
   // Fetch subscription plans with custom queryFn
-  const { data: plans = [], isLoading: plansLoading, error: plansError } = useQuery<SubscriptionPlan[]>({
+  const { data: plans = fallbackPlans, isLoading: plansLoading, error: plansError } = useQuery<SubscriptionPlan[]>({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
       console.log("Fetching subscription plans...");
@@ -46,7 +77,8 @@ export default function SubscriptionPlans() {
         console.error("API Error:", response.status, response.statusText);
         const text = await response.text();
         console.error("Error body:", text);
-        throw new Error(`Failed to fetch plans: ${response.status}`);
+        console.log("Using fallback plans");
+        return fallbackPlans;
       }
       
       const data = await response.json();

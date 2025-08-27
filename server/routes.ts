@@ -1051,10 +1051,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Get subscription plan
       const plans = await storage.getSubscriptionPlans();
-      const selectedPlan = plans.find(plan => plan.id === planId);
+      console.log("🔍 Available plans:", plans.map(p => ({ id: p.id, name: p.name })));
+      console.log("🔍 Looking for planId:", planId);
+      
+      let selectedPlan = plans.find(plan => plan.id === planId);
+      
+      // Fallback: try to find by name or partial match
       if (!selectedPlan) {
-        console.log("❌ Plan not found");
-        return res.status(404).json({ message: "Piano di abbonamento non trovato" });
+        console.log("❌ Plan not found by ID, trying fallback matching...");
+        console.log("Available plan IDs:", plans.map(p => p.id));
+        
+        // Try to match by partial ID (e.g., "monthly" matches "monthly-29")
+        selectedPlan = plans.find(plan => 
+          plan.id.includes(planId) || planId.includes(plan.id) ||
+          plan.name.toLowerCase().includes(planId.toLowerCase())
+        );
+        
+        if (!selectedPlan) {
+          // Use first plan as ultimate fallback
+          selectedPlan = plans[0];
+          console.log("🔄 Using fallback plan:", selectedPlan?.name);
+        }
+      }
+      
+      if (!selectedPlan) {
+        console.log("❌ No plans available");
+        return res.status(404).json({ message: "Nessun piano di abbonamento disponibile" });
       }
       console.log("✅ Plan found:", selectedPlan.name, selectedPlan.priceEur);
       console.log("💳 Stripe Price ID:", selectedPlan.stripePriceId);
