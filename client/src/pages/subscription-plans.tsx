@@ -228,36 +228,6 @@ export default function SubscriptionPlans() {
   console.log("plans length:", plans?.length);
   console.log("==================");
 
-  // If no plans loaded, show fallback plans to ensure functionality
-  const fallbackPlans: SubscriptionPlan[] = [
-    {
-      id: "monthly-29",
-      name: "Piano Mensile",
-      description: "Accesso completo al sistema nutrizionale personalizzato La Mia Gazzella",
-      priceEur: "29.00",
-      duration: "monthly",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
-    },
-    {
-      id: "quarterly-79", 
-      name: "Piano Trimestrale",
-      description: "Piano trimestrale con risparmio del 10% - il più popolare",
-      priceEur: "79.00",
-      duration: "quarterly",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "10% di risparmio"]
-    },
-    {
-      id: "annual-249",
-      name: "Piano Annuale", 
-      description: "Piano annuale con massimo risparmio del 29%",
-      priceEur: "249.00",
-      duration: "annual",
-      trialDays: 3,
-      features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email prioritario", "29% di risparmio", "Accesso anticipato alle nuove funzionalità"]
-    }
-  ];
 
   // Use API plans if available, otherwise use fallback
   const displayPlans = (Array.isArray(plans) && plans.length > 0) ? plans : fallbackPlans;
