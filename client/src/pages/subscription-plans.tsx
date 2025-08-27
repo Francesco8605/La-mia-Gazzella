@@ -31,9 +31,28 @@ export default function SubscriptionPlans() {
   const { toast } = useToast();
   const { user, isAuthenticated } = useAuth();
 
-  // Fetch subscription plans
-  const { data: plans = [], isLoading: plansLoading } = useQuery<SubscriptionPlan[]>({
-    queryKey: ["/api/subscription-plans"],
+  // Fetch subscription plans with custom queryFn
+  const { data: plans = [], isLoading: plansLoading, error: plansError } = useQuery<SubscriptionPlan[]>({
+    queryKey: ["subscription-plans"],
+    queryFn: async () => {
+      console.log("Fetching subscription plans...");
+      const response = await fetch("/api/subscription-plans", {
+        credentials: "include",
+      });
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+      
+      if (!response.ok) {
+        console.error("API Error:", response.status, response.statusText);
+        const text = await response.text();
+        console.error("Error body:", text);
+        throw new Error(`Failed to fetch plans: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Fetched plans:", data);
+      return data;
+    },
   });
 
   // Fetch user subscription status
@@ -145,6 +164,7 @@ export default function SubscriptionPlans() {
   // Debug logging for production
   console.log("=== DEBUG PIANI ===");
   console.log("plansLoading:", plansLoading);
+  console.log("plansError:", plansError);
   console.log("plans:", plans);
   console.log("plans type:", typeof plans);
   console.log("is array:", Array.isArray(plans));
