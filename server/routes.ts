@@ -2,7 +2,9 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
+import { sendVerificationEmail } from "./emailService";
 import OpenAI from "openai";
+import bcrypt from "bcrypt";
 import { 
   insertUserProfileSchema, 
   insertMealPlanSchema, 
@@ -10,6 +12,7 @@ import {
   insertWeightEntrySchema,
   type User 
 } from "@shared/schema";
+import { z } from "zod";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -31,6 +34,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Email signup route
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const signupSchema = z.object({
+        email: z.string().email(),
+        password: z.string().min(8),
+        firstName: z.string().min(2),
+        lastName: z.string().min(2),
+      });
+
+      const { email, password, firstName, lastName } = signupSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "Un account con questa email esiste già" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 12);
+
+      // Create user
+      const user = await storage.createEmailUser(email, hashedPassword, firstName, lastName);
+
+      // Send verification email
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const emailSent = await sendVerificationEmail(email, user.emailVerificationToken!, baseUrl);
+
+      if (!emailSent) {
+        console.error("Failed to send verification email");
+        // Don't fail the signup, user can request resend
+      }
+
+      res.json({ 
+        message: "Account creato! Controlla la tua email per verificare l'account.",
+        userId: user.id
+      });
+    } catch (error: any) {
+      console.error("Signup error:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Dati di registrazione non validi" });
+      }
+      res.status(500).json({ message: "Errore durante la registrazione" });
+    }
+  });
+
+  // Email verification route
+  app.post("/api/auth/verify-email", async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token) {
+        return res.status(400).json({ message: "Token di verifica richiesto" });
+      }
+
+      const user = await storage.verifyEmailUser(token);
+      
+      if (!user) {
+        return res.status(400).json({ message: "Token di verifica non valido o scaduto" });
+      }
+
+      res.json({ 
+        message: "Email verificata con successo!",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        }
+      });
+    } catch (error) {
+      console.error("Email verification error:", error);
+      res.status(500).json({ message: "Errore durante la verifica" });
+    }
+  });
+
+  // Email login route
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      const user = await storage.getUserByEmail(email);
+      if (!user || user.authProvider !== "email") {
+        return res.status(401).json({ message: "Email o password non corretti" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(401).json({ message: "Account non verificato. Controlla la tua email." });
+      }
+
+      const passwordMatch = await bcrypt.compare(password, user.password!);
+      if (!passwordMatch) {
+        return res.status(401).json({ message: "Email o password non corretti" });
+      }
+
+      // Create session manually for email users
+      (req.session as any).emailUserId = user.id;
+      
+      res.json({ 
+        message: "Accesso effettuato con successo!",
+        user: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Errore durante l'accesso" });
     }
   });
 

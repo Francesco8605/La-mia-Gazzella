@@ -20,15 +20,27 @@ export default function Landing() {
             secondo il Protocollo Gazzella
           </p>
           
-          <Button
-            size="lg"
-            onClick={() => window.location.href = '/api/login'}
-            className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg"
-            data-testid="login-button"
-          >
-            <User className="mr-2" size={20} />
-            Inizia Ora - Accedi Gratis
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => window.location.href = '/signup'}
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg"
+              data-testid="signup-button"
+            >
+              <User className="mr-2" size={20} />
+              Registrati Gratis
+            </Button>
+            
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => window.location.href = '/api/login'}
+              className="border-primary text-primary hover:bg-primary/10 px-8 py-4 text-lg"
+              data-testid="replit-login-button"
+            >
+              Accedi con Replit
+            </Button>
+          </div>
         </div>
 
         {/* Features Grid */}
@@ -118,15 +130,27 @@ export default function Landing() {
             Unisciti a migliaia di donne che hanno trasformato la loro salute
           </p>
           
-          <Button
-            size="lg"
-            onClick={() => window.location.href = '/api/login'}
-            className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg"
-            data-testid="cta-login-button"
-          >
-            <User className="mr-2" size={20} />
-            Accedi e Inizia Gratis
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => window.location.href = '/signup'}
+              className="bg-primary hover:bg-primary/90 text-white px-8 py-4 text-lg"
+              data-testid="cta-signup-button"
+            >
+              <User className="mr-2" size={20} />
+              Registrati Ora
+            </Button>
+            
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => window.location.href = '/login'}
+              className="border-primary text-primary hover:bg-primary/10 px-8 py-4 text-lg"
+              data-testid="cta-login-button"
+            >
+              Hai già un account?
+            </Button>
+          </div>
           
           <p className="text-sm text-slate-500 mt-4">
             * Registrazione gratuita con Replit • Nessuna carta di credito richiesta

@@ -9,6 +9,9 @@ import { InstallPWABanner } from "@/components/install-pwa-banner";
 import { useAuth } from "@/hooks/useAuth";
 import Landing from "@/pages/landing";
 import Home from "@/pages/home";
+import Signup from "@/pages/signup";
+import Login from "@/pages/login";
+import VerifyEmail from "@/pages/verify-email";
 import MealPlan from "@/pages/meal-plan";
 import RecipeDetail from "@/pages/recipe-detail";
 import RecipeGenerator from "@/pages/recipe-generator";
@@ -28,6 +31,14 @@ function Router() {
     <div className="min-h-screen">
       <Navigation />
       <Switch>
+        {/* Public routes */}
+        <Route path="/signup" component={Signup} />
+        <Route path="/login" component={Login} />
+        <Route path="/verify-email" component={VerifyEmail} />
+        <Route path="/privacy-policy" component={PrivacyPolicy} />
+        <Route path="/terms-of-service" component={TermsOfService} />
+        
+        {/* Conditional routes based on auth */}
         {isLoading || !isAuthenticated ? (
           <Route path="/" component={Landing} />
         ) : (
@@ -56,8 +67,6 @@ function Router() {
             <Route path="/recipe/:id" component={RecipeDetail} />
             <Route path="/ai-chat" component={AIChat} />
             <Route path="/assistente-nutrizionale" component={AIChat} />
-            <Route path="/privacy-policy" component={PrivacyPolicy} />
-            <Route path="/terms-of-service" component={TermsOfService} />
           </>
         )}
         <Route component={NotFound} />

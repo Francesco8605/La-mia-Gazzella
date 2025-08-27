@@ -75,15 +75,25 @@ export default function Navigation() {
                     </Button>
                   </div>
                 ) : (
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => window.location.href = '/api/login'}
-                    className="bg-primary hover:bg-primary/90"
-                  >
-                    <User size={16} className="mr-2" />
-                    Accedi
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.location.href = '/login'}
+                      className="text-slate-700 hover:text-primary"
+                    >
+                      Accedi
+                    </Button>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => window.location.href = '/signup'}
+                      className="bg-primary hover:bg-primary/90"
+                    >
+                      <User size={16} className="mr-2" />
+                      Registrati
+                    </Button>
+                  </div>
                 )}
               </>
             )}
@@ -153,15 +163,25 @@ export default function Navigation() {
                       </Button>
                     </div>
                   ) : (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => window.location.href = '/api/login'}
-                      className="w-full bg-primary hover:bg-primary/90"
-                    >
-                      <User size={16} className="mr-2" />
-                      Accedi
-                    </Button>
+                    <div className="space-y-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.location.href = '/login'}
+                        className="w-full"
+                      >
+                        Accedi
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => window.location.href = '/signup'}
+                        className="w-full bg-primary hover:bg-primary/90"
+                      >
+                        <User size={16} className="mr-2" />
+                        Registrati
+                      </Button>
+                    </div>
                   )}
                 </>
               )}

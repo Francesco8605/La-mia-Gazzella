@@ -22,7 +22,11 @@ import { eq } from "drizzle-orm";
 export interface IStorage {
   // User operations (mandatory for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  createEmailUser(email: string, password: string, firstName?: string, lastName?: string): Promise<User>;
+  verifyEmailUser(token: string): Promise<User | undefined>;
+  updateEmailVerificationToken(userId: string, token: string): Promise<void>;
   
   // User Profiles
   getUserProfile(userId: string): Promise<UserProfile | undefined>;
@@ -61,6 +65,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     const [user] = await db
       .insert(users)
@@ -74,6 +83,45 @@ export class DatabaseStorage implements IStorage {
       })
       .returning();
     return user;
+  }
+
+  async createEmailUser(email: string, password: string, firstName?: string, lastName?: string): Promise<User> {
+    const verificationToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    const [user] = await db
+      .insert(users)
+      .values({
+        email,
+        password, // In production, questo dovrebbe essere hashato
+        firstName,
+        lastName,
+        authProvider: "email",
+        emailVerificationToken: verificationToken,
+        emailVerified: null, // null = non verificato
+      })
+      .returning();
+    return user;
+  }
+
+  async verifyEmailUser(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        emailVerified: new Date(),
+        emailVerificationToken: null,
+      })
+      .where(eq(users.emailVerificationToken, token))
+      .returning();
+    return user;
+  }
+
+  async updateEmailVerificationToken(userId: string, token: string): Promise<void> {
+    await db
+      .update(users)
+      .set({
+        emailVerificationToken: token,
+      })
+      .where(eq(users.id, userId));
   }
 
   // User Profiles
