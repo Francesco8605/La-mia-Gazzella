@@ -12,12 +12,12 @@ export default function Navigation() {
 
   const navItems = [
     { href: "/", label: "Dashboard" },
+    { href: "/genera-piano", label: "Genera Piano" },
+    { href: "/piani-personalizzati", label: "I Miei Piani" },
     { href: "/recipe-generator", label: "Genera Ricette" },
-    { href: "/piani-personalizzati", label: "I Miei Piani Personalizzati" },
-    { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
-    { href: "/cambia-password", label: "Cambia Password" },
     { href: "/recipes", label: "Ricette" },
-    { href: "/assistente-nutrizionale", label: "Consulente Nutrizionale" },
+    { href: "/assistente-nutrizionale", label: "Consulente AI" },
+    { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/piani-abbonamento", label: "Abbonamenti" },
   ];
 
