@@ -1,4 +1,4 @@
-import { Mail, Settings } from "lucide-react";
+import { Mail, Settings, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -44,7 +44,7 @@ export default function Home() {
                 data-testid="genera-piano-button"
                 aria-label="Genera il tuo piano nutrizionale personalizzato"
               >
-                <img src={healthyMealIcon} alt="Piano nutrizionale" className="h-8 w-8 rounded-lg" />
+                <img src={healthyMealIcon} alt="Piano nutrizionale" className="h-12 w-12 rounded-lg" />
                 <span className="text-white drop-shadow-lg text-sm font-bold">Genera Piano</span>
               </Button>
             </Link>
@@ -54,7 +54,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="i-miei-piani-button"
               >
-                <img src={mealPlansIcon} alt="I miei piani" className="h-8 w-8 rounded-lg" />
+                <img src={mealPlansIcon} alt="I miei piani" className="h-12 w-12 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">I Miei Piani</span>
               </Button>
             </Link>
@@ -64,7 +64,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="ai-assistant-button"
               >
-                <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-8 w-8 rounded-lg" />
+                <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-12 w-12 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm text-center">Consulente Nutrizionale</span>
               </Button>
             </Link>
@@ -74,7 +74,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="il-mio-profilo-button"
               >
-                <img src={userProfileIcon} alt="Il mio profilo" className="h-8 w-8 rounded-lg" />
+                <img src={userProfileIcon} alt="Il mio profilo" className="h-12 w-12 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">Il Mio Profilo</span>
               </Button>
             </Link>
@@ -84,7 +84,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="genera-ricette-button"
               >
-                <img src={recipesIcon} alt="Genera ricette" className="h-8 w-8 rounded-lg" />
+                <img src={recipesIcon} alt="Genera ricette" className="h-12 w-12 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">Genera Ricette</span>
               </Button>
             </Link>
