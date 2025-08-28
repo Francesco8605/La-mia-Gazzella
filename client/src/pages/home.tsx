@@ -122,21 +122,47 @@ export default function Home() {
           </div>
 
           {/* Main Action Button - Featured */}
-          <div className="mb-16">
-            <Link href="/genera-piano" className="group block">
+          <div className="mb-16 relative">
+            {/* Decorative background glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-300/20 via-pink-300/20 to-purple-300/20 blur-3xl rounded-full transform scale-110"></div>
+            
+            <Link href="/genera-piano" className="group block relative">
               <Button
                 size="lg"
-                className="mx-auto w-full max-w-lg bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-8 py-10 rounded-3xl shadow-2xl hover:shadow-rose-500/25 transform group-hover:scale-105 transition-all duration-500 backdrop-blur-sm border border-white/10 flex flex-col items-center gap-4"
+                className="mx-auto w-full max-w-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-12 py-12 rounded-3xl shadow-2xl hover:shadow-rose-500/40 transform group-hover:scale-105 transition-all duration-700 backdrop-blur-sm border-2 border-white/20 flex flex-col items-center gap-6 relative overflow-hidden"
                 data-testid="genera-piano-button"
                 aria-label="Inizia la tua trasformazione ora"
               >
+                {/* Animated background shimmer */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                
+                {/* Icon section with enhanced styling */}
                 <div className="relative">
-                  <img src={healthyMealIcon} alt="Trasformazione nutrizionale" className="h-20 w-20 rounded-2xl shadow-xl group-hover:rotate-3 transition-transform duration-300" />
-                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full animate-pulse">✨ NUOVA TE</div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-3xl blur-xl"></div>
+                  <img src={healthyMealIcon} alt="Trasformazione nutrizionale" className="relative h-24 w-24 rounded-3xl shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" />
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-bold px-4 py-2 rounded-full animate-bounce shadow-lg">
+                    ✨ NUOVA TE
+                  </div>
                 </div>
-                <span className="text-white drop-shadow-lg text-xl font-bold">🔥 INIZIA LA TUA TRASFORMAZIONE</span>
-                <span className="text-white drop-shadow-lg text-lg font-semibold">Genera il Tuo Piano Personalizzato</span>
-                <span className="text-rose-100 text-base font-medium opacity-90">Piano personalizzato in 30 secondi - Risultati in 21 giorni</span>
+                
+                {/* Text content with improved hierarchy */}
+                <div className="text-center space-y-3">
+                  <div className="text-2xl md:text-3xl font-black tracking-wide drop-shadow-lg">
+                    🔥 INIZIA LA TUA TRASFORMAZIONE
+                  </div>
+                  <div className="text-xl md:text-2xl font-bold text-yellow-100 drop-shadow-md">
+                    Genera il Tuo Piano Personalizzato
+                  </div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 mt-4">
+                    <div className="text-white/90 text-lg font-semibold">Piano in 30 secondi</div>
+                    <div className="text-rose-100 text-base">Risultati visibili in 21 giorni</div>
+                  </div>
+                </div>
+                
+                {/* Sparkle animation */}
+                <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">✨</div>
+                <div className="absolute bottom-4 left-4 text-yellow-300 animate-pulse text-xl delay-300">💫</div>
+                <div className="absolute top-1/2 right-8 text-yellow-300 animate-pulse text-lg delay-700">⭐</div>
               </Button>
             </Link>
           </div>
