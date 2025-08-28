@@ -9,6 +9,7 @@ import mealPlansIcon from "@assets/generated_images/meal_plans_documents_icon_b8
 import nutritionConsultationIcon from "@assets/generated_images/nutrition_consultation_icon_41a7d43d.png";
 import userProfileIcon from "@assets/generated_images/user_profile_settings_icon_5794fd86.png";
 import recipesIcon from "@assets/generated_images/healthy_recipes_book_icon_8df496c1.png";
+import womanBackgroundImage from "@assets/generated_images/Woman_holding_smartphone_background_9710f43b.png";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -18,12 +19,20 @@ export default function Home() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 mb-16">
         <div className="text-center max-w-4xl mx-auto animate-slide-up">
-          {/* Logo Image */}
-          <div className="mb-8 flex justify-center">
+          {/* Logo Image with Background */}
+          <div className="mb-8 flex justify-center relative">
+            <div 
+              className="absolute inset-0 w-80 h-80 mx-auto rounded-3xl opacity-20 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url(${womanBackgroundImage})`,
+                filter: 'blur(2px)',
+                zIndex: 0
+              }}
+            />
             <img 
               src={logoGazzella} 
               alt="Logo La Mia Gazzella - Assistente Nutrizionale Personalizzato per la pianificazione alimentare" 
-              className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full shadow-2xl glass-morphism p-4 animate-float"
+              className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full shadow-2xl glass-morphism p-4 animate-float relative z-10"
               data-testid="hero-logo"
               role="img"
             />
