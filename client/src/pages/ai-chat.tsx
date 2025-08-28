@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Send, Bot, User, Heart, AlertTriangle, Loader2 } from "lucide-react";
+import lauraProfileImage from "@assets/0ADDBA68-68CF-4572-8888-BB7E018FE99E_1_105_c_1756389814359.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -165,15 +166,19 @@ export default function AIChat() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full text-white">
-            <Bot className="h-6 w-6" />
+          <div className="relative w-12 h-12 rounded-full overflow-hidden shadow-lg ring-2 ring-pink-500/30">
+            <img 
+              src={lauraProfileImage} 
+              alt="Laura - Consulente Nutrizionale" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Consulente Nutrizionale Gazzella
+              Laura - Consulente Nutrizionale Gazzella
             </h1>
             <p className="text-muted-foreground">
-              Il tuo consulente nutrizionale personale basato sul Manuale della Gazzella
+              La tua consulente nutrizionale personale basata sul Manuale della Gazzella
             </p>
           </div>
         </div>
@@ -245,8 +250,14 @@ export default function AIChat() {
             <div className="space-y-4">
               {messages.length === 0 && (
                 <div className="text-center py-12">
-                  <Bot className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Ciao! Sono il tuo Consulente Nutrizionale</h3>
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden shadow-xl ring-4 ring-pink-500/20">
+                    <img 
+                      src={lauraProfileImage} 
+                      alt="Laura - Consulente Nutrizionale" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2">Ciao! Sono Laura, la tua Consulente Nutrizionale</h3>
                   <p className="text-muted-foreground max-w-md mx-auto">
                     Sono qui per aiutarti con domande sul Manuale della Gazzella, i tuoi piani nutrizionali, 
                     ricette e tutto ciò che riguarda il tuo percorso di benessere.
@@ -265,12 +276,20 @@ export default function AIChat() {
                   key={message.id}
                   className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
                 >
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 ${
+                  <div className={`w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
                     message.role === "user" 
-                      ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white"
-                      : "bg-gradient-to-br from-pink-500 to-purple-600 text-white"
+                      ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center"
+                      : "shadow-md ring-1 ring-pink-500/30"
                   }`}>
-                    {message.role === "user" ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
+                    {message.role === "user" ? (
+                      <User className="h-4 w-4" />
+                    ) : (
+                      <img 
+                        src={lauraProfileImage} 
+                        alt="Laura" 
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
                   
                   <div className={`flex-1 max-w-[80%] ${message.role === "user" ? "text-right" : ""}`}>
@@ -299,8 +318,12 @@ export default function AIChat() {
               
               {isTyping && (
                 <div className="flex gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-600 text-white">
-                    <Bot className="h-4 w-4" />
+                  <div className="w-8 h-8 rounded-full overflow-hidden shadow-md ring-1 ring-pink-500/30">
+                    <img 
+                      src={lauraProfileImage} 
+                      alt="Laura" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="bg-muted p-3 rounded-lg">
                     <div className="flex gap-1">
