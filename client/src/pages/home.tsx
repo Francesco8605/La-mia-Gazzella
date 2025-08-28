@@ -1,4 +1,4 @@
-import { Mail, Settings, Sparkles } from "lucide-react";
+import { Mail, Settings, Star } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,7 +117,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center space-y-6">
             <div className="flex items-center justify-center space-x-2 mb-4">
-              <Sparkles className="text-secondary text-2xl" />
+              <Star className="text-secondary text-2xl" />
               <span className="font-bold text-2xl">La Mia Gazzella</span>
             </div>
             <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
