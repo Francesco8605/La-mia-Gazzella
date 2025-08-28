@@ -1,9 +1,14 @@
-import { Sparkles, Play, User, Mail, MessageCircle, Settings } from "lucide-react";
+import { Mail, Settings } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
+import healthyMealIcon from "@assets/generated_images/healthy_meal_plate_icon_6cac1eda.png";
+import mealPlansIcon from "@assets/generated_images/meal_plans_documents_icon_b817cb31.png";
+import nutritionConsultationIcon from "@assets/generated_images/nutrition_consultation_icon_41a7d43d.png";
+import userProfileIcon from "@assets/generated_images/user_profile_settings_icon_5794fd86.png";
+import recipesIcon from "@assets/generated_images/healthy_recipes_book_icon_8df496c1.png";
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
@@ -39,7 +44,7 @@ export default function Home() {
                 data-testid="genera-piano-button"
                 aria-label="Genera il tuo piano nutrizionale personalizzato"
               >
-                <Play className="h-6 w-6" />
+                <img src={healthyMealIcon} alt="Piano nutrizionale" className="h-8 w-8 rounded-lg" />
                 <span className="text-white drop-shadow-lg text-sm font-bold">Genera Piano</span>
               </Button>
             </Link>
@@ -49,7 +54,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="i-miei-piani-button"
               >
-                <User className="h-6 w-6 text-white" />
+                <img src={mealPlansIcon} alt="I miei piani" className="h-8 w-8 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">I Miei Piani</span>
               </Button>
             </Link>
@@ -59,7 +64,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="ai-assistant-button"
               >
-                <MessageCircle className="h-6 w-6 text-white" />
+                <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-8 w-8 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm text-center">Consulente Nutrizionale</span>
               </Button>
             </Link>
@@ -69,7 +74,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="il-mio-profilo-button"
               >
-                <Settings className="h-6 w-6 text-white" />
+                <img src={userProfileIcon} alt="Il mio profilo" className="h-8 w-8 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">Il Mio Profilo</span>
               </Button>
             </Link>
@@ -79,7 +84,7 @@ export default function Home() {
                 className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
                 data-testid="genera-ricette-button"
               >
-                <Sparkles className="h-6 w-6 text-white" />
+                <img src={recipesIcon} alt="Genera ricette" className="h-8 w-8 rounded-lg" />
                 <span className="text-white drop-shadow-lg font-bold text-sm">Genera Ricette</span>
               </Button>
             </Link>
