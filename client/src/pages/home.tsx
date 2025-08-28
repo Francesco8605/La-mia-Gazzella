@@ -278,14 +278,9 @@ export default function Home() {
             <p className="text-2xl font-bold text-slate-800 mb-4">
               🏆 Unisciti a più di 10.000 donne che hanno già trasformato la loro vita
             </p>
-            <p className="text-lg text-slate-600 mb-6">
+            <p className="text-lg text-slate-600">
               Il tuo futuro self ti ringrazierà per aver preso questa decisione oggi.
             </p>
-            <Link href="/piani-abbonamento">
-              <Button className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white font-bold px-8 py-4 rounded-2xl text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                🚀 Inizia la Tua Trasformazione Ora
-              </Button>
-            </Link>
           </div>
         </div>
       </section>
