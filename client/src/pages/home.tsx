@@ -122,14 +122,14 @@ export default function Home() {
           </div>
 
           {/* Main Action Button - Featured */}
-          <div className="mb-16 relative">
+          <div className="mb-12 md:mb-16 relative px-4">
             {/* Decorative background glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-300/20 via-pink-300/20 to-purple-300/20 blur-3xl rounded-full transform scale-110"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-300/20 via-pink-300/20 to-purple-300/20 blur-2xl md:blur-3xl rounded-full transform scale-110"></div>
             
             <Link href="/genera-piano" className="group block relative">
               <Button
                 size="lg"
-                className="mx-auto w-full max-w-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-12 py-12 rounded-3xl shadow-2xl hover:shadow-rose-500/40 transform group-hover:scale-105 transition-all duration-700 backdrop-blur-sm border-2 border-white/20 flex flex-col items-center gap-6 relative overflow-hidden"
+                className="mx-auto w-full max-w-sm md:max-w-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-6 md:px-12 py-8 md:py-12 rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl hover:shadow-rose-500/40 transform group-hover:scale-105 transition-all duration-500 md:duration-700 backdrop-blur-sm border border-white/20 md:border-2 flex flex-col items-center gap-4 md:gap-6 relative overflow-hidden"
                 data-testid="genera-piano-button"
                 aria-label="Inizia la tua trasformazione ora"
               >
@@ -138,31 +138,31 @@ export default function Home() {
                 
                 {/* Icon section with enhanced styling */}
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-3xl blur-xl"></div>
-                  <img src={healthyMealIcon} alt="Trasformazione nutrizionale" className="relative h-24 w-24 rounded-3xl shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" />
-                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-bold px-4 py-2 rounded-full animate-bounce shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-2xl md:rounded-3xl blur-lg md:blur-xl"></div>
+                  <img src={healthyMealIcon} alt="Trasformazione nutrizionale" className="relative h-16 w-16 md:h-24 md:w-24 rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" />
+                  <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs md:text-sm font-bold px-2 py-1 md:px-4 md:py-2 rounded-full animate-bounce shadow-lg">
                     ✨ NUOVA TE
                   </div>
                 </div>
                 
                 {/* Text content with improved hierarchy */}
-                <div className="text-center space-y-3">
-                  <div className="text-2xl md:text-3xl font-black tracking-wide drop-shadow-lg">
+                <div className="text-center space-y-2 md:space-y-3">
+                  <div className="text-lg md:text-3xl font-black tracking-wide drop-shadow-lg leading-tight">
                     🔥 INIZIA LA TUA TRASFORMAZIONE
                   </div>
-                  <div className="text-xl md:text-2xl font-bold text-yellow-100 drop-shadow-md">
+                  <div className="text-base md:text-2xl font-bold text-yellow-100 drop-shadow-md leading-tight">
                     Genera il Tuo Piano Personalizzato
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-3 mt-4">
-                    <div className="text-white/90 text-lg font-semibold">Piano in 30 secondi</div>
-                    <div className="text-rose-100 text-base">Risultati visibili in 21 giorni</div>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 py-2 md:px-6 md:py-3 mt-3 md:mt-4">
+                    <div className="text-white/90 text-sm md:text-lg font-semibold">Piano in 30 secondi</div>
+                    <div className="text-rose-100 text-xs md:text-base">Risultati visibili in 21 giorni</div>
                   </div>
                 </div>
                 
-                {/* Sparkle animation */}
-                <div className="absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">✨</div>
-                <div className="absolute bottom-4 left-4 text-yellow-300 animate-pulse text-xl delay-300">💫</div>
-                <div className="absolute top-1/2 right-8 text-yellow-300 animate-pulse text-lg delay-700">⭐</div>
+                {/* Sparkle animation - Hidden on small screens to avoid clutter */}
+                <div className="hidden md:block absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">✨</div>
+                <div className="hidden md:block absolute bottom-4 left-4 text-yellow-300 animate-pulse text-xl delay-300">💫</div>
+                <div className="hidden md:block absolute top-1/2 right-8 text-yellow-300 animate-pulse text-lg delay-700">⭐</div>
               </Button>
             </Link>
           </div>
