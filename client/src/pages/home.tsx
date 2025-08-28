@@ -36,57 +36,73 @@ export default function Home() {
           <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto">
             Pianificazione alimentare avanzata che si adatta al tuo stile di vita, alle tue preferenze alimentari e ai tuoi obiettivi di salute. Ottieni ricette personalizzate e piani nutrizionali in pochi secondi.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 justify-center items-center max-w-5xl mx-auto">
-            <Link href="/genera-piano" className="group">
+          {/* Main Action Button - Featured */}
+          <div className="mb-12">
+            <Link href="/genera-piano" className="group block">
               <Button
                 size="lg"
-                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 text-shadow-sm flex flex-col items-center gap-2"
+                className="mx-auto w-full max-w-sm bg-gradient-to-br from-emerald-500 via-green-500 to-teal-600 hover:from-emerald-600 hover:via-green-600 hover:to-teal-700 text-white font-bold px-8 py-8 rounded-3xl shadow-2xl hover:shadow-emerald-500/25 transform group-hover:scale-110 transition-all duration-500 backdrop-blur-sm border border-white/10 flex flex-col items-center gap-4 animate-pulse"
                 data-testid="genera-piano-button"
                 aria-label="Genera il tuo piano nutrizionale personalizzato"
               >
-                <img src={healthyMealIcon} alt="Piano nutrizionale" className="h-12 w-12 rounded-lg" />
-                <span className="text-white drop-shadow-lg text-sm font-bold">Genera Piano</span>
+                <div className="relative">
+                  <img src={healthyMealIcon} alt="Piano nutrizionale" className="h-16 w-16 rounded-2xl shadow-xl group-hover:rotate-3 transition-transform duration-300" />
+                  <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full animate-bounce">NEW</div>
+                </div>
+                <span className="text-white drop-shadow-lg text-lg font-bold">🚀 Genera il Tuo Piano</span>
+                <span className="text-emerald-100 text-sm font-medium opacity-90">Piano personalizzato in 30 secondi</span>
               </Button>
             </Link>
+          </div>
+
+          {/* Secondary Actions Grid */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
             <Link href="/piani-personalizzati" className="group">
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
-                data-testid="i-miei-piani-button"
-              >
-                <img src={mealPlansIcon} alt="I miei piani" className="h-12 w-12 rounded-lg" />
-                <span className="text-white drop-shadow-lg font-bold text-sm">I Miei Piani</span>
-              </Button>
+              <div className="relative backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-xl shadow-lg">
+                    <img src={mealPlansIcon} alt="I miei piani" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <span className="text-slate-700 font-bold text-sm">I Miei Piani</span>
+                  <span className="text-slate-500 text-xs">Visualizza piani salvati</span>
+                </div>
+              </div>
             </Link>
+
             <Link href="/assistente-nutrizionale" className="group">
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
-                data-testid="ai-assistant-button"
-              >
-                <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-12 w-12 rounded-lg" />
-                <span className="text-white drop-shadow-lg font-bold text-sm text-center">Consulente Nutrizionale</span>
-              </Button>
+              <div className="relative backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-4 rounded-xl shadow-lg">
+                    <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <span className="text-slate-700 font-bold text-sm">Consulente AI</span>
+                  <span className="text-slate-500 text-xs">Chat nutrizionale</span>
+                </div>
+              </div>
             </Link>
+
             <Link href="/aggiorna-profilo" className="group">
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
-                data-testid="il-mio-profilo-button"
-              >
-                <img src={userProfileIcon} alt="Il mio profilo" className="h-12 w-12 rounded-lg" />
-                <span className="text-white drop-shadow-lg font-bold text-sm">Il Mio Profilo</span>
-              </Button>
+              <div className="relative backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="bg-gradient-to-br from-orange-500 to-red-600 p-4 rounded-xl shadow-lg">
+                    <img src={userProfileIcon} alt="Il mio profilo" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <span className="text-slate-700 font-bold text-sm">Il Mio Profilo</span>
+                  <span className="text-slate-500 text-xs">Aggiorna dati personali</span>
+                </div>
+              </div>
             </Link>
+
             <Link href="/recipe-generator" className="group">
-              <Button
-                size="lg"
-                className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white font-bold px-4 py-6 rounded-xl shadow-lg hover:shadow-xl transform group-hover:scale-105 transition-all duration-300 flex flex-col items-center gap-2"
-                data-testid="genera-ricette-button"
-              >
-                <img src={recipesIcon} alt="Genera ricette" className="h-12 w-12 rounded-lg" />
-                <span className="text-white drop-shadow-lg font-bold text-sm">Genera Ricette</span>
-              </Button>
+              <div className="relative backdrop-blur-md bg-white/10 rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-xl shadow-lg">
+                    <img src={recipesIcon} alt="Genera ricette" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                  </div>
+                  <span className="text-slate-700 font-bold text-sm">Ricette Gazzella</span>
+                  <span className="text-slate-500 text-xs">Crea ricette personalizzate</span>
+                </div>
+              </div>
             </Link>
           </div>
         </div>
