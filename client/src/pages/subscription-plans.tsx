@@ -533,6 +533,8 @@ export default function SubscriptionPlans() {
                           amount={plan.priceEur}
                           currency="EUR"
                           intent="CAPTURE"
+                          planId={plan.id}
+                          isTrialAvailable={!userSubscription?.hasUsedTrial}
                         />
                       </div>
                     </div>

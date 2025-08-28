@@ -23,12 +23,16 @@ interface PayPalButtonProps {
   amount: string;
   currency: string;
   intent: string;
+  planId: string;
+  isTrialAvailable: boolean;
 }
 
 export default function PayPalButton({
   amount,
   currency,
   intent,
+  planId,
+  isTrialAvailable,
 }: PayPalButtonProps) {
   const createOrder = async () => {
     const orderPayload = {
@@ -113,11 +117,32 @@ export default function PayPalButton({
 
       const onClick = async () => {
         try {
-          const checkoutOptionsPromise = createOrder();
-          await paypalCheckout.start(
-            { paymentFlow: "auto" },
-            checkoutOptionsPromise,
-          );
+          // If trial is available, start trial instead of payment
+          if (isTrialAvailable) {
+            const response = await fetch("/paypal/start-trial", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
+              body: JSON.stringify({ planId }),
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+              // Trial activated successfully - redirect to success page
+              window.location.href = "/subscription-success";
+            } else {
+              console.error("Trial activation failed:", result);
+              alert(result.message || "Errore durante l'attivazione della prova gratuita");
+            }
+          } else {
+            // Regular PayPal payment flow
+            const checkoutOptionsPromise = createOrder();
+            await paypalCheckout.start(
+              { paymentFlow: "auto" },
+              checkoutOptionsPromise,
+            );
+          }
         } catch (e) {
           console.error(e);
         }
@@ -139,6 +164,20 @@ export default function PayPalButton({
     }
   };
 
-  return <paypal-button id="paypal-button"></paypal-button>;
+  return (
+    <div className="paypal-button-container">
+      {isTrialAvailable ? (
+        <button
+          id="paypal-button"
+          className="w-full bg-[#0070ba] hover:bg-[#005ea6] text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+        >
+          <span>🅿️</span>
+          Inizia Prova Gratuita con PayPal
+        </button>
+      ) : (
+        <paypal-button id="paypal-button"></paypal-button>
+      )}
+    </div>
+  );
 }
 // <END_EXACT_CODE>

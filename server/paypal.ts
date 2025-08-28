@@ -146,4 +146,28 @@ export async function loadPaypalDefault(req: Request, res: Response) {
     clientToken,
   });
 }
+
+export async function startPaypalTrial(req: Request, res: Response) {
+  try {
+    const { userId, planId } = req.body;
+
+    if (!userId || !planId) {
+      return res.status(400).json({ 
+        error: "UserId and PlanId are required for trial activation" 
+      });
+    }
+
+    // This function will activate trial in the database without PayPal payment
+    // The actual implementation will be handled in the routes file
+    res.json({ 
+      success: true, 
+      message: "Trial activation request received",
+      userId,
+      planId
+    });
+  } catch (error) {
+    console.error("Failed to start PayPal trial:", error);
+    res.status(500).json({ error: "Failed to start trial." });
+  }
+}
 // <END_EXACT_CODE>
