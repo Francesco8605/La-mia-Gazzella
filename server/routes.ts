@@ -585,6 +585,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse AI response to extract client profile and diet explanation
       const aiResponse = typeof aiMealPlan === 'string' ? JSON.parse(aiMealPlan) : aiMealPlan;
       
+      console.log("🤖 AI RESPONSE DEBUG:");
+      console.log("📋 AI Response Keys:", Object.keys(aiResponse || {}));
+      console.log("👤 Client Profile:", aiResponse.clientProfile);
+      console.log("🏆 Progressive Goals:", aiResponse.progressiveGoals);
+      console.log("📊 Data Update Instructions:", aiResponse.dataUpdateInstructions);
+      console.log("🎯 Scientific Ideal Weight:", aiResponse.clientProfile?.scientificIdealWeight);
+      
       // Save to storage with client profile and diet explanation
       const mealPlan = await storage.createMealPlan({
         userId: userId,
