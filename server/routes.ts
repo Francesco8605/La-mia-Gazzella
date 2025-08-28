@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { sendPasswordRecoveryEmail } from "./services/email";
-import { createPaypalOrder, capturePaypalOrder, loadPaypalDefault, startPaypalTrial } from "./paypal";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -1818,90 +1817,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ received: true });
   });
 
-  // PayPal Routes
-  app.get("/paypal/setup", async (req, res) => {
-    await loadPaypalDefault(req, res);
-  });
-
-  app.post("/paypal/order", async (req, res) => {
-    // Request body should contain: { intent, amount, currency }
-    await createPaypalOrder(req, res);
-  });
-
-  app.post("/paypal/order/:orderID/capture", async (req, res) => {
-    await capturePaypalOrder(req, res);
-  });
-
-  // PayPal Trial Activation (without immediate payment)
-  app.post("/paypal/start-trial", isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req as any).user.claims.sub;
-      const { planId } = req.body;
-
-      if (!planId) {
-        return res.status(400).json({ message: "Plan ID è obbligatorio" });
-      }
-
-      // Get user details
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "Utente non trovato" });
-      }
-
-      // Check if user has already used trial
-      if (user.hasUsedTrial === 'yes') {
-        return res.status(403).json({ 
-          message: "Hai già utilizzato il periodo di prova gratuito",
-          redirectToPayment: true
-        });
-      }
-
-      // Get plan details
-      const plans = await storage.getSubscriptionPlans();
-      const selectedPlan = plans.find(p => p.id === planId);
-      if (!selectedPlan) {
-        return res.status(404).json({ message: "Piano non trovato" });
-      }
-
-      // Activate trial for PayPal user
-      const now = new Date();
-      const trialDays = selectedPlan.trialDays || 3; // Default to 3 days if not set
-      const trialEndDate = new Date(now.getTime() + (trialDays * 24 * 60 * 60 * 1000));
-
-      const updateData = {
-        subscriptionStatus: 'trialing' as const,
-        subscriptionPlan: selectedPlan.id,
-        trialEndDate: trialEndDate,
-        hasUsedTrial: 'yes' as const,
-        paymentMethod: 'paypal'
-      };
-
-      await storage.updateUserStripeInfo(userId, updateData);
-
-      console.log(`🎯 PayPal trial activated for user ${user.email}:`, {
-        planId: selectedPlan.id,
-        trialEndDate: trialEndDate.toISOString(),
-        paymentMethod: 'paypal'
-      });
-
-      res.json({
-        success: true,
-        message: "Prova gratuita attivata con successo!",
-        trial: {
-          endDate: trialEndDate.toISOString(),
-          planName: selectedPlan.name,
-          paymentMethod: 'paypal'
-        }
-      });
-
-    } catch (error: any) {
-      console.error('❌ PayPal trial activation error:', error);
-      res.status(500).json({ 
-        message: "Errore durante l'attivazione della prova gratuita",
-        error: error?.message || 'Trial activation failed' 
-      });
-    }
-  });
 
   // Debug endpoint to check user subscription status
   app.get("/api/debug/user-subscription", isAuthenticated, async (req, res) => {

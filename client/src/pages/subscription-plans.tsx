@@ -7,7 +7,6 @@ import { CheckCircle, Crown, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
-import PayPalButton from "@/components/PayPalButton";
 
 interface SubscriptionPlan {
   id: string;
@@ -522,23 +521,6 @@ export default function SubscriptionPlans() {
                     )}
                   </Button>
 
-                  {/* PayPal Payment Option */}
-                  {!isCurrentPlan && (
-                    <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                      <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-3">
-                        Oppure paga con PayPal:
-                      </p>
-                      <div className="flex justify-center">
-                        <PayPalButton
-                          amount={plan.priceEur}
-                          currency="EUR"
-                          intent="CAPTURE"
-                          planId={plan.id}
-                          isTrialAvailable={!userSubscription?.hasUsedTrial}
-                        />
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             );
