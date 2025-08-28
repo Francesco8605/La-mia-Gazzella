@@ -83,6 +83,25 @@ export const mealPlans = pgTable("meal_plans", {
   dietPrinciples: json("diet_principles").$type<string[]>(),
   expectedResults: text("expected_results"),
   timeToGoal: varchar("time_to_goal"),
+  // New fields for enhanced goal tracking
+  scientificIdealWeight: numeric("scientific_ideal_weight", { precision: 5, scale: 1 }),
+  progressiveGoals: json("progressive_goals").$type<{
+    idealWeightCalculation: string;
+    comparisonMessage: string;
+    progressiveSteps: Array<{
+      phaseNumber: number;
+      targetWeight: string;
+      duration: string;
+      description: string;
+      advice: string;
+    }>;
+  }>(),
+  dataUpdateInstructions: json("data_update_instructions").$type<{
+    importance: string;
+    whenToUpdate: string[];
+    whatToUpdate: string[];
+    whyImportant: string;
+  }>(),
   // Legacy fields for backward compatibility
   bmi: text("bmi"),
   idealWeight: integer("ideal_weight"),

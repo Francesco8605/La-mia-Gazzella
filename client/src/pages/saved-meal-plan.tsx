@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, RefreshCw, Calendar, Target, Scale } from "lucide-react";
+import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
@@ -258,6 +258,128 @@ export default function SavedMealPlan() {
               </Card>
             )}
           </div>
+        )}
+
+        {/* Scientific Ideal Weight & Progressive Goals */}
+        {(mealPlan.scientificIdealWeight || mealPlan.progressiveGoals) && (
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Scientific Ideal Weight */}
+            {mealPlan.scientificIdealWeight && (
+              <Card className="bg-gradient-to-r from-cyan-50 to-teal-50 dark:from-cyan-900/20 dark:to-teal-900/20 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                    <Target className="w-5 h-5 mr-2 text-cyan-600" />
+                    Peso Forma Calcolato
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center p-4 bg-white/70 dark:bg-gray-800/70 rounded-lg">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Peso Ideale Scientifico</p>
+                    <p className="text-3xl font-bold text-cyan-600">{mealPlan.scientificIdealWeight}kg</p>
+                  </div>
+                  {mealPlan.progressiveGoals?.idealWeightCalculation && (
+                    <p className="text-sm text-gray-600 dark:text-gray-300 bg-cyan-50 dark:bg-cyan-900/20 p-3 rounded-lg">
+                      {mealPlan.progressiveGoals.idealWeightCalculation}
+                    </p>
+                  )}
+                  {mealPlan.progressiveGoals?.comparisonMessage && (
+                    <div className={`p-3 rounded-lg ${
+                      mealPlan.scientificIdealWeight === mealPlan.targetWeight 
+                        ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200' 
+                        : 'bg-amber-50 dark:bg-amber-900/20 text-amber-800 dark:text-amber-200'
+                    }`}>
+                      <p className="text-sm font-medium">{mealPlan.progressiveGoals.comparisonMessage}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Progressive Steps */}
+            {mealPlan.progressiveGoals?.progressiveSteps && mealPlan.progressiveGoals.progressiveSteps.length > 0 && (
+              <Card className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-0 shadow-xl">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                    <TrendingUp className="w-5 h-5 mr-2 text-emerald-600" />
+                    Obiettivi Progressivi
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {mealPlan.progressiveGoals.progressiveSteps.map((step, index) => (
+                    <div key={index} className="p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg border-l-4 border-emerald-500">
+                      <div className="flex justify-between items-start mb-2">
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-800">
+                          Fase {step.phaseNumber}
+                        </Badge>
+                        <span className="text-lg font-bold text-emerald-600">{step.targetWeight}</span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">{step.description}</p>
+                      <p className="text-xs text-emerald-600 font-medium">⏱️ {step.duration}</p>
+                      {step.advice && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 italic">{step.advice}</p>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Data Update Instructions */}
+        {mealPlan.dataUpdateInstructions && (
+          <Card className="bg-gradient-to-r from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 border-0 shadow-xl mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center text-gray-900 dark:text-white">
+                <AlertCircle className="w-5 h-5 mr-2 text-rose-600" />
+                Importante: Aggiorna i Tuoi Dati
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-rose-100 dark:bg-rose-900/30 rounded-lg border-l-4 border-rose-500">
+                <p className="font-semibold text-rose-800 dark:text-rose-200 mb-2">
+                  {mealPlan.dataUpdateInstructions.importance}
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center">
+                    <Lightbulb className="w-4 h-4 mr-1 text-amber-500" />
+                    Quando Aggiornare:
+                  </h4>
+                  <ul className="space-y-1">
+                    {mealPlan.dataUpdateInstructions.whenToUpdate.map((item, index) => (
+                      <li key={index} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
+                        <span className="text-rose-500 mr-2">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-2 flex items-center">
+                    <Target className="w-4 h-4 mr-1 text-blue-500" />
+                    Cosa Aggiornare:
+                  </h4>
+                  <ul className="space-y-1">
+                    {mealPlan.dataUpdateInstructions.whatToUpdate.map((item, index) => (
+                      <li key={index} className="text-sm text-gray-600 dark:text-gray-300 flex items-start">
+                        <span className="text-rose-500 mr-2">•</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-1">Perché è Importante:</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">{mealPlan.dataUpdateInstructions.whyImportant}</p>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Plan Summary */}
