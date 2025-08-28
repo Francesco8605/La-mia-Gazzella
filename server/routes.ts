@@ -585,12 +585,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse AI response to extract client profile and diet explanation
       const aiResponse = typeof aiMealPlan === 'string' ? JSON.parse(aiMealPlan) : aiMealPlan;
       
-      console.log("🤖 AI RESPONSE DEBUG:");
-      console.log("📋 AI Response Keys:", Object.keys(aiResponse || {}));
-      console.log("👤 Client Profile:", aiResponse.clientProfile);
-      console.log("🏆 Progressive Goals:", aiResponse.progressiveGoals);
-      console.log("📊 Data Update Instructions:", aiResponse.dataUpdateInstructions);
-      console.log("🎯 Scientific Ideal Weight:", aiResponse.clientProfile?.scientificIdealWeight);
+      // FALLBACK: Calculate missing data if AI doesn't provide it
+      const calculateIdealWeight = (height: number, age: number): number => {
+        // Formula di Robinson per donne 
+        let idealWeight = 49 + (1.7 * (height - 152.4) / 2.54);
+        // Correzione per età
+        if (age > 30) {
+          const ageCorrection = (age - 30) * 0.1;
+          idealWeight = idealWeight - ageCorrection;
+        }
+        return Math.max(45, Math.min(Math.round(idealWeight * 10) / 10, 70));
+      };
+      
+      const createProgressiveSteps = (currentWeight: number, targetWeight: number) => {
+        const weightToLose = currentWeight - targetWeight;
+        if (weightToLose <= 0) return [];
+        
+        const steps = [];
+        let remainingWeight = weightToLose;
+        let currentStepWeight = currentWeight;
+        let stepNumber = 1;
+        
+        while (remainingWeight > 0.5) {
+          const stepWeightLoss = remainingWeight > 6 ? 3 : remainingWeight > 3 ? 2 : remainingWeight;
+          const stepTarget = currentStepWeight - stepWeightLoss;
+          const weeksDuration = Math.ceil(stepWeightLoss / 0.5);
+          
+          steps.push({
+            phaseNumber: stepNumber,
+            targetWeight: `${Math.round(stepTarget * 10) / 10}kg`,
+            duration: `${weeksDuration} settimane`,
+            description: `Fase ${stepNumber}: Perdere ${stepWeightLoss.toFixed(1)}kg in ${weeksDuration} settimane`,
+            advice: `Quando raggiungi ${Math.round(stepTarget * 10) / 10}kg, aggiorna immediatamente il tuo peso nell'app per ricalcolare le grammature precise!`
+          });
+          
+          currentStepWeight = stepTarget;
+          remainingWeight -= stepWeightLoss;
+          stepNumber++;
+        }
+        return steps;
+      };
+      
+      // Generate fallback data
+      const scientificIdealWeight = calculateIdealWeight(validatedProfile.height, validatedProfile.age);
+      const progressiveSteps = createProgressiveSteps(validatedProfile.weight, nutritionalNeeds.weightGoal);
+      
+      const fallbackProgressiveGoals = {
+        idealWeightCalculation: `Peso ideale calcolato con formula Robinson per donne (altezza ${validatedProfile.height}cm, età ${validatedProfile.age} anni): ${scientificIdealWeight}kg`,
+        comparisonMessage: scientificIdealWeight !== nutritionalNeeds.weightGoal 
+          ? `Il tuo peso ideale scientificamente calcolato è ${scientificIdealWeight}kg, diverso dal tuo obiettivo attuale di ${nutritionalNeeds.weightGoal}kg`
+          : 'Perfetto! Il tuo obiettivo coincide con il peso ideale calcolato',
+        progressiveSteps: progressiveSteps
+      };
+      
+      const fallbackDataInstructions = {
+        importance: "FONDAMENTALE: Aggiorna i tuoi dati personali ogni volta che raggiungi un obiettivo intermedio per mantenere le grammature micrometriche sempre precise.",
+        whenToUpdate: [
+          "Appena raggiungi il peso dell'obiettivo intermedio",
+          "Ogni 2-3 settimane per monitorare i progressi", 
+          "Se cambi abitudini alimentari o livello di attività fisica",
+          "Se hai variazioni significative di peso (anche 500g)"
+        ],
+        whatToUpdate: [
+          "Peso attuale (fondamentale per ricalcolo grammature)",
+          "Frequenza esercizio settimanale",
+          "Orari dei pasti se cambiati",
+          "Preferenze alimentari o esclusioni"
+        ],
+        whyImportant: "Il sistema Gazzella ricalcola automaticamente le grammature precise per il tuo nuovo peso, garantendo la massima efficacia e personalizzazione. Anche 100g di differenza possono richiedere aggiustamenti nelle porzioni!"
+      };
+      
+      console.log("💡 FALLBACK DATA GENERATED:");
+      console.log("🎯 Scientific Ideal Weight:", scientificIdealWeight);
+      console.log("📈 Progressive Steps:", progressiveSteps.length);
+      console.log("📊 Data Instructions: READY");
       
       // Save to storage with client profile and diet explanation
       const mealPlan = await storage.createMealPlan({
@@ -614,11 +682,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expectedResults: Array.isArray(aiResponse.dietExplanation?.expectedResults) ? 
           aiResponse.dietExplanation.expectedResults.join(', ') : 
           aiResponse.dietExplanation?.expectedResults || "Perdita peso graduale e sostenibile",
-        // New enhanced fields from AI
-        scientificIdealWeight: aiResponse.clientProfile?.scientificIdealWeight ? 
-          String(aiResponse.clientProfile.scientificIdealWeight) : null,
-        progressiveGoals: aiResponse.progressiveGoals || null,
-        dataUpdateInstructions: aiResponse.dataUpdateInstructions || null,
+        // New enhanced fields - use fallback data generated by server
+        scientificIdealWeight: String(scientificIdealWeight),
+        progressiveGoals: fallbackProgressiveGoals,
+        dataUpdateInstructions: fallbackDataInstructions,
         // Legacy fields for backward compatibility
         bmi: nutritionalNeeds.bmi.toString(),
         idealWeight: nutritionalNeeds.idealWeight,
