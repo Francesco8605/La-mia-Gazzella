@@ -45,7 +45,7 @@ export default function AIChat() {
     if (!authLoading && !isAuthenticated) {
       toast({
         title: "Accesso Richiesto",
-        description: "Effettua il login per accedere al tuo consulente nutrizionale personale.",
+        description: "Effettua il login per accedere alla tua consulente nutrizionale personale.",
         variant: "destructive",
       });
       setTimeout(() => {
@@ -178,7 +178,7 @@ export default function AIChat() {
               Laura - Consulente Nutrizionale Gazzella
             </h1>
             <p className="text-muted-foreground">
-              La tua consulente nutrizionale personale basata sul Manuale della Gazzella
+              La tua consulente nutrizionale personale del Manuale della Gazzella
             </p>
           </div>
         </div>
@@ -227,7 +227,7 @@ export default function AIChat() {
                   Importante: Disclaimer Medico
                 </p>
                 <p className="text-orange-700 dark:text-orange-300">
-                  Questo assistente fornisce informazioni nutrizionali basate sul Manuale della Gazzella. 
+                  Questa consulente fornisce informazioni nutrizionali basate sul Manuale della Gazzella. 
                   Non sostituisce il parere medico professionale. Per problemi di salute gravi o condizioni 
                   mediche specifiche, consulta sempre un medico di persona.
                 </p>
@@ -240,7 +240,7 @@ export default function AIChat() {
       {/* Chat Interface */}
       <Card className="h-[600px] flex flex-col">
         <CardHeader>
-          <CardTitle className="text-lg">Chat con l'Assistente</CardTitle>
+          <CardTitle className="text-lg">Chat con Laura</CardTitle>
           <Separator />
         </CardHeader>
         

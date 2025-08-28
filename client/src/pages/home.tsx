@@ -210,8 +210,8 @@ export default function Home() {
                   <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-4 rounded-xl shadow-lg">
                     <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
                   </div>
-                  <span className="text-slate-700 font-bold text-sm">Consulente AI</span>
-                  <span className="text-slate-500 text-xs">Supporto 24/7</span>
+                  <span className="text-slate-700 font-bold text-sm">Consulente</span>
+                  <span className="text-slate-500 text-xs">Supporto nutrizionale</span>
                 </div>
               </div>
             </Link>
