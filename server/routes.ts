@@ -607,6 +607,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expectedResults: Array.isArray(aiResponse.dietExplanation?.expectedResults) ? 
           aiResponse.dietExplanation.expectedResults.join(', ') : 
           aiResponse.dietExplanation?.expectedResults || "Perdita peso graduale e sostenibile",
+        // New enhanced fields from AI
+        scientificIdealWeight: aiResponse.clientProfile?.scientificIdealWeight ? 
+          String(aiResponse.clientProfile.scientificIdealWeight) : null,
+        progressiveGoals: aiResponse.progressiveGoals || null,
+        dataUpdateInstructions: aiResponse.dataUpdateInstructions || null,
         // Legacy fields for backward compatibility
         bmi: nutritionalNeeds.bmi.toString(),
         idealWeight: nutritionalNeeds.idealWeight,
