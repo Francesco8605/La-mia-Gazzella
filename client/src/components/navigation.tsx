@@ -19,6 +19,7 @@ export default function Navigation() {
     { href: "/assistente-nutrizionale", label: "Consulente AI" },
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
     { href: "/piani-abbonamento", label: "Abbonamenti" },
+    { href: "/cambia-password", label: "Cambia Password" },
   ];
 
   return (

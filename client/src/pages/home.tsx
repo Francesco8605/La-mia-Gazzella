@@ -12,7 +12,7 @@ import recipesIcon from "@assets/generated_images/healthy_recipes_book_icon_8df4
 import womanBackgroundImage from "@assets/generated_images/Woman_holding_smartphone_background_9710f43b.png";
 
 export default function Home() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   
   return (
     <div className="pt-24 pb-12">
@@ -37,6 +37,16 @@ export default function Home() {
               role="img"
             />
           </div>
+          
+          {/* Personalized Greeting */}
+          {user && (
+            <div className="mb-4">
+              <p className="text-lg md:text-xl text-slate-600 font-medium">
+                Ciao {user.firstName || user.email.split('@')[0]}! 👋
+              </p>
+            </div>
+          )}
+          
           <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-red-600 via-green-600 to-emerald-600 bg-clip-text text-transparent mb-6 leading-tight" role="banner">
             Il Tuo Assistente
             <br />
