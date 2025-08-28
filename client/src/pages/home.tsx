@@ -135,6 +135,7 @@ export default function Home() {
                   <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 text-xs font-bold px-3 py-1 rounded-full animate-pulse">✨ NUOVA TE</div>
                 </div>
                 <span className="text-white drop-shadow-lg text-xl font-bold">🔥 INIZIA LA TUA TRASFORMAZIONE</span>
+                <span className="text-white drop-shadow-lg text-lg font-semibold">Genera il Tuo Piano Personalizzato</span>
                 <span className="text-rose-100 text-base font-medium opacity-90">Piano personalizzato in 30 secondi - Risultati in 21 giorni</span>
               </Button>
             </Link>
