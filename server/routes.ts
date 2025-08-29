@@ -339,7 +339,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.updateUserPassword(user.id, hashedPassword);
 
       // Send recovery email
-      await sendPasswordRecoveryEmail(user.email, user.username, tempPassword);
+      await sendPasswordRecoveryEmail(user.email, user.username || user.email, tempPassword);
 
       res.json({ message: "Se l'email esiste, riceverai la password a breve" });
     } catch (error) {
@@ -1269,8 +1269,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!customerId) {
         console.log("🆕 Creating new Stripe customer...");
         const customer = await stripe.customers.create({
-          email: user.email,
-          name: user.username,
+          email: user.email || '',
+          name: user.username || user.email || 'La Mia Gazzella User',
           metadata: {
             userId: userId,
             environment: process.env.NODE_ENV || 'development'
