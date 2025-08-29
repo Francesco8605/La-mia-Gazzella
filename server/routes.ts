@@ -151,25 +151,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) || 'N/A'
       });
       
-      const { username, email, password } = req.body;
+      const { email, password } = req.body;
       
       // Validate input
-      if (!username || !email || !password) {
+      if (!email || !password) {
         console.log("❌ Missing required fields");
-        return res.status(400).json({ message: "Username, email e password sono obbligatori" });
+        return res.status(400).json({ message: "Email e password sono obbligatori" });
       }
       
       console.log("✅ Input validation passed");
       
       try {
-        // Check if user already exists
-        console.log("🔍 Checking for existing user:", username);
-        const existingUser = await storage.getUserByUsername(username);
+        // Check if user already exists by email
+        console.log("🔍 Checking for existing user:", email);
+        const existingUser = await storage.getUserByEmail(email);
         if (existingUser) {
-          console.log("❌ User already exists:", username);
-          return res.status(400).json({ message: "Username già in uso" });
+          console.log("❌ User already exists:", email);
+          return res.status(400).json({ message: "Email già in uso" });
         }
-        console.log("✅ Username is available");
+        console.log("✅ Email is available");
       } catch (dbError: any) {
         console.error("❌ Database check error:", dbError);
         return res.status(500).json({ 
@@ -187,11 +187,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Create user without automatic trial - users must subscribe with payment details
         console.log("👤 Creating user in database...");
         const user = await storage.createUser({
-          username,
           email,
           password: hashedPassword,
         });
-        console.log("✅ User created successfully:", user.username);
+        console.log("✅ User created successfully:", user.email);
 
         // Create database session
         console.log("🍪 Creating session...");
@@ -211,7 +210,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Remove password from response
         const { password: _, ...userWithoutPassword } = user;
-        console.log("✅ Registration completed successfully for:", username);
+        console.log("✅ Registration completed successfully for:", email);
         res.status(201).json(userWithoutPassword);
       } catch (createError: any) {
         console.error("❌ User creation error:", createError);
@@ -232,10 +231,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { email, password } = req.body;
       
-      // Find user
-      const user = await storage.getUserByUsername(username);
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
       if (!user) {
         return res.status(401).json({ message: "Credenziali non valide" });
       }

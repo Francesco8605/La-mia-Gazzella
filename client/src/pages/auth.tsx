@@ -15,12 +15,11 @@ import { useLocation, Link } from "wouter";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
 
 const loginSchema = z.object({
-  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
+  email: z.string().email("Email non valida"),
   password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
 });
 
 const signupSchema = z.object({
-  username: z.string().min(3, "Username deve essere almeno 3 caratteri"),
   email: z.string().email("Email non valida"),
   password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
   confirmPassword: z.string(),
@@ -39,7 +38,7 @@ export default function Auth() {
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
@@ -47,7 +46,6 @@ export default function Auth() {
   const signupForm = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -71,7 +69,7 @@ export default function Auth() {
     onSuccess: (user) => {
       toast({
         title: "Benvenuto!",
-        description: `Accesso effettuato con successo come ${user.username}`,
+        description: `Accesso effettuato con successo come ${user.email}`,
       });
       // Invalida e aggiorna la cache dell'autenticazione
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
@@ -122,7 +120,7 @@ export default function Auth() {
     onSuccess: (user) => {
       toast({
         title: "Registrazione Completata!",
-        description: `Account creato con successo per ${user.username}. Scegli ora il tuo piano di abbonamento per iniziare!`,
+        description: `Account creato con successo per ${user.email}. Scegli ora il tuo piano di abbonamento per iniziare!`,
       });
       
       // Invalida e aggiorna la cache dell'autenticazione
@@ -190,18 +188,19 @@ export default function Auth() {
                   <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
                     <FormField
                       control={loginForm.control}
-                      name="username"
+                      name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel>Email</FormLabel>
                           <FormControl>
                             <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
                               <Input 
-                                placeholder="Il tuo username" 
+                                type="email"
+                                placeholder="La tua email" 
                                 className="pl-10"
                                 {...field} 
-                                data-testid="input-login-username"
+                                data-testid="input-login-email"
                               />
                             </div>
                           </FormControl>
@@ -282,28 +281,6 @@ export default function Auth() {
               <CardContent>
                 <Form {...signupForm}>
                   <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Username</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <User className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
-                              <Input 
-                                placeholder="Scegli un username" 
-                                className="pl-10"
-                                {...field}
-                                data-testid="input-signup-username"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     <FormField
                       control={signupForm.control}
                       name="email"
