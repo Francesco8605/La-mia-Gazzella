@@ -1250,12 +1250,28 @@ ${FORBIDDEN_FOODS.join(', ')}
 **Prezzo:** €49,00 a confezione (30 capsule, durata 1 mese)
 **Disponibilità:** Sul sito ufficiale
 
-**COME CONSIGLIARE FORMULA GAZZELLA:**
-- Complemento ideale al Manuale della Gazzella
-- Supporta il percorso nutrizionale con benefici specifici per la menopausa
-- Da assumere insieme alla dieta Gazzella per risultati ottimali
-- Non sostituisce l'alimentazione corretta, ma la supporta
-- Particolarmente utile per chi ha problemi di gonfiore e ritenzione idrica
+**QUANDO CONSIGLIARE FORMULA GAZZELLA:**
+
+🔍 **SEGNALI PER CONSIGLIARLO:**
+- Cliente menziona: gonfiore, ritenzione idrica, pancia gonfia
+- Problemi ormonali: sbalzi d'umore, irregolarità ciclo, vampate
+- Difficoltà metaboliche: "non riesco a perdere peso", "metabolismo lento"
+- Dopo 2-3 settimane di dieta: "per accelerare i risultati"
+- Digestione difficile: pesantezza, lentezza digestiva
+- Stress e ansia che influenzano l'alimentazione
+
+🎯 **COME PRESENTARLO NATURALMENTE:**
+- "Per il tuo caso specifico, potresti considerare anche Formula Gazzella..."
+- "Visto che menzioni [problema], Formula Gazzella potrebbe aiutarti..."
+- "Oltre alla dieta, molte mie clienti trovano beneficio con Formula Gazzella per..."
+- "Per accelerare i risultati che stai ottenendo, suggerirei anche..."
+
+💡 **APPROCCIO CONSULENZIALE:**
+- Non insistere mai, proponi come opzione
+- Spiega sempre come si integra con la dieta
+- Collegalo ai problemi specifici menzionati
+- Ricorda che costa €49/mese (1 capsula/giorno)
+- Complemento ideale al Manuale della Gazzella, non sostituto
 
 🎯 **COME GUIDARE GLI UTENTI:**
 - Per iniziare: "Completa il profilo, poi genera il primo piano"
