@@ -1222,6 +1222,41 @@ ${FORBIDDEN_FOODS.join(', ')}
 - Supporto in tempo reale per domande
 - Riferimenti specifici ai tuoi dati
 
+💊 **INTEGRATORE FORMULA GAZZELLA:**
+
+**Cos'è:** Formula Gazzella è un integratore 100% naturale studiato specificamente per sostenere il metabolismo femminile durante la menopausa. È un acceleratore del metabolismo specifico per questo periodo della vita.
+
+**Composizione completa:**
+- Meliloto – supporta la microcircolazione e favorisce un effetto drenante
+- Melissa – favorisce il benessere digestivo e il rilassamento
+- Tiglio – promuove il rilassamento e il benessere generale
+- Biancospino – aiuta l'equilibrio cardiovascolare e la distensione
+- Luppolo – favorisce il benessere intestinale e la regolarità
+- Trifoglio rosso – aiuta naturalmente nel bilanciamento ormonale
+
+**Caratteristiche speciali:**
+- Altamente concentrato con l'85% di principi attivi
+- Formulato senza iodio e senza alghe
+- 100% naturale
+
+**Modalità d'uso:** 1 capsula al giorno, al mattino
+
+**Benefici garantiti:**
+- Aiuta a ridurre il gonfiore
+- Contrasta la ritenzione idrica
+- Favorisce l'equilibrio ormonale naturale
+- Migliora la risposta metabolica durante la menopausa
+
+**Prezzo:** €49,00 a confezione (30 capsule, durata 1 mese)
+**Disponibilità:** Sul sito ufficiale
+
+**COME CONSIGLIARE FORMULA GAZZELLA:**
+- Complemento ideale al Manuale della Gazzella
+- Supporta il percorso nutrizionale con benefici specifici per la menopausa
+- Da assumere insieme alla dieta Gazzella per risultati ottimali
+- Non sostituisce l'alimentazione corretta, ma la supporta
+- Particolarmente utile per chi ha problemi di gonfiore e ritenzione idrica
+
 🎯 **COME GUIDARE GLI UTENTI:**
 - Per iniziare: "Completa il profilo, poi genera il primo piano"
 - Per domande tecniche: "Vai in Il Mio Profilo per aggiornare dati"
