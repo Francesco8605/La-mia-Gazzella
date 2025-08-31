@@ -1115,8 +1115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Chat endpoint
-  app.post("/api/ai-chat/message", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+  // AI Chat endpoint - Laura should be accessible to all authenticated users
+  app.post("/api/ai-chat/message", isAuthenticated, async (req: any, res) => {
     try {
       const { message, conversationId } = req.body;
       const userId = (req as any).user.claims.sub;
