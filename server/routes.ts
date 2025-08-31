@@ -1160,8 +1160,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         containsHealthWarning: "no"
       });
 
-      // Get Laura's memory about this user
-      const userMemories = await storage.getImportantMemories(userId, 6); // Get memories importance 6+
+      // Auto-save important personal information from user message BEFORE AI response
+      const personalInfoPatterns = [
+        { pattern: /mi chiamo ([a-zA-ZÀ-ÿ\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+)/i, type: "name", title: "Nome utente" },
+        { pattern: /sono ([a-zA-ZÀ-ÿ\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+)/i, type: "name", title: "Nome utente" },
+        { pattern: /il mio nome è ([a-zA-ZÀ-ÿ\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+)/i, type: "name", title: "Nome utente" }
+      ];
+
+      // Check existing memories first
+      let userMemories = await storage.getImportantMemories(userId, 6);
+
+      for (const { pattern, type, title } of personalInfoPatterns) {
+        const match = message.match(pattern);
+        if (match) {
+          const value = match[1];
+          // Check if we don't already have this information
+          const existingNameMemory = userMemories.find(m => m.memoryType === "preference" && m.title === "Nome utente");
+          
+          if (!existingNameMemory) {
+            try {
+              await storage.createUserMemory({
+                userId,
+                memoryType: "preference",
+                title: title,
+                content: `La cliente si chiama ${value}`,
+                importance: 10 // Highest importance for name
+              });
+              console.log(`💾 Saved ${type}: ${value} to memory`);
+              // Refresh memories after saving
+              userMemories = await storage.getImportantMemories(userId, 6);
+            } catch (error) {
+              console.error(`❌ Error saving ${type} to memory:`, error);
+            }
+          }
+        }
+      }
+
       const recentMessages = await storage.getRecentMessagesByUser(userId, 10); // Last 10 messages across all conversations
       
       console.log("🧠 User memories found:", userMemories.length);

@@ -1059,6 +1059,8 @@ export async function generateAIChatResponse(request: AIChatRequest & {
     const { userMessage, userId, userProfile, mealPlans, recipes, conversationHistory, userMemories, conversationId } = request;
     
     // Build memory context
+    const userName = userMemories?.find(m => m.title === "Nome utente")?.content?.match(/si chiama ([a-zA-ZÀ-ÿ\u0100-\u017F\u0180-\u024F\u1E00-\u1EFF]+)/i)?.[1];
+    
     const memoryContext = userMemories && userMemories.length > 0 ? `
 🧠 LA MIA MEMORIA SULLA CLIENTE:
 ${userMemories.map(memory => `
@@ -1069,8 +1071,9 @@ ${userMemories.map(memory => `
 
 💭 ISTRUZIONI USO MEMORIA:
 - Usa queste informazioni per personalizzare i consigli
-- Se menzioni qualcosa di nuovo e importante, suggerisci di memorizzarlo
+- Se conosci il nome della cliente, usalo naturalmente nella conversazione
 - Fai riferimento ai progressi e alle preferenze passate quando rilevanti
+${userName ? `- La cliente si chiama ${userName}, usalo quando appropriato` : ''}
 ` : '';
 
     const conversationContext = conversationHistory && conversationHistory.length > 0 ? `
@@ -1128,6 +1131,13 @@ ${memoryContext}
 ${conversationContext}
 
 DOMANDA CLIENTE: "${userMessage}"
+
+🔍 ANALISI CONTENUTO MESSAGGIO:
+- Se la cliente fornisce il suo NOME (es: "Mi chiamo [Nome]", "Sono [Nome]"), rispondi: "Ciao [Nome], piacere di conoscerti!"
+- Se chiede "Come mi chiamo?" e hai il nome nella memoria, rispondi: "Ti chiami [Nome]"
+- Se fornisce informazioni PERSONALI importanti, riferisciti a queste nella tua risposta
+- Se fa domande sui SERVIZI dell'app, spiega brevemente il servizio richiesto
+- Se menziona SINTOMI (gonfiore, ritenzione, metabolismo lento), menziona Formula Gazzella appropriatamente
 
 🏥 IMPORTANTE CONTROLLO MEDICO:
 ${containsHealthConcern ? `
@@ -1338,7 +1348,13 @@ RISPONDI in italiano in modo:
           - NON stimolare a continuare la conversazione
           - NON aggiungere consigli non richiesti
           - NON usare frasi motivazionali o di chiusura tipo "Buon percorso"
-          - Rispondi SOLO alla domanda specifica`
+          - Rispondi SOLO alla domanda specifica
+          
+          GESTIONE DOMANDE DIRETTE:
+          - Se chiede il nome e lo hai nella memoria, dì semplicemente "Ti chiami [Nome]"
+          - Se chiede informazioni che hai nella memoria, forniscile direttamente
+          - NON dire mai "Non posso rispondere" se hai le informazioni richieste
+          - Usa sempre le informazioni dalla tua memoria quando disponibili`
         },
         {
           role: "user",
