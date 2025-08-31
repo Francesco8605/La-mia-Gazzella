@@ -121,6 +121,7 @@ export class MemStorage implements IStorage {
     const user: User = { 
       ...insertUser,
       id,
+      username: insertUser.username ?? null,
       stripeCustomerId: insertUser.stripeCustomerId ?? null,
       stripeSubscriptionId: insertUser.stripeSubscriptionId ?? null,
       subscriptionStatus: insertUser.subscriptionStatus ?? null,
