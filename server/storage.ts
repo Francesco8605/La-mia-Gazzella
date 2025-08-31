@@ -1,8 +1,8 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session, type Conversation, type InsertConversation, type ChatMessage, type InsertChatMessage, type UserMemory, type InsertUserMemory } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions } from "@shared/schema";
-import { eq, lt } from "drizzle-orm";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory } from "@shared/schema";
+import { eq, lt, desc, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -53,6 +53,26 @@ export interface IStorage {
   updateUserStripeInfo(userId: string, stripeData: { stripeCustomerId?: string; stripeSubscriptionId?: string; subscriptionStatus?: string; subscriptionPlan?: string; subscriptionStartDate?: Date; subscriptionEndDate?: Date; trialEndDate?: Date; hasUsedTrial?: string }): Promise<User | undefined>;
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
+
+  // Conversations for Laura's long-term memory
+  getConversation(id: string): Promise<Conversation | undefined>;
+  getConversationsByUser(userId: string, limit?: number): Promise<Conversation[]>;
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  updateConversationTitle(id: string, title: string): Promise<Conversation | undefined>;
+  updateConversationLastMessage(id: string): Promise<Conversation | undefined>;
+
+  // Chat Messages
+  getChatMessage(id: string): Promise<ChatMessage | undefined>;
+  getMessagesByConversation(conversationId: string): Promise<ChatMessage[]>;
+  getRecentMessagesByUser(userId: string, limit?: number): Promise<ChatMessage[]>;
+  createChatMessage(message: InsertChatMessage): Promise<ChatMessage>;
+
+  // User Memory for Laura's insights
+  getUserMemory(userId: string): Promise<UserMemory[]>;
+  getUserMemoryByType(userId: string, memoryType: string): Promise<UserMemory[]>;
+  createUserMemory(memory: InsertUserMemory): Promise<UserMemory>;
+  updateUserMemoryLastReferenced(id: string): Promise<UserMemory | undefined>;
+  getImportantMemories(userId: string, minImportance?: number): Promise<UserMemory[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -461,6 +481,54 @@ export class MemStorage implements IStorage {
       }
     }
   }
+
+  // Chat conversation methods - not implemented in MemStorage
+  async getConversation(id: string): Promise<Conversation | undefined> {
+    return undefined;
+  }
+  async getConversationsByUser(userId: string, limit?: number): Promise<Conversation[]> {
+    return [];
+  }
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    return {} as Conversation;
+  }
+  async updateConversationTitle(id: string, title: string): Promise<Conversation | undefined> {
+    return undefined;
+  }
+  async updateConversationLastMessage(id: string): Promise<Conversation | undefined> {
+    return undefined;
+  }
+
+  // Chat message methods
+  async getChatMessage(id: string): Promise<ChatMessage | undefined> {
+    return undefined;
+  }
+  async getMessagesByConversation(conversationId: string): Promise<ChatMessage[]> {
+    return [];
+  }
+  async getRecentMessagesByUser(userId: string, limit?: number): Promise<ChatMessage[]> {
+    return [];
+  }
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    return {} as ChatMessage;
+  }
+
+  // User memory methods
+  async getUserMemory(userId: string): Promise<UserMemory[]> {
+    return [];
+  }
+  async getUserMemoryByType(userId: string, memoryType: string): Promise<UserMemory[]> {
+    return [];
+  }
+  async createUserMemory(memory: InsertUserMemory): Promise<UserMemory> {
+    return {} as UserMemory;
+  }
+  async updateUserMemoryLastReferenced(id: string): Promise<UserMemory | undefined> {
+    return undefined;
+  }
+  async getImportantMemories(userId: string, minImportance?: number): Promise<UserMemory[]> {
+    return [];
+  }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -743,6 +811,128 @@ export class DatabaseStorage implements IStorage {
   async deleteExpiredSessions(): Promise<void> {
     const now = new Date();
     await db.delete(sessions).where(lt(sessions.expire, now));
+  }
+
+  // Conversations for Laura's long-term memory
+  async getConversation(id: string): Promise<Conversation | undefined> {
+    const [conversation] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return conversation || undefined;
+  }
+
+  async getConversationsByUser(userId: string, limit: number = 10): Promise<Conversation[]> {
+    return await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.userId, userId))
+      .orderBy(desc(conversations.lastMessageAt))
+      .limit(limit);
+  }
+
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const [newConversation] = await db
+      .insert(conversations)
+      .values(conversation)
+      .returning();
+    return newConversation;
+  }
+
+  async updateConversationTitle(id: string, title: string): Promise<Conversation | undefined> {
+    const [conversation] = await db
+      .update(conversations)
+      .set({ title })
+      .where(eq(conversations.id, id))
+      .returning();
+    return conversation || undefined;
+  }
+
+  async updateConversationLastMessage(id: string): Promise<Conversation | undefined> {
+    const [conversation] = await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, id))
+      .returning();
+    return conversation || undefined;
+  }
+
+  // Chat Messages
+  async getChatMessage(id: string): Promise<ChatMessage | undefined> {
+    const [message] = await db.select().from(chatMessages).where(eq(chatMessages.id, id));
+    return message || undefined;
+  }
+
+  async getMessagesByConversation(conversationId: string): Promise<ChatMessage[]> {
+    return await db
+      .select()
+      .from(chatMessages)
+      .where(eq(chatMessages.conversationId, conversationId))
+      .orderBy(chatMessages.createdAt);
+  }
+
+  async getRecentMessagesByUser(userId: string, limit: number = 20): Promise<ChatMessage[]> {
+    return await db
+      .select({
+        id: chatMessages.id,
+        conversationId: chatMessages.conversationId,
+        role: chatMessages.role,
+        content: chatMessages.content,
+        containsHealthWarning: chatMessages.containsHealthWarning,
+        createdAt: chatMessages.createdAt,
+      })
+      .from(chatMessages)
+      .innerJoin(conversations, eq(chatMessages.conversationId, conversations.id))
+      .where(eq(conversations.userId, userId))
+      .orderBy(desc(chatMessages.createdAt))
+      .limit(limit);
+  }
+
+  async createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+    const [newMessage] = await db
+      .insert(chatMessages)
+      .values(message)
+      .returning();
+    return newMessage;
+  }
+
+  // User Memory for Laura's insights
+  async getUserMemory(userId: string): Promise<UserMemory[]> {
+    return await db
+      .select()
+      .from(userMemory)
+      .where(eq(userMemory.userId, userId))
+      .orderBy(desc(userMemory.importance), desc(userMemory.createdAt));
+  }
+
+  async getUserMemoryByType(userId: string, memoryType: string): Promise<UserMemory[]> {
+    return await db
+      .select()
+      .from(userMemory)
+      .where(eq(userMemory.userId, userId) && eq(userMemory.memoryType, memoryType))
+      .orderBy(desc(userMemory.importance), desc(userMemory.createdAt));
+  }
+
+  async createUserMemory(memory: InsertUserMemory): Promise<UserMemory> {
+    const [newMemory] = await db
+      .insert(userMemory)
+      .values(memory)
+      .returning();
+    return newMemory;
+  }
+
+  async updateUserMemoryLastReferenced(id: string): Promise<UserMemory | undefined> {
+    const [memory] = await db
+      .update(userMemory)
+      .set({ lastReferencedAt: new Date() })
+      .where(eq(userMemory.id, id))
+      .returning();
+    return memory || undefined;
+  }
+
+  async getImportantMemories(userId: string, minImportance: number = 7): Promise<UserMemory[]> {
+    return await db
+      .select()
+      .from(userMemory)
+      .where(eq(userMemory.userId, userId) && gte(userMemory.importance, minImportance))
+      .orderBy(desc(userMemory.importance), desc(userMemory.lastReferencedAt));
   }
 }
 

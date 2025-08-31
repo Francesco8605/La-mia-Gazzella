@@ -122,6 +122,37 @@ export const weightEntries = pgTable("weight_entries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Chat conversations for Laura's long-term memory
+export const conversations = pgTable("conversations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  title: text("title"), // Auto-generated summary of the conversation
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Individual chat messages within conversations
+export const chatMessages = pgTable("chat_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  conversationId: varchar("conversation_id").notNull(),
+  role: text("role").notNull(), // "user" | "assistant"
+  content: text("content").notNull(),
+  containsHealthWarning: text("contains_health_warning").default("no"), // "yes" | "no"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Laura's memory about each user - key insights to remember
+export const userMemory = pgTable("user_memory", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  memoryType: text("memory_type").notNull(), // "preference", "goal", "progress", "health_note", "success", "challenge"
+  title: text("title").notNull(), // Short description
+  content: text("content").notNull(), // Detailed memory content
+  importance: integer("importance").default(5), // 1-10 scale, 10 being most important
+  lastReferencedAt: timestamp("last_referenced_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"), // Associate recipes with users - nullable for backward compatibility
@@ -257,6 +288,24 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
 
+// Chat schemas
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+});
+
+export const insertChatMessageSchema = createInsertSchema(chatMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserMemorySchema = createInsertSchema(userMemory).omit({
+  id: true,
+  createdAt: true,
+  lastReferencedAt: true,
+});
+
 // Type exports
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -271,3 +320,13 @@ export type Recipe = typeof recipes.$inferSelect;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
+
+// Chat conversation types
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+
+export type ChatMessage = typeof chatMessages.$inferSelect;
+export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+export type UserMemory = typeof userMemory.$inferSelect;
+export type InsertUserMemory = typeof userMemory.$inferInsert;

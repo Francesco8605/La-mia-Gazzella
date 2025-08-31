@@ -1050,10 +1050,41 @@ export interface AIChatResponse {
   containsHealthWarning: boolean;
 }
 
-export async function generateAIChatResponse(request: AIChatRequest): Promise<AIChatResponse> {
+export async function generateAIChatResponse(request: AIChatRequest & {
+  conversationHistory?: any[];
+  userMemories?: any[];
+  conversationId?: string;
+}): Promise<AIChatResponse> {
   try {
-    const { userMessage, userId, userProfile, mealPlans, recipes } = request;
+    const { userMessage, userId, userProfile, mealPlans, recipes, conversationHistory, userMemories, conversationId } = request;
     
+    // Build memory context
+    const memoryContext = userMemories && userMemories.length > 0 ? `
+🧠 LA MIA MEMORIA SULLA CLIENTE:
+${userMemories.map(memory => `
+• ${memory.title} (Importanza: ${memory.importance}/10)
+  ${memory.content}
+  ${memory.lastReferencedAt ? `Ultimo riferimento: ${new Date(memory.lastReferencedAt).toLocaleDateString('it-IT')}` : 'Mai riferito prima'}
+`).join('')}
+
+💭 ISTRUZIONI USO MEMORIA:
+- Usa queste informazioni per personalizzare i consigli
+- Se menzioni qualcosa di nuovo e importante, suggerisci di memorizzarlo
+- Fai riferimento ai progressi e alle preferenze passate quando rilevanti
+` : '';
+
+    const conversationContext = conversationHistory && conversationHistory.length > 0 ? `
+📝 CONVERSAZIONI RECENTI:
+${conversationHistory.slice(-6).map(msg => `
+${msg.role === 'user' ? '👩 Cliente' : '🌟 Laura'}: ${msg.content.substring(0, 150)}${msg.content.length > 150 ? '...' : ''}
+`).join('')}
+
+💬 ISTRUZIONI CONVERSAZIONE:
+- Mantieni continuità con le conversazioni precedenti
+- Non ripetere informazioni già fornite di recente
+- Fai riferimento a domande o temi già discussi quando appropriato
+` : '';
+
     // Build context about user's data
     const userContext = userProfile ? `
 DATI CLIENTE ATTUALI:
@@ -1088,9 +1119,13 @@ ISTRUZIONI SPECIFICHE PER PROFILO MANCANTE:
       userMessage.toLowerCase().includes(keyword)
     );
 
-    const prompt = `Sei "Assistente Gazzella", esperta nutrizionista specializzata nel Manuale della Gazzella per donne in menopausa.
+    const prompt = `Sei Laura, consulente nutrizionale esperta del Manuale della Gazzella per donne in menopausa.
 
 ${userContext}
+
+${memoryContext}
+
+${conversationContext}
 
 DOMANDA CLIENTE: "${userMessage}"
 

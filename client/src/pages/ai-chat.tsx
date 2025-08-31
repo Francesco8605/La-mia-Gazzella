@@ -38,6 +38,7 @@ export default function AIChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Redirect to login if not authenticated
@@ -82,19 +83,50 @@ export default function AIChat() {
     staleTime: 1000 * 60 * 5, // 5 minuti di cache
   });
 
+  // Add welcome message when starting new conversation
+  useEffect(() => {
+    if (isAuthenticated && messages.length === 0 && !currentConversationId) {
+      setMessages([{
+        id: 'welcome',
+        role: 'assistant',
+        content: `Ciao! Sono Laura, la tua consulente nutrizionale personale del Manuale della Gazzella. 
+
+${userProfile ? 
+  `Vedo che hai completato il tuo profilo (${userProfile.weight}kg, ${userProfile.height}cm, ${userProfile.age} anni). Perfetto! 
+
+Ho anche accesso ai tuoi ${mealPlans?.length || 0} piani nutrizionali e ${recipes?.length || 0} ricette personalizzate.` 
+: 
+  `Per offrirti consigli personalizzati, ti consiglio di completare il tuo profilo con peso, altezza ed età nella sezione "Il Mio Profilo".`
+}
+
+Sono qui per aiutarti con qualsiasi domanda sulla tua alimentazione, spiegarti il Manuale della Gazzella, aiutarti con i tuoi piani pasto e supportarti nel tuo percorso di benessere.
+
+Cosa posso fare per te oggi? 😊`,
+        timestamp: new Date(),
+        containsHealthWarning: false
+      }]);
+    }
+  }, [isAuthenticated, userProfile, mealPlans, recipes, messages.length, currentConversationId]);
+
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: async (message: string) => {
       return await apiRequest("/api/ai-chat/message", {
         message,
+        conversationId: currentConversationId,
         userProfile,
         mealPlans,
         recipes
       }, "POST");
     },
     onSuccess: (response) => {
+      // Update conversation ID if this is a new conversation
+      if (!currentConversationId && response.conversationId) {
+        setCurrentConversationId(response.conversationId);
+      }
+
       const assistantMessage: ChatMessage = {
-        id: `assistant-${Date.now()}`,
+        id: response.messageId || `assistant-${Date.now()}`,
         role: "assistant",
         content: response.message,
         timestamp: new Date(),

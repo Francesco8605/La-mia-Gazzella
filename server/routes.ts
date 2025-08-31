@@ -1118,7 +1118,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AI Chat endpoint
   app.post("/api/ai-chat/message", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
-      const { message } = req.body;
+      const { message, conversationId } = req.body;
       const userId = (req as any).user.claims.sub;
 
       if (!message || typeof message !== 'string') {
@@ -1127,6 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("🤖 AI Chat request from user:", userId);
       console.log("📝 Message:", message);
+      console.log("💬 Conversation ID:", conversationId);
 
       // Fetch user's actual data from database
       const userProfile = await storage.getUserProfile(userId);
@@ -1137,18 +1138,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("📋 Meal plans found:", userMealPlans?.length || 0);
       console.log("🍳 Recipes found:", userRecipes?.length || 0);
 
-      // Generate AI response using OpenAI service
+      // Get or create conversation
+      let currentConversation;
+      if (conversationId) {
+        currentConversation = await storage.getConversation(conversationId);
+      }
+      
+      if (!currentConversation) {
+        console.log("🆕 Creating new conversation...");
+        currentConversation = await storage.createConversation({
+          userId,
+          title: null // Will be generated later based on conversation content
+        });
+      }
+
+      // Save user message to database
+      const userMessage = await storage.createChatMessage({
+        conversationId: currentConversation.id,
+        role: "user",
+        content: message,
+        containsHealthWarning: "no"
+      });
+
+      // Get Laura's memory about this user
+      const userMemories = await storage.getImportantMemories(userId, 6); // Get memories importance 6+
+      const recentMessages = await storage.getRecentMessagesByUser(userId, 10); // Last 10 messages across all conversations
+      
+      console.log("🧠 User memories found:", userMemories.length);
+      console.log("💭 Recent messages found:", recentMessages.length);
+
+      // Generate AI response with memory context
       const aiResponse = await generateAIChatResponse({
         userMessage: message,
         userId,
         userProfile,
         mealPlans: userMealPlans,
-        recipes: userRecipes
+        recipes: userRecipes,
+        conversationHistory: recentMessages,
+        userMemories: userMemories,
+        conversationId: currentConversation.id
       });
+
+      // Save AI response to database
+      const assistantMessage = await storage.createChatMessage({
+        conversationId: currentConversation.id,
+        role: "assistant",
+        content: aiResponse.response,
+        containsHealthWarning: aiResponse.containsHealthWarning ? "yes" : "no"
+      });
+
+      // Update conversation timestamp
+      await storage.updateConversationLastMessage(currentConversation.id);
+
+      // Mark relevant memories as recently referenced
+      for (const memory of userMemories) {
+        if (aiResponse.response.toLowerCase().includes(memory.title.toLowerCase()) || 
+            aiResponse.response.toLowerCase().includes(memory.content.toLowerCase().substring(0, 50))) {
+          await storage.updateUserMemoryLastReferenced(memory.id);
+        }
+      }
 
       res.json({
         message: aiResponse.response,
-        containsHealthWarning: aiResponse.containsHealthWarning
+        containsHealthWarning: aiResponse.containsHealthWarning,
+        conversationId: currentConversation.id,
+        messageId: assistantMessage.id
       });
     } catch (error) {
       console.error("Error in AI chat:", error);
