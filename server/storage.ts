@@ -2,7 +2,7 @@ import { type User, type InsertUser, type UserProfile, type InsertUserProfile, t
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory } from "@shared/schema";
-import { eq, lt, desc, gte } from "drizzle-orm";
+import { eq, lt, desc, gte, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -907,7 +907,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(userMemory)
-      .where(eq(userMemory.userId, userId) && eq(userMemory.memoryType, memoryType))
+      .where(and(eq(userMemory.userId, userId), eq(userMemory.memoryType, memoryType)))
       .orderBy(desc(userMemory.importance), desc(userMemory.createdAt));
   }
 
@@ -932,7 +932,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(userMemory)
-      .where(eq(userMemory.userId, userId) && gte(userMemory.importance, minImportance))
+      .where(and(eq(userMemory.userId, userId), gte(userMemory.importance, minImportance)))
       .orderBy(desc(userMemory.importance), desc(userMemory.lastReferencedAt));
   }
 }
