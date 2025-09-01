@@ -5,6 +5,7 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { sendPasswordRecoveryEmail } from "./services/email";
 import { getShopifyService } from "./services/shopify";
+import { whatsappService } from "./services/whatsapp";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -200,6 +201,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Debug endpoint for WhatsApp integration
+  app.get("/api/debug/whatsapp", async (req, res) => {
+    try {
+      console.log('📱 Testing WhatsApp integration...');
+      
+      const envCheck = {
+        WHATSAPP_API_KEY_3333401566: !!process.env.WHATSAPP_API_KEY_3333401566,
+        WHATSAPP_API_KEY_3884480928: !!process.env.WHATSAPP_API_KEY_3884480928,
+        apiKey3333401566Prefix: process.env.WHATSAPP_API_KEY_3333401566?.substring(0, 8) || 'NOT_SET',
+        apiKey3884480928Prefix: process.env.WHATSAPP_API_KEY_3884480928?.substring(0, 8) || 'NOT_SET'
+      };
+      
+      console.log('🔍 WhatsApp environment variables:', envCheck);
+      
+      const status = whatsappService.getStatus();
+      
+      res.json({
+        whatsapp: {
+          configured: status.configured,
+          environment: envCheck,
+          configuredNumbers: status.numbers,
+          serviceReady: whatsappService.isConfigured()
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: 'WhatsApp test failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -283,6 +316,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (shopifyError: any) {
           console.error("⚠️ Shopify integration error (registration continues):", shopifyError.message);
           // Non bloccante - la registrazione continua anche se Shopify fallisce
+        }
+
+        // Send WhatsApp notification for new registration
+        try {
+          console.log("📱 Sending WhatsApp notification for new registration...");
+          await whatsappService.sendRegistrationNotification(email);
+          console.log("✅ WhatsApp notifications sent successfully");
+        } catch (whatsappError: any) {
+          console.error("⚠️ WhatsApp notification error (registration continues):", whatsappError.message);
+          // Non bloccante - la registrazione continua anche se WhatsApp fallisce
         }
 
         // Remove password from response
