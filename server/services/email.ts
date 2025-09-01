@@ -32,7 +32,10 @@ export async function sendWelcomeEmail(email: string, username: string) {
           
           <!-- Header con logo e benvenuto -->
           <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 40px 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 2.2em; font-weight: bold;">🦌 La Mia Gazzella</h1>
+            <img src="https://lamiagazzella.replit.app/src/immagini/Logo-gazzella.jpg" 
+                 alt="La Mia Gazzella Logo" 
+                 style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">
+            <h1 style="margin: 0; font-size: 2.2em; font-weight: bold;">La Mia Gazzella</h1>
             <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Il tuo viaggio verso il benessere inizia qui</p>
           </div>
           
@@ -54,7 +57,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
               </div>
               
               <div style="margin-bottom: 15px;">
-                <strong style="color: #2d5016;">🤖 Consulente AI "Laura"</strong><br>
+                <strong style="color: #2d5016;">🤖 Consulente "Laura"</strong><br>
                 <span style="color: #666; font-size: 14px;">Chatta con Laura, la tua nutrizionista virtuale sempre disponibile per consigli e domande</span>
               </div>
               
@@ -123,7 +126,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
     const mailOptions = {
       from: `"La Mia Gazzella" <${process.env.GMAIL_USER}>`,
       to: email,
-      subject: '🦌 Benvenuta in La Mia Gazzella - Il tuo viaggio verso il benessere inizia ora!',
+      subject: 'Benvenuta in La Mia Gazzella - Il tuo viaggio verso il benessere inizia ora!',
       html: htmlContent
     };
 
