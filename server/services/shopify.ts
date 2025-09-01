@@ -274,17 +274,17 @@ class ShopifyService {
   }
 
   /**
-   * Crea un ordine in Shopify per tracciare i pagamenti
+   * Traccia un pagamento aggiungendo una nota al cliente invece di creare un ordine
    */
-  async createOrder(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
+  async trackPayment(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
     try {
-      console.log('📦 Creating Shopify order for:', customerEmail, 'Amount:', amount);
+      console.log('💰 Tracking payment for customer:', customerEmail, 'Amount:', amount);
       
       // Prima trova o crea il cliente
       let customer = await this.findCustomerByEmail(customerEmail);
       
       if (!customer) {
-        // Se il cliente non esiste, crealo
+        console.log('🔍 Customer not found, creating new customer for payment tracking...');
         customer = await this.createCustomer({
           email: customerEmail,
           firstName: '',
@@ -293,20 +293,23 @@ class ShopifyService {
         });
       }
       
+      // Aggiungi una nota al cliente con i dettagli del pagamento
+      const paymentNote = `💰 PAGAMENTO: €${amount} - ${description} - ${new Date().toLocaleDateString('it-IT')} ${new Date().toLocaleTimeString('it-IT')}`;
+      
+      const currentNote = customer.note || '';
+      const updatedNote = currentNote ? `${currentNote}\n${paymentNote}` : paymentNote;
+      
       const mutation = `
-        mutation CreateOrder($input: OrderInput!) {
-          orderCreate(input: $input) {
-            order {
+        mutation UpdateCustomer($input: CustomerInput!) {
+          customerUpdate(input: $input) {
+            customer {
               id
-              name
               email
-              totalPriceSet {
-                shopMoney {
-                  amount
-                  currencyCode
-                }
+              note
+              totalSpent {
+                amount
+                currencyCode
               }
-              createdAt
             }
             userErrors {
               field
@@ -316,57 +319,74 @@ class ShopifyService {
         }
       `;
 
-      const orderInput = {
-        email: customerEmail,
-        customerId: customer.id,
-        confirmed: true,
-        note: `${description} - Pagamento automatico via Stripe`,
-        tags: ['stripe-payment', 'abbonamento'],
-        lineItems: [
-          {
-            quantity: 1,
-            title: description,
-            price: amount,
-            taxable: false,
-            customAttributes: [
-              {
-                key: 'source',
-                value: 'stripe_webhook'
-              },
-              {
-                key: 'payment_date',
-                value: new Date().toISOString()
-              }
-            ]
-          }
-        ],
-        shippingLine: {
-          title: 'Digital Service',
-          price: '0.00'
-        },
-        financialStatus: 'PAID'
+      const customerInput = {
+        id: customer.id,
+        note: updatedNote,
+        tags: [...customer.tags, 'has-payments'].filter((tag, index, arr) => arr.indexOf(tag) === index) // Rimuovi duplicati
       };
 
-      const data: any = await this.client.request(mutation, { input: orderInput });
+      console.log('📋 Customer update input:', JSON.stringify(customerInput, null, 2));
+
+      const data: any = await this.client.request(mutation, { input: customerInput });
       
-      if (data.orderCreate.userErrors?.length > 0) {
-        console.error('❌ Shopify order creation errors:', data.orderCreate.userErrors);
+      if (data.customerUpdate.userErrors?.length > 0) {
+        console.error('❌ Shopify customer update errors:', data.customerUpdate.userErrors);
+        data.customerUpdate.userErrors.forEach((error: any) => {
+          console.error(`  - Field: ${error.field}, Message: ${error.message}`);
+        });
         return false;
       }
 
-      const order = data.orderCreate.order;
-      console.log('✅ Shopify order created successfully:', {
-        id: order.id,
-        name: order.name,
-        email: order.email,
-        amount: order.totalPriceSet.shopMoney.amount,
-        currency: order.totalPriceSet.shopMoney.currencyCode,
-        createdAt: order.createdAt
+      console.log('✅ Payment tracked in Shopify customer notes:', {
+        id: data.customerUpdate.customer.id,
+        email: data.customerUpdate.customer.email,
+        totalSpent: data.customerUpdate.customer.totalSpent?.amount || 'N/A',
+        noteAdded: paymentNote
       });
       
       return true;
+    } catch (error: any) {
+      console.error('❌ Error tracking payment in Shopify:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
+      return false;
+    }
+  }
+
+  /**
+   * Traccia pagamenti tramite tag Shopify invece di ordini complessi
+   */
+  async createOrder(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
+    try {
+      console.log('💰 Tracking payment via tags for:', customerEmail, 'Amount:', amount);
+      
+      // Trova il cliente esistente
+      const customer = await this.findCustomerByEmail(customerEmail);
+      
+      if (!customer) {
+        console.log('❌ Customer not found for payment tracking:', customerEmail);
+        return false;
+      }
+      
+      // Crea tag di pagamento con data e importo
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+      const paymentTag = `pagamento-${amount}EUR-${dateStr}`;
+      
+      // Aggiungi il tag di pagamento
+      const success = await this.addTagsToCustomer(customer.id, [paymentTag]);
+      
+      if (success) {
+        console.log(`✅ Payment tracked via tag: ${paymentTag}`);
+        return true;
+      } else {
+        console.log('❌ Failed to add payment tag');
+        return false;
+      }
+      
     } catch (error) {
-      console.error('❌ Error creating Shopify order:', error);
+      console.error('❌ Error tracking payment via tags:', error);
       return false;
     }
   }
@@ -422,7 +442,7 @@ export const getShopifyService = (): ShopifyService => {
           return false;
         },
         createOrder: async () => {
-          console.log('🔧 Shopify service not configured - skipping order creation');
+          console.log('🔧 Shopify service not configured - skipping payment tracking');
           return false;
         },
         testConnection: async () => false
