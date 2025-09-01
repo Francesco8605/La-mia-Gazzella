@@ -130,7 +130,6 @@ export default function MealPlanDisplay({ mealPlanId }: MealPlanDisplayProps) {
               <div className="text-center mb-4">
                 <h4 className="font-bold text-slate-800 text-lg">{translateDay(day.day)}</h4>
                 <p className="text-sm text-slate-600">{day.totalCalories} kcal</p>
-                {day.date && <p className="text-xs text-slate-500">{formatDate(day.date)}</p>}
               </div>
               
               <div className="space-y-3">
