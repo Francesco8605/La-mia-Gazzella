@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { sendPasswordRecoveryEmail } from "./services/email";
+import { getShopifyService } from "./services/shopify";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -131,10 +132,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status.database.error = error?.message || 'Unknown error';
       }
 
+      // Test Shopify connection
+      try {
+        const shopifyService = getShopifyService();
+        status.shopify = {
+          configured: !!process.env.SHOPIFY_STORE_DOMAIN && !!process.env.SHOPIFY_API_SECRET,
+          storeUrl: process.env.SHOPIFY_STORE_DOMAIN || 'N/A',
+          connectionTest: 'testing...'
+        };
+        
+        const shopifyConnection = await shopifyService.testConnection();
+        status.shopify.connectionTest = shopifyConnection ? 'success' : 'failed';
+      } catch (error: any) {
+        status.shopify = {
+          configured: false,
+          connectionTest: 'failed',
+          error: error?.message || 'Connection failed'
+        };
+      }
+
       res.json(status);
     } catch (error: any) {
       res.status(500).json({ 
         error: 'Debug endpoint failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
+
+  // Shopify Test Endpoint (solo per verificare configurazione)
+  app.get("/api/debug/shopify", async (req, res) => {
+    try {
+      console.log('🛍️ Testing Shopify integration...');
+      
+      const envCheck = {
+        SHOPIFY_STORE_DOMAIN: !!process.env.SHOPIFY_STORE_DOMAIN,
+        SHOPIFY_API_SECRET: !!process.env.SHOPIFY_API_SECRET,
+        storeUrl: process.env.SHOPIFY_STORE_DOMAIN || 'NOT_SET',
+        tokenPrefix: process.env.SHOPIFY_API_SECRET?.substring(0, 8) || 'NOT_SET'
+      };
+      
+      console.log('🔍 Environment variables:', envCheck);
+      
+      let connectionTest = false;
+      let error = null;
+      
+      try {
+        const shopifyService = getShopifyService();
+        connectionTest = await shopifyService.testConnection();
+      } catch (testError: any) {
+        error = testError.message;
+        console.error('❌ Shopify test error:', testError);
+      }
+      
+      res.json({
+        shopify: {
+          configured: envCheck.SHOPIFY_STORE_DOMAIN && envCheck.SHOPIFY_API_SECRET,
+          environment: envCheck,
+          connectionTest,
+          error
+        }
+      });
+    } catch (error: any) {
+      res.status(500).json({ 
+        error: 'Shopify test failed', 
         details: error?.message || 'Unknown error'
       });
     }
@@ -207,6 +268,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
           sameSite: isProduction ? 'none' : 'lax' // different for production
         });
+
+        // Add customer to Shopify with free trial tag
+        try {
+          console.log("🛍️ Adding customer to Shopify with free trial tag...");
+          const shopifyService = getShopifyService();
+          const shopifySuccess = await shopifyService.tagCustomerAsFreeTrial(email);
+          
+          if (shopifySuccess) {
+            console.log("✅ Customer tagged in Shopify successfully:", email);
+          } else {
+            console.log("⚠️ Shopify tagging failed (registration continues):", email);
+          }
+        } catch (shopifyError: any) {
+          console.error("⚠️ Shopify integration error (registration continues):", shopifyError.message);
+          // Non bloccante - la registrazione continua anche se Shopify fallisce
+        }
 
         // Remove password from response
         const { password: _, ...userWithoutPassword } = user;
