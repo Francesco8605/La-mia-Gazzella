@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Heart, Zap, Star, Trophy } from "lucide-react";
+import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Heart, Zap, Star, Trophy, ChefHat, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -324,6 +324,18 @@ export default function Auth() {
                   <p className="text-green-700 font-medium leading-relaxed">
                     🎯 <strong>Unisciti a migliaia di donne</strong> che hanno già trasformato la loro vita con La Mia Gazzella!
                   </p>
+                  
+                  {/* Chef Section */}
+                  <div className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ChefHat className="w-5 h-5 text-orange-600" />
+                      <h4 className="font-bold text-orange-800">Chef Professionale</h4>
+                    </div>
+                    <p className="text-orange-700 text-sm leading-relaxed">
+                      👨‍🍳 <strong>Il nostro chef specializzato</strong> crea ricette deliziose seguendo rigorosamente il <strong>Manuale della Gazzella</strong>, garantendo risultati ottimali per il tuo benessere!
+                    </p>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                     <div className="flex items-center gap-2 text-green-700">
                       <Heart className="w-4 h-4 text-red-500" />
@@ -342,12 +354,32 @@ export default function Auth() {
                       <span>Trial gratuito 3 giorni</span>
                     </div>
                   </div>
+                  
                   <div className="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-xl p-3 text-center">
                     <p className="text-red-700 font-bold text-sm">
                       ⏰ <strong>Solo chi ha il Manuale della Gazzella può accedere!</strong>
                     </p>
                     <p className="text-red-600 text-xs mt-1">
                       Accesso esclusivo riservato ai nostri clienti
+                    </p>
+                  </div>
+
+                  {/* CTA Button for Manual Purchase */}
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 text-center">
+                    <p className="text-blue-700 font-medium text-sm mb-3">
+                      📚 <strong>Non hai ancora il Manuale della Gazzella?</strong>
+                    </p>
+                    <a
+                      href="https://ilmanualedellagazzella.com/products/ebook-il-manuale-della-gazzella"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-sm"
+                    >
+                      <ShoppingCart className="w-4 h-4" />
+                      Acquista il Manuale Ora
+                    </a>
+                    <p className="text-blue-600 text-xs mt-2">
+                      Ottieni accesso immediato all'app dopo l'acquisto
                     </p>
                   </div>
                 </div>
