@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { User, Mail, Lock, UserPlus, LogIn, Sparkles } from "lucide-react";
+import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Heart, Zap, Star, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -150,26 +150,63 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mb-4 mx-auto">
-            <img src={logoGazzella} alt="Logo Gazzella" className="w-full h-full object-contain rounded-full" />
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-green-50 to-emerald-50 relative overflow-hidden flex items-center justify-center p-4">
+      {/* Background decorations */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-10 -left-10 w-40 h-40 bg-gradient-to-br from-red-200/30 to-pink-200/30 rounded-full blur-xl animate-pulse"></div>
+        <div className="absolute -bottom-10 -right-10 w-60 h-60 bg-gradient-to-br from-green-200/30 to-emerald-200/30 rounded-full blur-xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/4 right-1/4 w-32 h-32 bg-gradient-to-br from-yellow-200/20 to-orange-200/20 rounded-full blur-xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="w-full max-w-lg relative z-10">
+        {/* Enhanced Header */}
+        <div className="text-center mb-12">
+          <div className="relative w-28 h-28 mb-6 mx-auto">
+            <div className="absolute inset-0 bg-gradient-to-r from-red-400 to-green-400 rounded-full blur-md opacity-40 animate-pulse"></div>
+            <img 
+              src={logoGazzella} 
+              alt="Logo Gazzella" 
+              className="relative w-full h-full object-contain rounded-full shadow-2xl bg-white/80 backdrop-blur-sm p-2 border-2 border-white/50" 
+            />
+            <div className="absolute -top-2 -right-2">
+              <Sparkles className="w-6 h-6 text-yellow-500 animate-bounce" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-red-600 via-pink-500 to-green-600 bg-clip-text text-transparent mb-3 leading-tight">
             La Mia Gazzella
           </h1>
-          <p className="text-slate-600">
-            Il tuo assistente nutrizionale personale
+          <p className="text-lg text-slate-700 font-medium">
+            🦌 Il tuo assistente nutrizionale personale
           </p>
+          <div className="flex items-center justify-center gap-1 mt-2">
+            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            <Star className="w-4 h-4 text-yellow-500 fill-current" />
+            <span className="text-sm text-slate-600 ml-2">Valutazione 5 stelle</span>
+          </div>
         </div>
 
-        <Card className="glass-morphism">
+        <Card className="backdrop-blur-xl bg-white/30 border border-white/50 shadow-2xl rounded-3xl overflow-hidden">
           <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" data-testid="tab-login">Accedi</TabsTrigger>
-              <TabsTrigger value="signup" data-testid="tab-signup">Registrati</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 bg-gradient-to-r from-red-100/50 to-green-100/50 backdrop-blur-sm border-0 h-14 rounded-2xl m-2">
+              <TabsTrigger 
+                value="login" 
+                data-testid="tab-login"
+                className="rounded-xl font-semibold data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:text-green-700 transition-all duration-300"
+              >
+                <LogIn className="w-4 h-4 mr-2" />
+                Accedi
+              </TabsTrigger>
+              <TabsTrigger 
+                value="signup" 
+                data-testid="tab-signup"
+                className="rounded-xl font-semibold data-[state=active]:bg-white/80 data-[state=active]:shadow-lg data-[state=active]:text-green-700 transition-all duration-300"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Registrati
+              </TabsTrigger>
             </TabsList>
             
             {/* Login Tab */}
@@ -235,7 +272,7 @@ export default function Auth() {
                     <Button
                       type="submit"
                       disabled={loginMutation.isPending}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                       data-testid="button-login"
                     >
                       {loginMutation.isPending ? (
@@ -269,14 +306,51 @@ export default function Auth() {
 
             {/* Signup Tab */}
             <TabsContent value="signup">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5" />
+              <CardHeader className="space-y-4">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <UserPlus className="h-6 w-6 text-green-600" />
                   Crea un Nuovo Account
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-base">
                   Registrati per iniziare il tuo percorso nutrizionale personalizzato
                 </CardDescription>
+                
+                {/* Motivational Section */}
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-6 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="w-6 h-6 text-yellow-500" />
+                    <h3 className="font-bold text-green-800 text-lg">Trasforma il Tuo Benessere Oggi!</h3>
+                  </div>
+                  <p className="text-green-700 font-medium leading-relaxed">
+                    🎯 <strong>Unisciti a migliaia di donne</strong> che hanno già trasformato la loro vita con La Mia Gazzella!
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Heart className="w-4 h-4 text-red-500" />
+                      <span>Piani alimentari personalizzati</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      <span>Risultati in 3 giorni</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Star className="w-4 h-4 text-yellow-500" />
+                      <span>Supporto di Consulente Laura</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-700">
+                      <Trophy className="w-4 h-4 text-yellow-500" />
+                      <span>Trial gratuito 3 giorni</span>
+                    </div>
+                  </div>
+                  <div className="bg-gradient-to-r from-red-100 to-pink-100 border border-red-200 rounded-xl p-3 text-center">
+                    <p className="text-red-700 font-bold text-sm">
+                      ⏰ <strong>Solo chi ha il Manuale della Gazzella può accedere!</strong>
+                    </p>
+                    <p className="text-red-600 text-xs mt-1">
+                      Accesso esclusivo riservato ai nostri clienti
+                    </p>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <Form {...signupForm}>
@@ -353,7 +427,7 @@ export default function Auth() {
                     <Button
                       type="submit"
                       disabled={signupMutation.isPending}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                      className="w-full bg-gradient-to-r from-red-600 via-pink-600 to-green-600 hover:from-red-700 hover:via-pink-700 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 text-lg"
                       data-testid="button-signup"
                     >
                       {signupMutation.isPending ? (
@@ -375,18 +449,28 @@ export default function Auth() {
           </Tabs>
         </Card>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
+        {/* Enhanced Footer */}
+        <div className="text-center mt-8 space-y-4">
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-600">
+            <div className="flex items-center gap-1">
+              <Heart className="w-4 h-4 text-red-500" />
+              <span>Migliaia di donne soddisfatte</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Zap className="w-4 h-4 text-yellow-500" />
+              <span>Risultati garantiti</span>
+            </div>
+          </div>
           <p className="text-sm text-slate-500">
             Accedendo accetti i nostri{" "}
             <Link href="/terms-of-service">
-              <span className="text-primary hover:underline cursor-pointer">
+              <span className="text-green-600 hover:text-green-800 hover:underline cursor-pointer font-medium">
                 Termini di Servizio
               </span>
             </Link>{" "}
             e{" "}
             <Link href="/privacy-policy">
-              <span className="text-primary hover:underline cursor-pointer">
+              <span className="text-green-600 hover:text-green-800 hover:underline cursor-pointer font-medium">
                 Privacy Policy
               </span>
             </Link>
