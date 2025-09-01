@@ -382,6 +382,25 @@ export default function Auth() {
                       Ottieni accesso immediato all'app dopo l'acquisto
                     </p>
                   </div>
+
+                  {/* Registration Encouragement for Existing Customers */}
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-300 rounded-xl p-4 text-center border-2 border-dashed">
+                    <div className="flex items-center justify-center gap-2 mb-2">
+                      <Sparkles className="w-5 h-5 text-emerald-600" />
+                      <p className="text-emerald-800 font-bold text-sm">
+                        ✅ <strong>Hai già acquistato il Manuale?</strong>
+                      </p>
+                    </div>
+                    <p className="text-emerald-700 font-medium text-sm leading-relaxed">
+                      🎉 <strong>Fantastico!</strong> Registrati qui sotto con la <strong>stessa email usata per l'acquisto</strong> e inizia subito la tua <strong>prova gratuita di 3 giorni</strong> dell'app esclusiva La Mia Gazzella!
+                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-2">
+                      <Zap className="w-4 h-4 text-yellow-500" />
+                      <p className="text-emerald-600 text-xs font-semibold">
+                        Accesso immediato garantito • Trial senza impegno
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
