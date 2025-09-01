@@ -22,19 +22,22 @@ export async function sendWelcomeEmail(email: string, username: string) {
   try {
     const transporter = createTransporter();
     
-    // Read and encode logo
+    // Setup logo attachment
     const logoPath = path.join(process.cwd(), 'client/src/immagini/Logo-gazzella.jpg');
     console.log('🖼️ Reading logo from:', logoPath);
     
-    let logoDataUrl = '';
+    let logoAttachment = null;
     try {
-      const logoBuffer = fs.readFileSync(logoPath);
-      const logoBase64 = logoBuffer.toString('base64');
-      logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
-      console.log('✅ Logo converted to base64, size:', logoBuffer.length, 'bytes');
+      if (fs.existsSync(logoPath)) {
+        logoAttachment = {
+          filename: 'logo-gazzella.jpg',
+          path: logoPath,
+          cid: 'logo-gazzella' // Content-ID per referenziare nell'HTML
+        };
+        console.log('✅ Logo attachment prepared');
+      }
     } catch (logoError) {
-      console.error('❌ Error reading logo:', logoError.message);
-      logoDataUrl = ''; // Fallback senza logo
+      console.error('❌ Error preparing logo:', logoError.message);
     }
     
     const htmlContent = `
@@ -49,7 +52,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
           
           <!-- Header con logo e benvenuto -->
           <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 40px 30px; text-align: center;">
-            ${logoDataUrl ? `<img src="${logoDataUrl}" 
+            ${logoAttachment ? `<img src="cid:logo-gazzella" 
                  alt="La Mia Gazzella Logo" 
                  style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">` : ''}
             <h1 style="margin: 0; font-size: 2.2em; font-weight: bold;">La Mia Gazzella</h1>
@@ -144,7 +147,8 @@ export async function sendWelcomeEmail(email: string, username: string) {
       from: `"La Mia Gazzella" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'Benvenuta in La Mia Gazzella - Il tuo viaggio verso il benessere inizia ora!',
-      html: htmlContent
+      html: htmlContent,
+      ...(logoAttachment && { attachments: [logoAttachment] })
     };
 
     const result = await transporter.sendMail(mailOptions);
