@@ -176,6 +176,84 @@ class ShopifyService {
   }
 
   /**
+   * Verifica se un cliente ha acquistato un prodotto specifico
+   */
+  async hasCustomerPurchasedProduct(customerEmail: string, productId: string): Promise<boolean> {
+    try {
+      console.log(`🛒 Checking if customer ${customerEmail} has purchased product ${productId}`);
+      
+      // Query per trovare ordini del cliente con il prodotto specifico
+      const query = `
+        query FindCustomerOrders($email: String!, $productId: ID!) {
+          customers(first: 1, query: $email) {
+            nodes {
+              id
+              email
+              orders(first: 50) {
+                nodes {
+                  id
+                  name
+                  createdAt
+                  lineItems(first: 50) {
+                    nodes {
+                      variant {
+                        product {
+                          id
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const data: any = await this.client.request(query, { 
+        email: customerEmail,
+        productId: `gid://shopify/Product/${productId}`
+      });
+      
+      const customers = data.customers?.nodes || [];
+      
+      if (customers.length === 0) {
+        console.log(`❌ Customer ${customerEmail} not found in Shopify`);
+        return false;
+      }
+      
+      const customer = customers[0];
+      const orders = customer.orders?.nodes || [];
+      
+      console.log(`📦 Found ${orders.length} orders for customer ${customerEmail}`);
+      
+      // Controlla ogni ordine per il prodotto specifico
+      for (const order of orders) {
+        const lineItems = order.lineItems?.nodes || [];
+        
+        for (const lineItem of lineItems) {
+          const productIdInOrder = lineItem.variant?.product?.id;
+          const targetProductId = `gid://shopify/Product/${productId}`;
+          
+          console.log(`🔍 Checking line item product ID: ${productIdInOrder} vs target: ${targetProductId}`);
+          
+          if (productIdInOrder === targetProductId) {
+            console.log(`✅ Customer ${customerEmail} has purchased product ${productId} in order ${order.name}`);
+            return true;
+          }
+        }
+      }
+      
+      console.log(`❌ Customer ${customerEmail} has NOT purchased product ${productId}`);
+      return false;
+      
+    } catch (error) {
+      console.error('❌ Error checking customer product purchase:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Trova o crea un cliente e aggiunge il tag "freetrial-lamiagazzella"
    */
   async tagCustomerAsFreeTrial(email: string, firstName?: string, lastName?: string): Promise<boolean> {

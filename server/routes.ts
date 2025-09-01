@@ -442,17 +442,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("✅ Input validation passed");
       
-      // Check if email exists in Shopify first
+      // Check if email exists in Shopify and has purchased "Il Manuale della Gazzella"
       try {
         console.log("🛍️ Checking if email exists in Shopify:", email);
         const shopifyCustomer = await getShopifyService().findCustomerByEmail(email);
         if (!shopifyCustomer) {
           console.log("❌ Email not found in Shopify:", email);
           return res.status(403).json({ 
-            message: "Accesso negato. Solo i clienti registrati possono accedere alla piattaforma." 
+            message: "Accesso negato. Solo chi ha il Manuale della Gazzella può accedere all'app La Mia Gazzella. Verifica di aver inserito la mail con cui hai acquistato il manuale della Gazzella o procedi all'acquisto qui https://ilmanualedellagazzella.com/" 
           });
         }
         console.log("✅ Email found in Shopify:", shopifyCustomer.email);
+        
+        // Check if customer has purchased "Il Manuale della Gazzella" (Product ID: 8831095112021)
+        console.log("📖 Checking if customer has purchased Il Manuale della Gazzella...");
+        const hasPurchasedManual = await getShopifyService().hasCustomerPurchasedProduct(email, "8831095112021");
+        
+        if (!hasPurchasedManual) {
+          console.log("❌ Customer has not purchased Il Manuale della Gazzella:", email);
+          return res.status(403).json({ 
+            message: "Accesso negato. Solo chi ha il Manuale della Gazzella può accedere all'app La Mia Gazzella. Verifica di aver inserito la mail con cui hai acquistato il manuale della Gazzella o procedi all'acquisto qui https://ilmanualedellagazzella.com/" 
+          });
+        }
+        
+        console.log("✅ Customer has purchased Il Manuale della Gazzella:", email);
       } catch (shopifyError: any) {
         console.error("❌ Shopify check error:", shopifyError);
         return res.status(500).json({ 
