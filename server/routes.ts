@@ -442,15 +442,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("✅ Input validation passed");
       
+      // Check if email exists in Shopify first
       try {
-        // Check if user already exists by email
-        console.log("🔍 Checking for existing user:", email);
+        console.log("🛍️ Checking if email exists in Shopify:", email);
+        const shopifyCustomer = await getShopifyService().findCustomerByEmail(email);
+        if (!shopifyCustomer) {
+          console.log("❌ Email not found in Shopify:", email);
+          return res.status(403).json({ 
+            message: "Accesso negato. Solo i clienti registrati possono accedere alla piattaforma." 
+          });
+        }
+        console.log("✅ Email found in Shopify:", shopifyCustomer.email);
+      } catch (shopifyError: any) {
+        console.error("❌ Shopify check error:", shopifyError);
+        return res.status(500).json({ 
+          message: "Errore di verifica cliente", 
+          details: shopifyError?.message || 'Shopify verification failed'
+        });
+      }
+      
+      try {
+        // Check if user already exists by email in our database
+        console.log("🔍 Checking for existing user in database:", email);
         const existingUser = await storage.getUserByEmail(email);
         if (existingUser) {
           console.log("❌ User already exists:", email);
           return res.status(400).json({ message: "Email già in uso" });
         }
-        console.log("✅ Email is available");
+        console.log("✅ Email is available in database");
       } catch (dbError: any) {
         console.error("❌ Database check error:", dbError);
         return res.status(500).json({ 
