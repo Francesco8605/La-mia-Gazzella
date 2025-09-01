@@ -274,6 +274,104 @@ class ShopifyService {
   }
 
   /**
+   * Crea un ordine in Shopify per tracciare i pagamenti
+   */
+  async createOrder(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
+    try {
+      console.log('📦 Creating Shopify order for:', customerEmail, 'Amount:', amount);
+      
+      // Prima trova o crea il cliente
+      let customer = await this.findCustomerByEmail(customerEmail);
+      
+      if (!customer) {
+        // Se il cliente non esiste, crealo
+        customer = await this.createCustomer({
+          email: customerEmail,
+          firstName: '',
+          lastName: '',
+          tags: []
+        });
+      }
+      
+      const mutation = `
+        mutation CreateOrder($input: OrderInput!) {
+          orderCreate(input: $input) {
+            order {
+              id
+              name
+              email
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+              createdAt
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+
+      const orderInput = {
+        email: customerEmail,
+        customerId: customer.id,
+        confirmed: true,
+        note: `${description} - Pagamento automatico via Stripe`,
+        tags: ['stripe-payment', 'abbonamento'],
+        lineItems: [
+          {
+            quantity: 1,
+            title: description,
+            price: amount,
+            taxable: false,
+            customAttributes: [
+              {
+                key: 'source',
+                value: 'stripe_webhook'
+              },
+              {
+                key: 'payment_date',
+                value: new Date().toISOString()
+              }
+            ]
+          }
+        ],
+        shippingLine: {
+          title: 'Digital Service',
+          price: '0.00'
+        },
+        financialStatus: 'PAID'
+      };
+
+      const data: any = await this.client.request(mutation, { input: orderInput });
+      
+      if (data.orderCreate.userErrors?.length > 0) {
+        console.error('❌ Shopify order creation errors:', data.orderCreate.userErrors);
+        return false;
+      }
+
+      const order = data.orderCreate.order;
+      console.log('✅ Shopify order created successfully:', {
+        id: order.id,
+        name: order.name,
+        email: order.email,
+        amount: order.totalPriceSet.shopMoney.amount,
+        currency: order.totalPriceSet.shopMoney.currencyCode,
+        createdAt: order.createdAt
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('❌ Error creating Shopify order:', error);
+      return false;
+    }
+  }
+
+  /**
    * Test di connessione per verificare che l'API funzioni
    */
   async testConnection(): Promise<boolean> {
@@ -321,6 +419,10 @@ export const getShopifyService = (): ShopifyService => {
         },
         tagCustomerAsCanceled: async () => {
           console.log('🔧 Shopify service not configured - skipping canceled tagging');
+          return false;
+        },
+        createOrder: async () => {
+          console.log('🔧 Shopify service not configured - skipping order creation');
           return false;
         },
         testConnection: async () => false

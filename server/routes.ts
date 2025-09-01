@@ -323,6 +323,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for Shopify order creation
+  app.post("/api/debug/test-shopify-order", async (req, res) => {
+    try {
+      const { email, amount, description } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing Shopify order creation for:', email);
+      
+      const shopifyService = getShopifyService();
+      const orderSuccess = await shopifyService.createOrder(
+        email, 
+        amount || '29.00', 
+        description || 'Test Order - Abbonamento La Mia Gazzella'
+      );
+      
+      res.json({
+        success: orderSuccess,
+        email,
+        amount: amount || '29.00',
+        description: description || 'Test Order - Abbonamento La Mia Gazzella',
+        message: orderSuccess ? 'Shopify order created successfully' : 'Failed to create Shopify order'
+      });
+    } catch (error: any) {
+      console.error('❌ Test Shopify order creation error:', error);
+      res.status(500).json({ 
+        error: 'Test Shopify order creation failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -1977,6 +2011,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('⚠️ Shopify paid tagging failed (checkout continues):', customerEmail);
                   }
 
+                  // Create order in Shopify
+                  try {
+                    console.log('📦 Creating Shopify order for payment...');
+                    const orderSuccess = await shopifyService.createOrder(customerEmail, '29.00', 'Abbonamento La Mia Gazzella - Checkout');
+                    if (orderSuccess) {
+                      console.log('✅ Shopify order created successfully');
+                    } else {
+                      console.log('⚠️ Shopify order creation failed (checkout continues)');
+                    }
+                  } catch (orderError: any) {
+                    console.error('⚠️ Shopify order creation error (checkout continues):', orderError.message);
+                  }
+                  
                   // Send WhatsApp payment notification
                   try {
                     console.log('📱 Sending WhatsApp payment notification...');
@@ -2088,6 +2135,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('⚠️ Shopify paid tagging failed (subscription update continues):', customerEmail);
                   }
 
+                  // Create order in Shopify for subscription activation
+                  try {
+                    console.log('📦 Creating Shopify order for subscription activation...');
+                    const orderSuccess = await shopifyService.createOrder(customerEmail, '29.00', 'Abbonamento La Mia Gazzella - Attivazione');
+                    if (orderSuccess) {
+                      console.log('✅ Shopify order created successfully');
+                    } else {
+                      console.log('⚠️ Shopify order creation failed (subscription continues)');
+                    }
+                  } catch (orderError: any) {
+                    console.error('⚠️ Shopify order creation error (subscription continues):', orderError.message);
+                  }
+                  
                   // Send WhatsApp payment notification for subscription activation
                   try {
                     console.log('📱 Sending WhatsApp payment notification (subscription activated)...');
@@ -2174,6 +2234,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('⚠️ Shopify paid tagging failed (payment processing continues):', customerEmail);
                   }
 
+                  // Create order in Shopify for invoice payment
+                  try {
+                    console.log('📦 Creating Shopify order for invoice payment...');
+                    const invoiceAmount = ((invoice as any).amount_paid / 100).toFixed(2); // Convert from cents
+                    const orderSuccess = await shopifyService.createOrder(customerEmail, invoiceAmount, 'Abbonamento La Mia Gazzella - Rinnovo');
+                    if (orderSuccess) {
+                      console.log('✅ Shopify order created successfully');
+                    } else {
+                      console.log('⚠️ Shopify order creation failed (payment continues)');
+                    }
+                  } catch (orderError: any) {
+                    console.error('⚠️ Shopify order creation error (payment continues):', orderError.message);
+                  }
+                  
                   // Send WhatsApp payment notification for successful invoice payment
                   try {
                     console.log('📱 Sending WhatsApp payment notification (invoice paid)...');
