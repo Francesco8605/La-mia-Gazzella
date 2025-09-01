@@ -274,6 +274,38 @@ class ShopifyService {
   }
 
   /**
+   * Trova un cliente e aggiunge il tag "dati-carta-inseriti" quando inserisce la carta per il trial
+   */
+  async tagCustomerCardInserted(email: string): Promise<boolean> {
+    try {
+      console.log('💳 Tagging customer card inserted:', email);
+      
+      // Trova il cliente esistente
+      const customer = await this.findCustomerByEmail(email);
+      
+      if (!customer) {
+        console.log('❌ Customer not found in Shopify for card insertion tagging:', email);
+        return false;
+      }
+      
+      // Aggiungi il tag se non ce l'ha già
+      if (!customer.tags.includes('dati-carta-inseriti')) {
+        const success = await this.addTagsToCustomer(customer.id, ['dati-carta-inseriti']);
+        if (success) {
+          console.log('✅ Customer tagged as card inserted:', email);
+        }
+        return success;
+      }
+      
+      console.log('ℹ️ Customer already has card inserted tag:', email);
+      return true;
+    } catch (error) {
+      console.error('❌ Error tagging customer card insertion:', error);
+      return false;
+    }
+  }
+
+  /**
    * Traccia un pagamento aggiungendo una nota al cliente invece di creare un ordine
    */
   async trackPayment(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
@@ -439,6 +471,10 @@ export const getShopifyService = (): ShopifyService => {
         },
         tagCustomerAsCanceled: async () => {
           console.log('🔧 Shopify service not configured - skipping canceled tagging');
+          return false;
+        },
+        tagCustomerCardInserted: async () => {
+          console.log('🔧 Shopify service not configured - skipping card insertion tagging');
           return false;
         },
         createOrder: async () => {

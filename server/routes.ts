@@ -357,6 +357,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for card insertion notification
+  app.post("/api/debug/test-card-inserted", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing card insertion notification for:', email);
+      
+      // Test Shopify tagging
+      const shopifyService = getShopifyService();
+      const shopifyTagged = await shopifyService.tagCustomerCardInserted(email);
+      
+      // Test WhatsApp notification
+      await whatsappService.sendCardInsertedNotification(email);
+      
+      res.json({
+        success: true,
+        email,
+        shopifyTagged,
+        message: 'Card insertion notifications sent successfully'
+      });
+    } catch (error: any) {
+      console.error('❌ Test card insertion error:', error);
+      res.status(500).json({ 
+        error: 'Test card insertion failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
