@@ -261,6 +261,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for WhatsApp payment notifications
+  app.post("/api/debug/test-whatsapp-payment", async (req, res) => {
+    try {
+      const { email, amount } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing WhatsApp payment notification for:', email);
+      
+      await whatsappService.sendPaymentNotification(email, amount || '29.00');
+      
+      res.json({
+        success: true,
+        email,
+        amount: amount || '29.00',
+        message: 'WhatsApp payment notification sent successfully'
+      });
+    } catch (error: any) {
+      console.error('❌ Test payment notification error:', error);
+      res.status(500).json({ 
+        error: 'Test payment notification failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -1900,7 +1928,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log('✅ User subscription updated successfully for userId:', targetUserId);
 
-            // Tag customer as paid in Shopify if subscription is active (paid)
+            // Tag customer as paid in Shopify and send WhatsApp notification if subscription is active (paid)
             if (stripeSubscription.status === 'active') {
               try {
                 const customerEmail = (stripeCustomer as any).email;
@@ -1913,6 +1941,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
                   } else {
                     console.log('⚠️ Shopify paid tagging failed (checkout continues):', customerEmail);
+                  }
+
+                  // Send WhatsApp payment notification
+                  try {
+                    console.log('📱 Sending WhatsApp payment notification...');
+                    await whatsappService.sendPaymentNotification(customerEmail, '29.00');
+                    console.log('✅ WhatsApp payment notification sent successfully');
+                  } catch (whatsappError: any) {
+                    console.error('⚠️ WhatsApp payment notification error (checkout continues):', whatsappError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -1985,7 +2022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateUserStripeInfo(targetUser.id, updateData);
             console.log('✅ User subscription updated for userId:', targetUser.id);
 
-            // Tag customer as paid in Shopify if subscription is now active (payment started)
+            // Tag customer as paid in Shopify and send WhatsApp notification if subscription is now active (payment started)
             if (subscription.status === 'active') {
               try {
                 const stripeCustomer = await stripe.customers.retrieve(subscription.customer as string);
@@ -1999,6 +2036,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
                   } else {
                     console.log('⚠️ Shopify paid tagging failed (subscription update continues):', customerEmail);
+                  }
+
+                  // Send WhatsApp payment notification for subscription activation
+                  try {
+                    console.log('📱 Sending WhatsApp payment notification (subscription activated)...');
+                    await whatsappService.sendPaymentNotification(customerEmail, '29.00');
+                    console.log('✅ WhatsApp payment notification sent successfully');
+                  } catch (whatsappError: any) {
+                    console.error('⚠️ WhatsApp payment notification error (subscription update continues):', whatsappError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -2056,7 +2102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (targetUser) {
               console.log('✅ Payment succeeded for user:', targetUser.username);
               
-              // Tag customer as paid in Shopify for successful payments
+              // Tag customer as paid in Shopify and send WhatsApp notification for successful payments
               try {
                 const stripeCustomer = await stripe.customers.retrieve(invoice.customer as string);
                 const customerEmail = (stripeCustomer as any).email;
@@ -2069,6 +2115,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
                   } else {
                     console.log('⚠️ Shopify paid tagging failed (payment processing continues):', customerEmail);
+                  }
+
+                  // Send WhatsApp payment notification for successful invoice payment
+                  try {
+                    console.log('📱 Sending WhatsApp payment notification (invoice paid)...');
+                    const invoiceAmount = ((invoice as any).amount_paid / 100).toFixed(2); // Convert from cents
+                    await whatsappService.sendPaymentNotification(customerEmail, invoiceAmount);
+                    console.log('✅ WhatsApp payment notification sent successfully');
+                  } catch (whatsappError: any) {
+                    console.error('⚠️ WhatsApp payment notification error (payment processing continues):', whatsappError.message);
                   }
                 }
               } catch (shopifyError: any) {
