@@ -24,9 +24,18 @@ export async function sendWelcomeEmail(email: string, username: string) {
     
     // Read and encode logo
     const logoPath = path.join(process.cwd(), 'client/src/immagini/Logo-gazzella.jpg');
-    const logoBuffer = fs.readFileSync(logoPath);
-    const logoBase64 = logoBuffer.toString('base64');
-    const logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
+    console.log('🖼️ Reading logo from:', logoPath);
+    
+    let logoDataUrl = '';
+    try {
+      const logoBuffer = fs.readFileSync(logoPath);
+      const logoBase64 = logoBuffer.toString('base64');
+      logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
+      console.log('✅ Logo converted to base64, size:', logoBuffer.length, 'bytes');
+    } catch (logoError) {
+      console.error('❌ Error reading logo:', logoError.message);
+      logoDataUrl = ''; // Fallback senza logo
+    }
     
     const htmlContent = `
       <!DOCTYPE html>
@@ -40,9 +49,9 @@ export async function sendWelcomeEmail(email: string, username: string) {
           
           <!-- Header con logo e benvenuto -->
           <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 40px 30px; text-align: center;">
-            <img src="${logoDataUrl}" 
+            ${logoDataUrl ? `<img src="${logoDataUrl}" 
                  alt="La Mia Gazzella Logo" 
-                 style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">
+                 style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">` : ''}
             <h1 style="margin: 0; font-size: 2.2em; font-weight: bold;">La Mia Gazzella</h1>
             <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Il tuo viaggio verso il benessere inizia qui</p>
           </div>
