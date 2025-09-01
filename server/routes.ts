@@ -233,6 +233,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for Shopify paid tagging
+  app.post("/api/debug/test-shopify-paid-tag", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing Shopify paid subscriber tagging for:', email);
+      
+      const shopifyService = getShopifyService();
+      const success = await shopifyService.tagCustomerAsPaid(email);
+      
+      res.json({
+        success,
+        email,
+        message: success ? 'Customer tagged as paid subscriber successfully' : 'Failed to tag customer as paid subscriber'
+      });
+    } catch (error: any) {
+      console.error('❌ Test paid tagging error:', error);
+      res.status(500).json({ 
+        error: 'Test paid tagging failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -1871,6 +1899,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateUserStripeInfo(targetUserId, updateData);
             
             console.log('✅ User subscription updated successfully for userId:', targetUserId);
+
+            // Tag customer as paid in Shopify if subscription is active (paid)
+            if (stripeSubscription.status === 'active') {
+              try {
+                const customerEmail = (stripeCustomer as any).email;
+                if (customerEmail) {
+                  console.log('💰 Tagging customer as paid subscriber in Shopify...');
+                  const shopifyService = getShopifyService();
+                  const shopifySuccess = await shopifyService.tagCustomerAsPaid(customerEmail);
+                  
+                  if (shopifySuccess) {
+                    console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
+                  } else {
+                    console.log('⚠️ Shopify paid tagging failed (checkout continues):', customerEmail);
+                  }
+                }
+              } catch (shopifyError: any) {
+                console.error('⚠️ Shopify paid tagging error (checkout continues):', shopifyError.message);
+              }
+            }
           } catch (updateError) {
             console.error('❌ Error updating user subscription:', updateError);
             return res.status(500).json({ error: 'Failed to update subscription' });
@@ -1936,6 +1984,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             await storage.updateUserStripeInfo(targetUser.id, updateData);
             console.log('✅ User subscription updated for userId:', targetUser.id);
+
+            // Tag customer as paid in Shopify if subscription is now active (payment started)
+            if (subscription.status === 'active') {
+              try {
+                const stripeCustomer = await stripe.customers.retrieve(subscription.customer as string);
+                const customerEmail = (stripeCustomer as any).email;
+                if (customerEmail) {
+                  console.log('💰 Tagging customer as paid subscriber in Shopify (subscription active)...');
+                  const shopifyService = getShopifyService();
+                  const shopifySuccess = await shopifyService.tagCustomerAsPaid(customerEmail);
+                  
+                  if (shopifySuccess) {
+                    console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
+                  } else {
+                    console.log('⚠️ Shopify paid tagging failed (subscription update continues):', customerEmail);
+                  }
+                }
+              } catch (shopifyError: any) {
+                console.error('⚠️ Shopify paid tagging error (subscription update continues):', shopifyError.message);
+              }
+            }
           } else {
             console.error('❌ User not found for subscription:', subscription.id);
           }
@@ -1986,7 +2055,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (targetUser) {
               console.log('✅ Payment succeeded for user:', targetUser.username);
-              // Subscription is already active, no need to update unless status changed
+              
+              // Tag customer as paid in Shopify for successful payments
+              try {
+                const stripeCustomer = await stripe.customers.retrieve(invoice.customer as string);
+                const customerEmail = (stripeCustomer as any).email;
+                if (customerEmail) {
+                  console.log('💰 Tagging customer as paid subscriber in Shopify (payment succeeded)...');
+                  const shopifyService = getShopifyService();
+                  const shopifySuccess = await shopifyService.tagCustomerAsPaid(customerEmail);
+                  
+                  if (shopifySuccess) {
+                    console.log('✅ Customer tagged as paid subscriber in Shopify:', customerEmail);
+                  } else {
+                    console.log('⚠️ Shopify paid tagging failed (payment processing continues):', customerEmail);
+                  }
+                }
+              } catch (shopifyError: any) {
+                console.error('⚠️ Shopify paid tagging error (payment processing continues):', shopifyError.message);
+              }
             }
           }
         } catch (error) {

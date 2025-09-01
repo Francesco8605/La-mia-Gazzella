@@ -210,6 +210,38 @@ class ShopifyService {
   }
 
   /**
+   * Trova un cliente e aggiunge il tag "Abbonamento-pagato" 
+   */
+  async tagCustomerAsPaid(email: string): Promise<boolean> {
+    try {
+      console.log('💰 Tagging customer as paid subscriber:', email);
+      
+      // Trova il cliente esistente
+      const customer = await this.findCustomerByEmail(email);
+      
+      if (!customer) {
+        console.log('❌ Customer not found in Shopify for paid tagging:', email);
+        return false;
+      }
+      
+      // Aggiungi il tag se non ce l'ha già
+      if (!customer.tags.includes('Abbonamento-pagato')) {
+        const success = await this.addTagsToCustomer(customer.id, ['Abbonamento-pagato']);
+        if (success) {
+          console.log('✅ Customer tagged as paid subscriber:', email);
+        }
+        return success;
+      }
+      
+      console.log('ℹ️ Customer already has paid subscription tag:', email);
+      return true;
+    } catch (error) {
+      console.error('❌ Error tagging customer as paid subscriber:', error);
+      return false;
+    }
+  }
+
+  /**
    * Test di connessione per verificare che l'API funzioni
    */
   async testConnection(): Promise<boolean> {
@@ -249,6 +281,10 @@ export const getShopifyService = (): ShopifyService => {
         addTagsToCustomer: async () => false,
         tagCustomerAsFreeTrial: async () => {
           console.log('🔧 Shopify service not configured - skipping tagging');
+          return false;
+        },
+        tagCustomerAsPaid: async () => {
+          console.log('🔧 Shopify service not configured - skipping paid tagging');
           return false;
         },
         testConnection: async () => false
