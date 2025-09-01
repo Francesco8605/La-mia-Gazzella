@@ -2101,6 +2101,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             console.log('✅ User subscription updated successfully for userId:', targetUserId);
 
+            // Handle trial activation - send card insertion notification
+            if (stripeSubscription.status === 'trialing') {
+              try {
+                const customerEmail = (stripeCustomer as any).email;
+                if (customerEmail) {
+                  console.log('💳 Trial activated - Processing card insertion notifications...');
+                  const shopifyService = getShopifyService();
+                  
+                  // Tag customer as having inserted card data in Shopify
+                  const shopifyTagged = await shopifyService.tagCustomerCardInserted(customerEmail);
+                  
+                  if (shopifyTagged) {
+                    console.log('✅ Customer tagged as card inserted in Shopify:', customerEmail);
+                  } else {
+                    console.log('⚠️ Shopify card inserted tagging failed (trial continues):', customerEmail);
+                  }
+                  
+                  // Send WhatsApp card insertion notification
+                  try {
+                    console.log('📱 Sending WhatsApp card insertion notification...');
+                    await whatsappService.sendCardInsertedNotification(customerEmail);
+                    console.log('✅ WhatsApp card insertion notification sent successfully');
+                  } catch (whatsappError: any) {
+                    console.error('⚠️ WhatsApp card insertion notification error (trial continues):', whatsappError.message);
+                  }
+                }
+              } catch (trialError: any) {
+                console.error('⚠️ Trial activation error (checkout continues):', trialError.message);
+              }
+            }
+
             // Tag customer as paid in Shopify and send WhatsApp notification if subscription is active (paid)
             if (stripeSubscription.status === 'active') {
               try {
