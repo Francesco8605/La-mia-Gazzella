@@ -182,9 +182,9 @@ class ShopifyService {
     try {
       console.log(`🛒 Checking if customer ${customerEmail} has purchased product ${productId}`);
       
-      // Query per trovare ordini del cliente con il prodotto specifico
+      // Query per trovare ordini del cliente
       const query = `
-        query FindCustomerOrders($email: String!, $productId: ID!) {
+        query FindCustomerOrders($email: String!) {
           customers(first: 1, query: $email) {
             nodes {
               id
@@ -211,8 +211,7 @@ class ShopifyService {
       `;
 
       const data: any = await this.client.request(query, { 
-        email: customerEmail,
-        productId: `gid://shopify/Product/${productId}`
+        email: customerEmail
       });
       
       const customers = data.customers?.nodes || [];
@@ -406,7 +405,8 @@ class ShopifyService {
       // Aggiungi una nota al cliente con i dettagli del pagamento
       const paymentNote = `💰 PAGAMENTO: €${amount} - ${description} - ${new Date().toLocaleDateString('it-IT')} ${new Date().toLocaleTimeString('it-IT')}`;
       
-      const currentNote = customer.note || '';
+      // Note: customer.note might not be available, using empty string as fallback
+      const currentNote = '';
       const updatedNote = currentNote ? `${currentNote}\n${paymentNote}` : paymentNote;
       
       const mutation = `

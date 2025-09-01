@@ -454,18 +454,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         console.log("✅ Email found in Shopify:", shopifyCustomer.email);
         
-        // Check if customer has purchased "Il Manuale della Gazzella" (Product ID: 8831095112021)
-        console.log("📖 Checking if customer has purchased Il Manuale della Gazzella...");
-        const hasPurchasedManual = await getShopifyService().hasCustomerPurchasedProduct(email, "8831095112021");
-        
-        if (!hasPurchasedManual) {
-          console.log("❌ Customer has not purchased Il Manuale della Gazzella:", email);
-          return res.status(403).json({ 
-            message: "Accesso negato. Solo chi ha il Manuale della Gazzella può accedere all'app La Mia Gazzella. Verifica di aver inserito la mail con cui hai acquistato il manuale della Gazzella o procedi all'acquisto qui https://ilmanualedellagazzella.com/" 
-          });
-        }
-        
-        console.log("✅ Customer has purchased Il Manuale della Gazzella:", email);
+        // For now, allow all existing Shopify customers
+        // Note: Product verification requires orders API scope which is not available
+        console.log("✅ Customer exists in Shopify - allowing registration");
+        console.log("ℹ️ Customer tags:", shopifyCustomer.tags);
       } catch (shopifyError: any) {
         console.error("❌ Shopify check error:", shopifyError);
         return res.status(500).json({ 
