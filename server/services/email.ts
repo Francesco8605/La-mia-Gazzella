@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
 
 // Create transporter using Gmail SMTP
 const createTransporter = () => {
@@ -20,6 +22,12 @@ export async function sendWelcomeEmail(email: string, username: string) {
   try {
     const transporter = createTransporter();
     
+    // Read and encode logo
+    const logoPath = path.join(process.cwd(), 'client/src/immagini/Logo-gazzella.jpg');
+    const logoBuffer = fs.readFileSync(logoPath);
+    const logoBase64 = logoBuffer.toString('base64');
+    const logoDataUrl = `data:image/jpeg;base64,${logoBase64}`;
+    
     const htmlContent = `
       <!DOCTYPE html>
       <html>
@@ -32,7 +40,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
           
           <!-- Header con logo e benvenuto -->
           <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 40px 30px; text-align: center;">
-            <img src="https://lamiagazzella.replit.app/src/immagini/Logo-gazzella.jpg" 
+            <img src="${logoDataUrl}" 
                  alt="La Mia Gazzella Logo" 
                  style="width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">
             <h1 style="margin: 0; font-size: 2.2em; font-weight: bold;">La Mia Gazzella</h1>
