@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail } from "./services/email";
+import { sendPasswordRecoveryEmail, sendWelcomeEmail } from "./services/email";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
 import { z } from "zod";
@@ -390,6 +390,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for welcome email
+  app.post("/api/debug/test-welcome-email", async (req, res) => {
+    try {
+      const { email, username } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing welcome email for:', email);
+      
+      // Test welcome email
+      const result = await sendWelcomeEmail(email, username || email.split('@')[0]);
+      
+      res.json({
+        success: true,
+        email,
+        username: username || email.split('@')[0],
+        messageId: result.messageId,
+        message: 'Welcome email sent successfully'
+      });
+    } catch (error: any) {
+      console.error('❌ Test welcome email error:', error);
+      res.status(500).json({ 
+        error: 'Test welcome email failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -483,6 +513,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (whatsappError: any) {
           console.error("⚠️ WhatsApp notification error (registration continues):", whatsappError.message);
           // Non bloccante - la registrazione continua anche se WhatsApp fallisce
+        }
+
+        // Send welcome email to new user
+        try {
+          console.log("📧 Sending welcome email to new user...");
+          await sendWelcomeEmail(email, email.split('@')[0]); // Use email prefix as username
+          console.log("✅ Welcome email sent successfully");
+        } catch (emailError: any) {
+          console.error("⚠️ Welcome email error (registration continues):", emailError.message);
+          // Non bloccante - la registrazione continua anche se l'email fallisce
         }
 
         // Remove password from response
