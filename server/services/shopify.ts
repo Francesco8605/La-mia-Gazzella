@@ -242,6 +242,38 @@ class ShopifyService {
   }
 
   /**
+   * Trova un cliente e aggiunge il tag "abbonamento-cancellato"
+   */
+  async tagCustomerAsCanceled(email: string): Promise<boolean> {
+    try {
+      console.log('❌ Tagging customer as canceled subscription:', email);
+      
+      // Trova il cliente esistente
+      const customer = await this.findCustomerByEmail(email);
+      
+      if (!customer) {
+        console.log('❌ Customer not found in Shopify for cancellation tagging:', email);
+        return false;
+      }
+      
+      // Aggiungi il tag se non ce l'ha già
+      if (!customer.tags.includes('abbonamento-cancellato')) {
+        const success = await this.addTagsToCustomer(customer.id, ['abbonamento-cancellato']);
+        if (success) {
+          console.log('✅ Customer tagged as canceled subscription:', email);
+        }
+        return success;
+      }
+      
+      console.log('ℹ️ Customer already has canceled subscription tag:', email);
+      return true;
+    } catch (error) {
+      console.error('❌ Error tagging customer as canceled subscription:', error);
+      return false;
+    }
+  }
+
+  /**
    * Test di connessione per verificare che l'API funzioni
    */
   async testConnection(): Promise<boolean> {
@@ -285,6 +317,10 @@ export const getShopifyService = (): ShopifyService => {
         },
         tagCustomerAsPaid: async () => {
           console.log('🔧 Shopify service not configured - skipping paid tagging');
+          return false;
+        },
+        tagCustomerAsCanceled: async () => {
+          console.log('🔧 Shopify service not configured - skipping canceled tagging');
           return false;
         },
         testConnection: async () => false

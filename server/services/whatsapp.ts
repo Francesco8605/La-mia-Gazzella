@@ -129,6 +129,40 @@ export class WhatsAppService {
     }
   }
 
+  async sendCancellationNotification(userEmail: string, reason?: string): Promise<void> {
+    const reasonText = reason ? `\n📄 Motivo: ${reason}` : '';
+    const message = `❌ Abbonamento cancellato La Mia Gazzella!\n\n📧 Cliente: ${userEmail}${reasonText}\n⏰ Data: ${new Date().toLocaleString('it-IT')}\n\n⚠️ Cliente non più attivo.`;
+    
+    const promises: Promise<boolean>[] = [];
+
+    // Send to 3333401566 if API key is available
+    if (this.config.apiKey3333401566) {
+      promises.push(this.sendMessage('3333401566', message, this.config.apiKey3333401566));
+    } else {
+      console.log('⚠️ WhatsApp API key for 3333401566 not configured');
+    }
+
+    // Send to 3884480928 if API key is available
+    if (this.config.apiKey3884480928) {
+      promises.push(this.sendMessage('3884480928', message, this.config.apiKey3884480928));
+    } else {
+      console.log('⚠️ WhatsApp API key for 3884480928 not configured');
+    }
+
+    if (promises.length === 0) {
+      console.log('⚠️ No WhatsApp API keys configured. Skipping cancellation notifications.');
+      return;
+    }
+
+    try {
+      const results = await Promise.all(promises);
+      const successCount = results.filter(result => result).length;
+      console.log(`❌ WhatsApp cancellation notifications sent: ${successCount}/${results.length} successful`);
+    } catch (error) {
+      console.error('❌ Error sending WhatsApp cancellation notifications:', error);
+    }
+  }
+
   async sendTestMessage(phone: string, apiKey: string): Promise<boolean> {
     const message = '🧪 Test message from La Mia Gazzella - WhatsApp integration working!';
     return this.sendMessage(phone, message, apiKey);

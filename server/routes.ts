@@ -289,6 +289,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Test endpoint for cancellation notifications
+  app.post("/api/debug/test-cancellation", async (req, res) => {
+    try {
+      const { email, reason } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: 'Email is required' });
+      }
+      
+      console.log('🧪 Testing cancellation notification for:', email);
+      
+      // Test Shopify tagging
+      const shopifyService = getShopifyService();
+      const shopifySuccess = await shopifyService.tagCustomerAsCanceled(email);
+      
+      // Test WhatsApp notification
+      await whatsappService.sendCancellationNotification(email, reason || 'Test cancellation');
+      
+      res.json({
+        success: true,
+        email,
+        reason: reason || 'Test cancellation',
+        shopifyTagged: shopifySuccess,
+        message: 'Cancellation notifications sent successfully'
+      });
+    } catch (error: any) {
+      console.error('❌ Test cancellation error:', error);
+      res.status(500).json({ 
+        error: 'Test cancellation failed', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
   
   // Authentication Routes
   app.post("/api/auth/register", async (req, res) => {
@@ -2017,6 +2051,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
             if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
               updateData.subscriptionEndDate = new Date();
               console.log('❌ Subscription canceled/unpaid');
+              
+              // Get user email for notifications
+              const customer = await stripe.customers.retrieve(subscription.customer as string);
+              const userEmail = (customer as any).email;
+              
+              if (userEmail) {
+                // Tag customer as canceled in Shopify
+                const shopifyService = getShopifyService();
+                await shopifyService.tagCustomerAsCanceled(userEmail);
+                
+                // Send cancellation notification via WhatsApp
+                await whatsappService.sendCancellationNotification(
+                  userEmail, 
+                  subscription.status === 'unpaid' ? 'Pagamento non riuscito' : 'Cancellazione volontaria'
+                );
+              }
             }
 
             await storage.updateUserStripeInfo(targetUser.id, updateData);
@@ -2078,6 +2128,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
               trialEndDate: null,
             });
             console.log('✅ Subscription deleted for userId:', targetUser.id);
+            
+            // Tag customer as canceled in Shopify and send WhatsApp notification
+            if (targetUser.email) {
+              const shopifyService = getShopifyService();
+              await shopifyService.tagCustomerAsCanceled(targetUser.email);
+              await whatsappService.sendCancellationNotification(targetUser.email, 'Abbonamento cancellato definitivamente');
+            }
           } else {
             console.error('❌ User not found for deleted subscription:', deletedSubscription.id);
           }
@@ -2249,6 +2306,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`✅ Stripe subscription canceled for user ${user.email}: ${subscription.id}`);
         
+        // Tag customer as canceled in Shopify and send WhatsApp notification
+        const shopifyService = getShopifyService();
+        await shopifyService.tagCustomerAsCanceled(user.email);
+        await whatsappService.sendCancellationNotification(user.email, 'Cancellazione richiesta dall\'utente');
+        
         res.json({ 
           message: "Abbonamento cancellato con successo",
           subscription: {
@@ -2267,6 +2329,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         console.log(`✅ Trial subscription canceled for user ${user.email}`);
+        
+        // Tag customer as canceled in Shopify and send WhatsApp notification
+        const shopifyService = getShopifyService();
+        await shopifyService.tagCustomerAsCanceled(user.email);
+        await whatsappService.sendCancellationNotification(user.email, 'Trial gratuito cancellato');
         
         res.json({ 
           message: "Abbonamento di prova cancellato con successo",
@@ -2366,6 +2433,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscriptionStatus: 'canceled',
         subscriptionEndDate: endDate,
       });
+      
+      // Get user for notifications
+      const cancelUser = await storage.getUser(userId);
+      if (cancelUser && cancelUser.email) {
+        // Tag customer as canceled in Shopify and send WhatsApp notification
+        const shopifyService = getShopifyService();
+        await shopifyService.tagCustomerAsCanceled(cancelUser.email);
+        await whatsappService.sendCancellationNotification(cancelUser.email, 'Cancellazione programmata - attivo fino a fine periodo');
+      }
 
       res.json({ 
         message: "Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo di fatturazione corrente.",
