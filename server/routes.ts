@@ -2711,8 +2711,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
-      // Simple password check - replace with bcrypt in production
-      if (password !== "admin123") { // TODO: Replace with hashed password
+      // Check password with bcrypt
+      const isValidPassword = await bcrypt.compare(password, admin.password);
+      if (!isValidPassword) {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
