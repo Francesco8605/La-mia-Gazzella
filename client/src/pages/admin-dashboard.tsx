@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText } from "lucide-react";
+import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText, ChevronDown, ChevronRight, Clock, Utensils } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -51,6 +51,7 @@ export default function AdminDashboard() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("users");
+  const [expandedItems, setExpandedItems] = useState<{[key: string]: boolean}>({});
 
   // Login function
   const handleLogin = async (e: React.FormEvent) => {
@@ -350,21 +351,67 @@ export default function AdminDashboard() {
                     <CardTitle>📋 Piani Alimentari Generati ({userDetails.mealPlans?.length || 0})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
                       {userDetails.mealPlans && userDetails.mealPlans.length > 0 ? (
                         userDetails.mealPlans.map((plan: any) => (
-                          <div key={plan.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium text-green-800">{plan.name || "Piano Personalizzato"}</h4>
-                                <p className="text-sm text-green-600">Obiettivo: {plan.goal || "Non specificato"}</p>
-                                <p className="text-xs text-slate-500">Creato: {new Date(plan.createdAt).toLocaleDateString('it-IT')}</p>
+                          <div key={plan.id} className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-green-800">{plan.title || "Piano Personalizzato"}</h4>
+                                <p className="text-sm text-green-600 mt-1">
+                                  🎯 Calorie: {plan.targetCalories} | ⚖️ Peso attuale: {plan.currentWeight}kg → {plan.targetWeight}kg
+                                </p>
+                                <p className="text-xs text-slate-500">📅 Creato: {new Date(plan.createdAt).toLocaleDateString('it-IT')}</p>
                               </div>
-                              <div className="text-right text-sm">
-                                <p className="text-green-700">Calorie: {plan.targetCalories || "N/A"}</p>
-                                <p className="text-xs text-slate-500">Durata: {plan.duration || "N/A"} giorni</p>
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setExpandedItems(prev => ({
+                                  ...prev,
+                                  [`plan-${plan.id}`]: !prev[`plan-${plan.id}`]
+                                }))}
+                                className="text-green-700"
+                              >
+                                {expandedItems[`plan-${plan.id}`] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                Dettagli
+                              </Button>
                             </div>
+                            
+                            {expandedItems[`plan-${plan.id}`] && (
+                              <div className="mt-3 p-3 bg-white rounded border border-green-100 space-y-3">
+                                <div>
+                                  <h5 className="font-medium text-green-800 mb-2">📝 Descrizione:</h5>
+                                  <p className="text-sm text-slate-700">{plan.description}</p>
+                                </div>
+                                
+                                <div>
+                                  <h5 className="font-medium text-green-800 mb-2">🎯 Obiettivi Nutrizionali:</h5>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p>🔥 Calorie: {plan.targetCalories}</p>
+                                    <p>🥩 Proteine: {plan.targetProtein}g</p>
+                                    <p>🍞 Carboidrati: {plan.targetCarbs}g</p>
+                                    <p>🥑 Grassi: {plan.targetFat}g</p>
+                                  </div>
+                                </div>
+
+                                {plan.days && plan.days.length > 0 && (
+                                  <div>
+                                    <h5 className="font-medium text-green-800 mb-2">📅 Esempio Giornata (Giorno 1):</h5>
+                                    <div className="space-y-2 text-xs">
+                                      {plan.days[0].meals.breakfast && (
+                                        <p><strong>🌅 Colazione:</strong> {plan.days[0].meals.breakfast.name}</p>
+                                      )}
+                                      {plan.days[0].meals.lunch && (
+                                        <p><strong>🌞 Pranzo:</strong> {plan.days[0].meals.lunch.name}</p>
+                                      )}
+                                      {plan.days[0].meals.dinner && (
+                                        <p><strong>🌙 Cena:</strong> {plan.days[0].meals.dinner.name}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
@@ -380,21 +427,89 @@ export default function AdminDashboard() {
                     <CardTitle>🍳 Ricette Generate ({userDetails.recipes?.length || 0})</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                    <div className="space-y-3 max-h-80 overflow-y-auto">
                       {userDetails.recipes && userDetails.recipes.length > 0 ? (
                         userDetails.recipes.map((recipe: any) => (
-                          <div key={recipe.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h4 className="font-medium text-orange-800">{recipe.name}</h4>
-                                <p className="text-sm text-orange-600">{recipe.category || "Categoria non specificata"}</p>
-                                <p className="text-xs text-slate-500">Creata: {new Date(recipe.createdAt).toLocaleDateString('it-IT')}</p>
+                          <div key={recipe.id} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <div className="flex-1">
+                                <h4 className="font-medium text-orange-800">{recipe.title || recipe.name || "Ricetta Senza Titolo"}</h4>
+                                <p className="text-sm text-orange-600 mt-1">
+                                  🔥 {recipe.calories || "N/A"} cal | ⏱️ {recipe.prepTime || "N/A"}min prep + {recipe.cookTime || "N/A"}min cottura
+                                </p>
+                                <p className="text-xs text-slate-500">📅 Creata: {new Date(recipe.createdAt).toLocaleDateString('it-IT')}</p>
                               </div>
-                              <div className="text-right text-sm">
-                                <p className="text-orange-700">⏱️ {recipe.prepTime || "N/A"} min</p>
-                                <p className="text-xs text-slate-500">🔥 {recipe.calories || "N/A"} cal</p>
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setExpandedItems(prev => ({
+                                  ...prev,
+                                  [`recipe-${recipe.id}`]: !prev[`recipe-${recipe.id}`]
+                                }))}
+                                className="text-orange-700"
+                              >
+                                {expandedItems[`recipe-${recipe.id}`] ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                Dettagli
+                              </Button>
                             </div>
+                            
+                            {expandedItems[`recipe-${recipe.id}`] && (
+                              <div className="mt-3 p-3 bg-white rounded border border-orange-100 space-y-3">
+                                <div>
+                                  <h5 className="font-medium text-orange-800 mb-2">📝 Descrizione:</h5>
+                                  <p className="text-sm text-slate-700">{recipe.description || "Nessuna descrizione disponibile"}</p>
+                                </div>
+                                
+                                <div>
+                                  <h5 className="font-medium text-orange-800 mb-2">🥗 Ingredienti:</h5>
+                                  <div className="space-y-1 text-sm">
+                                    {recipe.ingredients && recipe.ingredients.length > 0 ? (
+                                      recipe.ingredients.map((ingredient: string, index: number) => (
+                                        <p key={index} className="text-slate-700">• {ingredient}</p>
+                                      ))
+                                    ) : (
+                                      <p className="text-slate-500">Nessun ingrediente specificato</p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h5 className="font-medium text-orange-800 mb-2">👩‍🍳 Istruzioni:</h5>
+                                  <div className="space-y-1 text-sm">
+                                    {recipe.instructions && recipe.instructions.length > 0 ? (
+                                      recipe.instructions.map((step: string, index: number) => (
+                                        <p key={index} className="text-slate-700">{index + 1}. {step}</p>
+                                      ))
+                                    ) : (
+                                      <p className="text-slate-500">Nessuna istruzione specificata</p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div>
+                                  <h5 className="font-medium text-orange-800 mb-2">📊 Valori Nutrizionali:</h5>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <p>🔥 Calorie: {recipe.calories || "N/A"}</p>
+                                    <p>🥩 Proteine: {recipe.protein || "N/A"}g</p>
+                                    <p>🍞 Carboidrati: {recipe.carbs || "N/A"}g</p>
+                                    <p>🥑 Grassi: {recipe.fat || "N/A"}g</p>
+                                  </div>
+                                  {recipe.dietaryTags && recipe.dietaryTags.length > 0 && (
+                                    <div className="mt-2">
+                                      <p className="text-xs text-orange-600">
+                                        🏷️ Tag: {recipe.dietaryTags.join(", ")}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <div className="text-xs text-slate-500 pt-2 border-t border-orange-200">
+                                  <p>👨‍👩‍👧‍👦 Porzioni: {recipe.servings || 1} | 
+                                     🌟 Difficoltà: {recipe.difficulty || "N/A"} | 
+                                     🍝 Cucina: {recipe.cuisine || "Non specificata"}</p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))
                       ) : (
