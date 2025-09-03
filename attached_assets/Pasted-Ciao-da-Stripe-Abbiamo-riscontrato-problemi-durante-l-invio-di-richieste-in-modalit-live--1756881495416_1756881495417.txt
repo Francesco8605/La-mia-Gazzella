@@ -1,0 +1,87 @@
+Ciao da Stripe.	
+ 
+ 
+ 
+ 
+Abbiamo riscontrato problemi durante l'invio di richieste in modalità live a un endpoint del webhook associato al tuo account Desideria SRL. Stripe invia eventi webhook al tuo server per informarti dell'attività nel tuo account Stripe, come l'esecuzione di un bonifico o la creazione di una fattura.	
+ 
+ 
+ 
+ 
+L'URL dell'endpoint del webhook con errori è: https://lamiagazzella.replit.app/api/stripe-webhook	
+ 
+ 
+ 
+ 
+Il tuo account Stripe è stato configurato da te (o da qualcuno del tuo team) per inviare eventi a tale URL. Puoi modificare gli endpoint del webhook del tuo account dalla Dashboard.	
+ 
+ 
+ 
+ 
+Nella maggior parte dei casi un webhook con errori non influisce su pagamenti o bonifici. Tuttavia:	
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Se usi abbonamenti, facciamo affidamento sull'endpoint del webhook per avvisarti di nuove fatture. Le fatture potrebbero subire ritardi anche di tre giorni se il tuo endpoint non è in grado di riceverle correttamente.
+
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Se usi Checkout e fai affidamento sull'evento checkout.session.completed per la procedura di completamento degli acquisti, devi verificare i pagamenti completati per assicurarti di avere evaso tutti gli acquisti recenti.
+
+ 
+ 
+ 
+ 
+ 
+Abbiamo tentato l'invio di notifiche di eventi a questo endpoint 114 volte dopo il primo tentativo fallito registrato in data 30 agosto 2025 alle ore 10:57:55 UTC. Se questo endpoint è importante per la tua applicazione, prova a risolvere il problema. Se l'endpoint del webhook non ti serve, puoi eliminarlo dalle impostazioni del webhook di Stripe. Interromperemo l'invio di notifiche di eventi a questo endpoint del webhook entro il giorno 8 settembre 2025 alle ore 10:57:55 UTC.	
+ 
+ 
+ 
+ 
+Ecco il riepilogo degli errori che abbiamo ricevuto durante i tentativi di invio di eventi webhook:	
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+114 requests had other errors while sending the webhook event.	
+ 
+ 
+ 
+ 
+ 
+Deve essere restituito un codice di stato tra HTTP 200 e 299 affinché Stripe consideri l'evento webhook correttamente recapitato.	
+ 
+ 
+ 
+ 
+Per maggiori dettagli su questi errori e per verificare l'attività recente del tuo account, consulta l'elenco completo degli eventi e dei log delle richieste nella Dashboard.	
+ 
+ 
+ 
+ 
+Per informazioni più approfondite sull'utilizzo dei webhook, consulta la nostra documentazione.	
+ 
+ 
+ 
+ 
+— Il team di Stripe

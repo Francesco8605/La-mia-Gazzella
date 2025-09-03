@@ -1981,7 +1981,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Handle Stripe webhooks with proper signature verification
-  app.post("/api/stripe-webhook", express.raw({ type: 'application/json' }), async (req, res) => {
+  // Note: express.raw() middleware is now configured globally for this route in server/index.ts
+  app.post("/api/stripe-webhook", async (req, res) => {
     console.log('🎯 WEBHOOK RECEIVED:', new Date().toISOString());
     
     const sig = req.headers['stripe-signature'] as string;

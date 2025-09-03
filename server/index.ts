@@ -5,6 +5,11 @@ import { setupVite, serveStatic, log } from "./vite";
 
 const app = express();
 app.use(cookieParser());
+
+// CRITICAL: Webhook MUST be registered BEFORE express.json() middleware
+// Stripe webhooks require raw body for signature verification
+app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
