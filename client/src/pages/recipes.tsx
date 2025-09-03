@@ -34,7 +34,7 @@ export default function Recipes() {
   const [cuisineFilter, setCuisineFilter] = useState<string>("");
 
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+    queryKey: ["/api/recipes/user"],
     retry: false,
   });
 

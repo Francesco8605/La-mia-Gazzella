@@ -9,7 +9,7 @@ import { type Recipe } from "@shared/schema";
 
 export default function RecipeCards() {
   const { data: recipes, isLoading, error } = useQuery<Recipe[]>({
-    queryKey: ["/api/recipes"],
+    queryKey: ["/api/recipes/user"],
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
