@@ -28,6 +28,7 @@ import AIChat from "@/pages/ai-chat";
 import CancelSubscription from "@/pages/cancel-subscription";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
+import AdminDashboard from "@/pages/admin-dashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -55,6 +56,7 @@ function Router() {
         <Route path="/recupera-password" component={ForgotPassword} />
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route component={Auth} />
       </Switch>
     );
@@ -200,6 +202,8 @@ function Router() {
             );
           }}
         </Route>
+        
+        <Route path="/admin" component={AdminDashboard} />
         
         <Route path="/subscription-canceled">
           {() => {

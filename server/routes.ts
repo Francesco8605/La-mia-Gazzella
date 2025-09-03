@@ -1,7 +1,9 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
 import { sendPasswordRecoveryEmail, sendWelcomeEmail } from "./services/email";
 import { getShopifyService } from "./services/shopify";
@@ -2663,6 +2665,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore nella cancellazione dell'abbonamento" });
     }
   });
+
+  // =================
+  // ADMIN DASHBOARD ROUTES
+  // =================
+
+  // Admin authentication middleware
+  const isAdminAuthenticated = async (req: any, res: any, next: any) => {
+    try {
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        return res.status(401).json({ message: "Token richiesto" });
+      }
+
+      // For now, use simple password check - replace with JWT in production
+      const adminEmail = req.headers['x-admin-email'];
+      if (!adminEmail) {
+        return res.status(401).json({ message: "Email admin richiesta" });
+      }
+
+      const admin = await storage.getAdminUserByEmail(adminEmail);
+      if (!admin || admin.isActive !== 'yes') {
+        return res.status(401).json({ message: "Admin non trovato o non attivo" });
+      }
+
+      req.admin = admin;
+      next();
+    } catch (error) {
+      console.error("Error in admin auth:", error);
+      res.status(401).json({ message: "Autenticazione fallita" });
+    }
+  };
+
+  // Admin login
+  app.post("/api/admin/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ message: "Email e password richieste" });
+      }
+
+      const admin = await storage.getAdminUserByEmail(email);
+      if (!admin) {
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+
+      // Simple password check - replace with bcrypt in production
+      if (password !== "admin123") { // TODO: Replace with hashed password
+        return res.status(401).json({ message: "Credenziali non valide" });
+      }
+
+      // Update last login
+      await storage.updateAdminLastLogin(admin.id);
+
+      res.json({
+        token: "admin_token", // TODO: Generate JWT
+        admin: {
+          id: admin.id,
+          email: admin.email,
+          name: admin.name,
+          role: admin.role
+        }
+      });
+    } catch (error) {
+      console.error("Error in admin login:", error);
+      res.status(500).json({ message: "Errore del server" });
+    }
+  });
+
+  // Get all users for dashboard
+  app.get("/api/admin/users", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const { page = 1, limit = 20, search, status } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+
+      // Get all users with profiles and subscription info
+      const allUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          username: users.username,
+          subscriptionStatus: users.subscriptionStatus,
+          subscriptionPlan: users.subscriptionPlan,
+          trialEndDate: users.trialEndDate,
+          hasUsedTrial: users.hasUsedTrial,
+          createdAt: users.createdAt,
+          profile: {
+            id: userProfiles.id,
+            age: userProfiles.age,
+            weight: userProfiles.weight,
+            height: userProfiles.height,
+          }
+        })
+        .from(users)
+        .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
+        .limit(parseInt(limit))
+        .offset(offset)
+        .orderBy(desc(users.createdAt));
+
+      // Get activity logs for each user (last activity)
+      const usersWithActivity = await Promise.all(
+        allUsers.map(async (user) => {
+          const lastActivity = await db
+            .select()
+            .from(activityLogs)
+            .where(eq(activityLogs.userId, user.id))
+            .orderBy(desc(activityLogs.createdAt))
+            .limit(1);
+
+          return {
+            ...user,
+            lastActivity: lastActivity[0]?.createdAt || null,
+            lastAction: lastActivity[0]?.action || null
+          };
+        })
+      );
+
+      res.json({
+        users: usersWithActivity,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          offset
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Errore nel recupero utenti" });
+    }
+  });
+
+  // Get user details for dashboard
+  app.get("/api/admin/users/:userId", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+
+      // Get user with profile
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+
+      const profile = await storage.getUserProfile(userId);
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      const recipes = await storage.getRecipesByUser(userId);
+      const activityLogs = await storage.getActivityLogsByUser(userId, 50);
+      const conversations = await storage.getConversationsByUser(userId, 10);
+
+      // Get chat messages for recent conversations
+      const conversationsWithMessages = await Promise.all(
+        conversations.map(async (conv) => {
+          const messages = await storage.getMessagesByConversation(conv.id);
+          return { ...conv, messages: messages.slice(-10) }; // Last 10 messages
+        })
+      );
+
+      res.json({
+        user,
+        profile,
+        mealPlans: mealPlans.length,
+        recipes: recipes.length,
+        activityLogs,
+        conversations: conversationsWithMessages,
+        stats: {
+          totalMealPlans: mealPlans.length,
+          totalRecipes: recipes.length,
+          totalActivities: activityLogs.length,
+          totalConversations: conversations.length
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+      res.status(500).json({ message: "Errore nel recupero dettagli utente" });
+    }
+  });
+
+  // Get dashboard stats
+  app.get("/api/admin/stats", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const totalUsers = await db.select({ count: sql`count(*)` }).from(users);
+      const activeSubscriptions = await db.select({ count: sql`count(*)` }).from(users).where(eq(users.subscriptionStatus, 'active'));
+      const totalMealPlans = await db.select({ count: sql`count(*)` }).from(mealPlans);
+      const totalRecipes = await db.select({ count: sql`count(*)` }).from(recipes);
+
+      // Recent activity
+      const recentLogs = await storage.getAllActivityLogs(20, 0);
+
+      res.json({
+        stats: {
+          totalUsers: totalUsers[0].count,
+          activeSubscriptions: activeSubscriptions[0].count,
+          totalMealPlans: totalMealPlans[0].count,
+          totalRecipes: totalRecipes[0].count
+        },
+        recentActivity: recentLogs
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Errore nel recupero statistiche" });
+    }
+  });
+
+  console.log("✅ All routes registered successfully including admin dashboard");
 
   const httpServer = createServer(app);
   return httpServer;

@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session, type Conversation, type InsertConversation, type ChatMessage, type InsertChatMessage, type UserMemory, type InsertUserMemory } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session, type Conversation, type InsertConversation, type ChatMessage, type InsertChatMessage, type UserMemory, type InsertUserMemory, type AdminUser, type InsertAdminUser, type ActivityLog, type InsertActivityLog } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory } from "@shared/schema";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory, adminUsers, activityLogs } from "@shared/schema";
 import { eq, lt, desc, gte, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -73,6 +73,19 @@ export interface IStorage {
   createUserMemory(memory: InsertUserMemory): Promise<UserMemory>;
   updateUserMemoryLastReferenced(id: string): Promise<UserMemory | undefined>;
   getImportantMemories(userId: string, minImportance?: number): Promise<UserMemory[]>;
+
+  // Admin Users for dashboard access
+  getAdminUser(id: string): Promise<AdminUser | undefined>;
+  getAdminUserByEmail(email: string): Promise<AdminUser | undefined>;
+  createAdminUser(admin: InsertAdminUser): Promise<AdminUser>;
+  updateAdminLastLogin(id: string): Promise<AdminUser | undefined>;
+  getAllAdminUsers(): Promise<AdminUser[]>;
+
+  // Activity Logs for user tracking
+  createActivityLog(log: InsertActivityLog): Promise<ActivityLog>;
+  getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]>;
+  getAllActivityLogs(limit?: number, offset?: number): Promise<ActivityLog[]>;
+  getActivityLogsByAction(action: string, limit?: number): Promise<ActivityLog[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -934,6 +947,74 @@ export class DatabaseStorage implements IStorage {
       .from(userMemory)
       .where(and(eq(userMemory.userId, userId), gte(userMemory.importance, minImportance)))
       .orderBy(desc(userMemory.importance), desc(userMemory.lastReferencedAt));
+  }
+
+  // Admin Users for dashboard access
+  async getAdminUser(id: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.id, id));
+    return admin || undefined;
+  }
+
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> {
+    const [admin] = await db.select().from(adminUsers).where(eq(adminUsers.email, email));
+    return admin || undefined;
+  }
+
+  async createAdminUser(admin: InsertAdminUser): Promise<AdminUser> {
+    const [newAdmin] = await db
+      .insert(adminUsers)
+      .values(admin)
+      .returning();
+    return newAdmin;
+  }
+
+  async updateAdminLastLogin(id: string): Promise<AdminUser | undefined> {
+    const [admin] = await db
+      .update(adminUsers)
+      .set({ lastLoginAt: new Date() })
+      .where(eq(adminUsers.id, id))
+      .returning();
+    return admin || undefined;
+  }
+
+  async getAllAdminUsers(): Promise<AdminUser[]> {
+    return await db.select().from(adminUsers).orderBy(adminUsers.name);
+  }
+
+  // Activity Logs for user tracking
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> {
+    const [newLog] = await db
+      .insert(activityLogs)
+      .values(log)
+      .returning();
+    return newLog;
+  }
+
+  async getActivityLogsByUser(userId: string, limit: number = 50): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, userId))
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getAllActivityLogs(limit: number = 100, offset: number = 0): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getActivityLogsByAction(action: string, limit: number = 50): Promise<ActivityLog[]> {
+    return await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.action, action))
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit);
   }
 }
 

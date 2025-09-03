@@ -190,6 +190,29 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Admin Users table for dashboard access
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name").notNull(),
+  role: text("role").default("admin"), // "admin", "super_admin"
+  isActive: text("is_active").default("yes"), // "yes", "no"
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Activity Logs table for tracking user actions
+export const activityLogs = pgTable("activity_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  action: text("action").notNull(), // "login", "register", "trial_start", "subscription_start", "meal_plan_created", "recipe_generated", "chat_message", etc.
+  details: json("details").$type<Record<string, any>>(), // Additional context about the action
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Type definitions
 export type MealPlanDay = {
   day: string;
@@ -330,3 +353,9 @@ export type InsertChatMessage = typeof chatMessages.$inferInsert;
 
 export type UserMemory = typeof userMemory.$inferSelect;
 export type InsertUserMemory = typeof userMemory.$inferInsert;
+
+// Admin and Activity Log types
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = typeof adminUsers.$inferInsert;
+export type ActivityLog = typeof activityLogs.$inferSelect;
+export type InsertActivityLog = typeof activityLogs.$inferInsert;
