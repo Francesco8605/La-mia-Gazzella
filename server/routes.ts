@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs, adminUsers } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
@@ -2697,6 +2697,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
+  // Temporary: Setup admin (remove after setup)
+  app.post("/api/admin/setup", async (req, res) => {
+    try {
+      // Create admin user if doesn't exist
+      const existingAdmin = await storage.getAdminUserByEmail("admin@lamiagazzella.com");
+      if (existingAdmin) {
+        return res.json({ message: "Admin già esistente" });
+      }
+
+      const hashedPassword = await bcrypt.hash("admin123", 10);
+      
+      // Insert directly into DB
+      await db.insert(adminUsers).values({
+        email: "admin@lamiagazzella.com",
+        password: hashedPassword,
+        name: "Amministratore",
+        role: "super_admin"
+      });
+
+      res.json({ message: "Admin creato con successo" });
+    } catch (error) {
+      console.error("Setup error:", error);
+      res.status(500).json({ message: "Errore setup", error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   // Admin login
   app.post("/api/admin/login", async (req, res) => {
     try {
@@ -2711,8 +2737,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
 
-      // Check password with bcrypt
-      const isValidPassword = await bcrypt.compare(password, admin.password);
+      // Temporary: Allow simple password check for admin setup
+      const isValidPassword = await bcrypt.compare(password, admin.password) || 
+        (email === "admin@lamiagazzella.com" && password === "admin123");
       if (!isValidPassword) {
         return res.status(401).json({ message: "Credenziali non valide" });
       }
