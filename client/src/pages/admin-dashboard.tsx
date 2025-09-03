@@ -144,8 +144,8 @@ export default function AdminDashboard() {
             <div className="mx-auto w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mb-4">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <CardTitle className="text-2xl">Admin Dashboard</CardTitle>
-            <CardDescription>Accesso riservato al team La Mia Gazzella</CardDescription>
+            <CardTitle className="text-2xl text-red-600">🔒 ADMIN DASHBOARD SISTEMA</CardTitle>
+            <CardDescription className="text-orange-600 font-bold">⚠️ ACCESSO RISERVATO AL TEAM - VERSIONE ADMIN ⚠️</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
