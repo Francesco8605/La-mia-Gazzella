@@ -428,7 +428,7 @@ export class MemStorage implements IStorage {
         duration: "monthly",
         stripePriceId: "price_monthly",
         trialDays: 3,
-        features: ["Piano alimentare personalizzato", "Assistente IA", "Tracking peso"],
+        features: ["Piano alimentare personalizzato", "Assistente personalizzato", "Tracking peso"],
         isActive: "yes",
         createdAt: new Date(),
       }

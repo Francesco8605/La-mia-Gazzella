@@ -53,7 +53,7 @@ export default function PrivacyPolicy() {
               <ul className="list-disc pl-6 text-slate-600 space-y-1">
                 <li>Fornire piani nutrizionali personalizzati</li>
                 <li>Generare ricette adatte alle tue esigenze</li>
-                <li>Fornire assistenza nutrizionale tramite IA</li>
+                <li>Fornire assistenza nutrizionale personalizzata</li>
                 <li>Elaborare pagamenti e gestire abbonamenti</li>
                 <li>Migliorare i nostri servizi</li>
                 <li>Comunicare con te riguardo al servizio</li>

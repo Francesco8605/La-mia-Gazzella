@@ -1036,7 +1036,7 @@ Risposta in formato JSON:
   }
 }
 
-// AI Chat Response Interface
+// Chat Response Interface
 export interface AIChatRequest {
   userMessage: string;
   userId: string;
@@ -1373,7 +1373,7 @@ RISPONDI in italiano in modo:
     };
 
   } catch (error) {
-    console.error("Error generating AI chat response:", error);
+    console.error("Error generating chat response:", error);
     
     return {
       response: "Mi dispiace, sto avendo difficoltà tecniche. Riprova tra qualche minuto. Se il problema persiste, contatta il supporto.",

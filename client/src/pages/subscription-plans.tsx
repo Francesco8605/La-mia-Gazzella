@@ -39,7 +39,7 @@ export default function SubscriptionPlans() {
     priceEur: "29.00",
     duration: "monthly",
     trialDays: 3,
-    features: ["Piani alimentari personalizzati", "Generazione ricette IA", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
+    features: ["Piani alimentari personalizzati", "Generazione ricette personalizzate", "Tracciamento peso", "Chat assistente nutrizionale", "Supporto email"]
   };
 
   // Fetch subscription plans with custom queryFn

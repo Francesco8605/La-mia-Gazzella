@@ -1464,7 +1464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // AI Chat endpoint
+  // Chat endpoint
   app.post("/api/ai-chat/message", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
       const { message, conversationId } = req.body;
@@ -1474,7 +1474,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Messaggio richiesto" });
       }
 
-      console.log("🤖 AI Chat request from user:", userId);
+      console.log("🤖 Chat request from user:", userId);
       console.log("📝 Message:", message);
       console.log("💬 Conversation ID:", conversationId);
 
@@ -1550,7 +1550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("🧠 User memories found:", userMemories.length);
       console.log("💭 Recent messages found:", recentMessages.length);
 
-      // Generate AI response with memory context
+      // Generate response with memory context
       const aiResponse = await generateAIChatResponse({
         userMessage: message,
         userId,
@@ -1562,7 +1562,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         conversationId: currentConversation.id
       });
 
-      // Save AI response to database
+      // Save response to database
       const assistantMessage = await storage.createChatMessage({
         conversationId: currentConversation.id,
         role: "assistant",
@@ -1588,7 +1588,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         messageId: assistantMessage.id
       });
     } catch (error) {
-      console.error("Error in AI chat:", error);
+      console.error("Error in chat:", error);
       res.status(500).json({ 
         message: "Errore del server. Riprova tra poco.",
         error: error instanceof Error ? error.message : "Unknown error"
