@@ -50,6 +50,7 @@ export default function AdminDashboard() {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("users");
 
   // Login function
   const handleLogin = async (e: React.FormEvent) => {
@@ -242,7 +243,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        <Tabs defaultValue="users" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList>
             <TabsTrigger value="users">Utenti</TabsTrigger>
             <TabsTrigger value="user-detail" disabled={!selectedUserId}>Dettaglio Utente</TabsTrigger>
@@ -293,7 +294,10 @@ export default function AdminDashboard() {
                         <TableCell>
                           <Button
                             size="sm"
-                            onClick={() => setSelectedUserId(user.id)}
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setActiveTab("user-detail");
+                            }}
                             data-testid={`view-user-${user.id}`}
                           >
                             Visualizza
@@ -340,9 +344,128 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
+                {/* Piani Alimentari Generati */}
                 <Card className="lg:col-span-2">
                   <CardHeader>
-                    <CardTitle>Log Attività Recenti</CardTitle>
+                    <CardTitle>📋 Piani Alimentari Generati ({userDetails.mealPlans?.length || 0})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {userDetails.mealPlans && userDetails.mealPlans.length > 0 ? (
+                        userDetails.mealPlans.map((plan: any) => (
+                          <div key={plan.id} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-green-800">{plan.name || "Piano Personalizzato"}</h4>
+                                <p className="text-sm text-green-600">Obiettivo: {plan.goal || "Non specificato"}</p>
+                                <p className="text-xs text-slate-500">Creato: {new Date(plan.createdAt).toLocaleDateString('it-IT')}</p>
+                              </div>
+                              <div className="text-right text-sm">
+                                <p className="text-green-700">Calorie: {plan.targetCalories || "N/A"}</p>
+                                <p className="text-xs text-slate-500">Durata: {plan.duration || "N/A"} giorni</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500 text-center py-4">Nessun piano alimentare generato</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Ricette Generate */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>🍳 Ricette Generate ({userDetails.recipes?.length || 0})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3 max-h-60 overflow-y-auto">
+                      {userDetails.recipes && userDetails.recipes.length > 0 ? (
+                        userDetails.recipes.map((recipe: any) => (
+                          <div key={recipe.id} className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h4 className="font-medium text-orange-800">{recipe.name}</h4>
+                                <p className="text-sm text-orange-600">{recipe.category || "Categoria non specificata"}</p>
+                                <p className="text-xs text-slate-500">Creata: {new Date(recipe.createdAt).toLocaleDateString('it-IT')}</p>
+                              </div>
+                              <div className="text-right text-sm">
+                                <p className="text-orange-700">⏱️ {recipe.prepTime || "N/A"} min</p>
+                                <p className="text-xs text-slate-500">🔥 {recipe.calories || "N/A"} cal</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500 text-center py-4">Nessuna ricetta generata</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Conversazioni Chat */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>💬 Conversazioni con Laura ({userDetails.conversations?.length || 0})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4 max-h-80 overflow-y-auto">
+                      {userDetails.conversations && userDetails.conversations.length > 0 ? (
+                        userDetails.conversations.map((conversation: any) => (
+                          <div key={conversation.id} className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex justify-between items-center mb-3">
+                              <h4 className="font-medium text-blue-800">
+                                💬 Conversazione del {new Date(conversation.createdAt).toLocaleDateString('it-IT')}
+                              </h4>
+                              <span className="text-xs text-blue-600">{conversation.messages?.length || 0} messaggi</span>
+                            </div>
+                            
+                            {conversation.messages && conversation.messages.length > 0 && (
+                              <div className="space-y-2">
+                                {conversation.messages.slice(-3).map((message: any, index: number) => (
+                                  <div key={message.id || index} className={`p-2 rounded text-xs ${
+                                    message.role === 'user' 
+                                      ? 'bg-blue-100 text-blue-800 ml-4' 
+                                      : 'bg-white text-slate-700 mr-4'
+                                  }`}>
+                                    <div className="flex justify-between items-start">
+                                      <p className="flex-1">
+                                        <strong>{message.role === 'user' ? '👤 Cliente:' : '🧠 Laura:'}</strong> 
+                                        {message.content.length > 150 
+                                          ? ` ${message.content.substring(0, 150)}...` 
+                                          : ` ${message.content}`
+                                        }
+                                      </p>
+                                      <span className="text-xs text-slate-400 ml-2">
+                                        {new Date(message.createdAt).toLocaleTimeString('it-IT', { 
+                                          hour: '2-digit', 
+                                          minute: '2-digit' 
+                                        })}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))}
+                                {conversation.messages.length > 3 && (
+                                  <p className="text-xs text-blue-600 text-center">
+                                    ... e altri {conversation.messages.length - 3} messaggi
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-slate-500 text-center py-4">Nessuna conversazione registrata</p>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Log Attività Recenti */}
+                <Card className="lg:col-span-2">
+                  <CardHeader>
+                    <CardTitle>📝 Log Attività Recenti</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2 max-h-60 overflow-y-auto">

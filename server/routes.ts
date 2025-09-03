@@ -2852,8 +2852,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         user,
         profile,
-        mealPlans: mealPlans.length,
-        recipes: recipes.length,
+        mealPlans, // Full meal plans data
+        recipes, // Full recipes data
         activityLogs,
         conversations: conversationsWithMessages,
         stats: {
