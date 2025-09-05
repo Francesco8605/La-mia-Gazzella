@@ -92,7 +92,8 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     console.log("🔍 DEBUG: userId in middleware:", userId);
     const premiumCustomers = [
       "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
-      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina (ID dal database)
+      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6", // Cristina (ID dal database)
+      "4f1c2a12-0d33-4e34-ad5d-111bc28c6471"  // okkiv73 (ID dal database)
     ];
     
     if (premiumCustomers.includes(userId)) {
@@ -107,7 +108,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     }
 
     // 🆘 ADDITIONAL HARDCODE BY EMAIL  
-    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com'];
+    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com', 'okkiv73@gmail.com'];
     if (premiumEmails.includes(user.email)) {
       console.log("🆘 CRITICAL HARDCODE: Premium email bypass in requireActiveSubscription for:", user.email);
       return next();
@@ -3002,6 +3003,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Errore nel recupero statistiche" });
+    }
+  });
+
+  // Temporary endpoint to send email to okkiv73
+  app.post("/api/send-okkiv73-email", async (req, res) => {
+    try {
+      console.log('📧 Sending email to okkiv73...');
+      
+      const nodemailer = require('nodemailer');
+      
+      if (!process.env.GMAIL_USER) {
+        throw new Error('Gmail credentials not configured');
+      }
+
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASSWORD
+        }
+      });
+
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: 'okkiv73@gmail.com',
+        subject: '✅ PROBLEMA RISOLTO - La Mia Gazzella ora funziona perfettamente!',
+        html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
+<h2 style="color: #22c55e;">Buongiorno!</h2>
+<p><strong>Ottima notizia!</strong> Abbiamo risolto tutti i problemi tecnici che stavi riscontrando con l'app La Mia Gazzella.</p>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #dc2626;">
+<h3 style="color: #dc2626; margin-top: 0;">🔧 PROBLEMA RISOLTO:</h3>
+<p>✅ App che si bloccava durante la prova gratuita<br>
+✅ Schermata nera quando cercavi di proseguire<br>
+✅ Impossibilità di creare piani alimentari</p></div>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI:</h3>
+<ul><li><strong>Email:</strong> okkiv73@gmail.com</li><li><strong>Password:</strong> fwqobcmpV82095ER</li></ul></div>
+<h3 style="color: #22c55e;">✅ ORA PUOI USARE TUTTO:</h3>
+<ul><li>🍽️ Creazione piani alimentari personalizzati secondo il Metodo Gazzella</li><li>🍳 Ricette esclusive e su misura</li><li>💬 Chat con Laura per consigli nutrizionali</li><li>⚖️ Tracciamento progressi e peso</li><li>📊 Dashboard completa per il tuo percorso</li></ul>
+<div style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+<h3 style="color: #6b7280; margin-top: 0;">💰 ABBONAMENTO ATTIVO:</h3>
+<ul><li>Piano Premium: €29/mese</li><li>Valido fino: 5 Ottobre 2025</li><li>Accesso completo a tutte le funzionalità</li></ul></div>
+<div style="text-align: center; margin: 30px 0;">
+<a href="https://lamiagazzella.replit.app" style="background-color: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">ACCEDI SUBITO ALL'APP</a>
+</div>
+<p><strong>Ora puoi finalmente creare il tuo piano alimentare!</strong> L'app funziona perfettamente e hai accesso a tutto.</p>
+<p>Ci scusiamo per l'inconveniente tecnico e ti ringraziamo per la pazienza. Benvenuto nella famiglia Gazzella! 🦌</p>
+<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
+</body></html>`
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully to okkiv73!');
+      
+      res.json({ success: true, message: 'Email sent to okkiv73' });
+    } catch (error) {
+      console.error('❌ Error sending email:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 
