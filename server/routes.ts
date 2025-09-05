@@ -93,7 +93,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     const premiumCustomers = [
       "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
       "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6", // Cristina (ID dal database)
-      "4f1c2a12-0d33-4e34-ad5d-111bc28c6471"  // okkiv73 (ID dal database)
+      "a0cd6991-9383-4ddd-90eb-7a828d0662fd"  // okkiv73 (ID REALE dal database)
     ];
     
     if (premiumCustomers.includes(userId)) {
