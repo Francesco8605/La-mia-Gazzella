@@ -655,11 +655,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMealPlan(insertMealPlan: InsertMealPlan): Promise<MealPlan> {
-    const [mealPlan] = await db
-      .insert(mealPlans)
-      .values(insertMealPlan as any)
-      .returning();
-    return mealPlan;
+    // Debug log per vedere cosa stiamo inserendo
+    console.log("🔍 createMealPlan input:", JSON.stringify(insertMealPlan, null, 2));
+    
+    // Assicuriamoci che i valori numerici siano effettivamente numeri
+    const sanitizedData = {
+      ...insertMealPlan,
+      targetCalories: insertMealPlan.targetCalories ? parseInt(String(insertMealPlan.targetCalories)) : null,
+      targetProtein: insertMealPlan.targetProtein ? parseInt(String(insertMealPlan.targetProtein)) : null,
+      targetCarbs: insertMealPlan.targetCarbs ? parseInt(String(insertMealPlan.targetCarbs)) : null,
+      targetFat: insertMealPlan.targetFat ? parseInt(String(insertMealPlan.targetFat)) : null,
+      idealWeight: insertMealPlan.idealWeight ? parseInt(String(insertMealPlan.idealWeight)) : null,
+      weightGoal: insertMealPlan.weightGoal ? parseInt(String(insertMealPlan.weightGoal)) : null,
+      estimatedTimeWeeks: insertMealPlan.estimatedTimeWeeks ? parseInt(String(insertMealPlan.estimatedTimeWeeks)) : null,
+    };
+
+    console.log("🔧 createMealPlan sanitized:", JSON.stringify(sanitizedData, null, 2));
+
+    try {
+      const [mealPlan] = await db
+        .insert(mealPlans)
+        .values(sanitizedData)
+        .returning();
+      return mealPlan;
+    } catch (error) {
+      console.error("❌ Database insertion error:", error);
+      throw error;
+    }
   }
 
   async updateMealPlan(id: string, updateData: Partial<InsertMealPlan>): Promise<MealPlan | undefined> {
