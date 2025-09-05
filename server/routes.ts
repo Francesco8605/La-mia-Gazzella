@@ -3005,6 +3005,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary endpoint to send email to Cristina
+  app.post("/api/send-cristina-email", async (req, res) => {
+    try {
+      console.log('📧 Sending email to Cristina...');
+      
+      const nodemailer = require('nodemailer');
+      
+      if (!process.env.GMAIL_USER) {
+        throw new Error('Gmail credentials not configured');
+      }
+
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASSWORD
+        }
+      });
+
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: 'cristinapaparo@me.com',
+        subject: '✅ Tutto risolto - La tua app La Mia Gazzella è perfettamente funzionante!',
+        html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
+<h2 style="color: #22c55e;">Ciao Cristina,</h2>
+<p>Ottima notizia! Abbiamo risolto tutti i problemi tecnici e il tuo account La Mia Gazzella è ora <strong>completamente operativo</strong> con accesso a tutte le funzionalità premium.</p>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI:</h3>
+<ul><li><strong>Email:</strong> cristinapaparo@me.com</li><li><strong>Password:</strong> 6iz66w79444F7YIK</li></ul></div>
+<h3 style="color: #22c55e;">✅ TUTTO FUNZIONA:</h3>
+<ul><li>🍽️ Piani alimentari personalizzati</li><li>🍳 Ricette esclusive</li><li>💬 Chat con Laura</li><li>⚖️ Tracciamento peso</li></ul>
+<div style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+<h3 style="color: #6b7280; margin-top: 0;">💰 ABBONAMENTO ATTIVO:</h3>
+<ul><li>Piano: €29/mese</li><li>Valido fino: 5 Ottobre 2025</li></ul></div>
+<p>Benvenuta nella famiglia Gazzella! 🦌</p>
+<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
+</body></html>`
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully to Cristina!');
+      
+      res.json({ success: true, message: 'Email sent to Cristina' });
+    } catch (error) {
+      console.error('❌ Error sending email:', error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
   console.log("✅ All routes registered successfully including admin dashboard");
 
   const httpServer = createServer(app);
