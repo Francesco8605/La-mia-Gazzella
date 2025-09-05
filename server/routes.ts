@@ -53,23 +53,6 @@ async function isAuthenticated(req: any, res: any, next: any) {
     // Mock user object to match what would come from Replit Auth
     const userId = (session.sess as any).userId;
     console.log("✅ User authenticated:", userId);
-    
-    // CRITICAL HARDCODE: Force authentication for premium customers
-    const premiumUsers: { [key: string]: string } = {
-      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c": "Maria",
-      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6": "Cristina"
-    };
-    
-    if (premiumUsers[userId]) {
-      console.log(`🆘 HARDCODE AUTH FOR ${premiumUsers[userId]}`);
-      req.user = {
-        claims: {
-          sub: userId
-        }
-      };
-      return next();
-    }
-    
     req.user = {
       claims: {
         sub: userId
@@ -87,33 +70,13 @@ async function isAuthenticated(req: any, res: any, next: any) {
 async function requireActiveSubscription(req: any, res: any, next: any) {
   try {
     const userId = (req as any).user.claims.sub;
-    
-    // 🆘 CRITICAL HARDCODE FOR PREMIUM CUSTOMERS
-    console.log("🔍 DEBUG: userId in middleware:", userId);
-    const premiumCustomers = [
-      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
-      "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
-      "a0cd6991-9383-4ddd-90eb-7a828d0662fd", // okkiv73 (ID REALE dal database)
-      "4db6edc6-6285-46a8-97ef-f88dba14e1da"  // fresco8605 (account esistente)
-    ];
-    
-    if (premiumCustomers.includes(userId)) {
-      console.log("🆘 CRITICAL HARDCODE: Premium customer bypass in requireActiveSubscription for:", userId);
-      return next();
-    }
-    
     const user = await storage.getUser(userId);
     
     if (!user) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
-    // 🆘 ADDITIONAL HARDCODE BY EMAIL  
-    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com', 'okkiv73@gmail.com', 'fresco8605@gmail.com'];
-    if (premiumEmails.includes(user.email)) {
-      console.log("🆘 CRITICAL HARDCODE: Premium email bypass in requireActiveSubscription for:", user.email);
-      return next();
-    }
+
 
     // Check if user has active subscription
     const now = new Date();
@@ -911,47 +874,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Meal Plans  
-  app.post("/api/meal-plans/generate", async (req: any, res) => {
+  app.post("/api/meal-plans/generate", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
-      console.log("🔍 POST /api/meal-plans/generate called - ENTRY POINT");
+      console.log("POST /api/meal-plans/generate called");
       
-      // MANUAL AUTHENTICATION FOR MARIA
-      const sessionId = req.cookies?.session;
-      console.log("🔍 Session ID:", sessionId);
-      
-      if (!sessionId) {
-        console.log("❌ No session cookie");
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-      
-      const session = await storage.getSession(sessionId);
-      console.log("🔍 Session found:", !!session);
-      
-      if (!session) {
-        console.log("❌ Invalid session");
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-      
-      const userId = (session.sess as any).userId;
-      console.log("🔍 User ID from session:", userId);
-      
-      // 🆘 HARDCODE BYPASS FOR PREMIUM CUSTOMERS
-      const allowedUsers = [
-        "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
-        "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
-        "a0cd6991-9383-4ddd-90eb-7a828d0662fd", // okkiv73 (ID REALE dal database)
-        "4db6edc6-6285-46a8-97ef-f88dba14e1da"  // fresco8605 (account esistente)
-      ];
-      
-      if (!allowedUsers.includes(userId)) {
-        console.log("🚫 BLOCKING user:", userId);
-        return res.status(403).json({
-          message: "Abbonamento richiesto",
-          requiresSubscription: true
-        });
-      }
-      
-      console.log("✅ PREMIUM CUSTOMER HARDCODE SUCCESS - PROCEEDING TO MEAL PLAN GENERATION");
+      // Use authenticated user ID from session
+      const userId = (req as any).user.claims.sub;
       const profile = await storage.getUserProfile(userId);
       
       console.log("Profile found:", !!profile);
@@ -2638,56 +2566,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get user subscription status
-  app.get("/api/user/subscription", async (req, res) => {
+  app.get("/api/user/subscription", isAuthenticated, async (req, res) => {
     try {
-      // EMERGENCY BYPASS: Check if this is Maria by cookie or session first
-      const sessionId = req.cookies?.session;
-      if (sessionId) {
-        const session = await storage.getSession(sessionId);
-        if (session) {
-          const userId = (session.sess as any).userId;
-          const user = await storage.getUser(userId);
-          if (user && user.email === 'ayetta@me.com') {
-            console.log(`🆘 EMERGENCY BYPASS FOR MARIA ACTIVATED`);
-            return res.json({
-              hasActiveSubscription: true,
-              status: 'active',
-              plan: 'monthly-29',
-              startDate: '2025-09-01T20:37:11.000Z',
-              endDate: '2025-10-04T20:37:11.000Z',
-              trialEndDate: null,
-              isInTrial: false,
-              hasUsedTrial: true
-            });
-          }
-          if (user && user.email === 'cristinapaparo@me.com') {
-            console.log(`🆘 EMERGENCY BYPASS FOR CRISTINA ACTIVATED`);
-            return res.json({
-              hasActiveSubscription: true,
-              status: 'active',
-              plan: 'monthly-29',
-              startDate: '2025-09-05T06:00:00.000Z',
-              endDate: '2025-10-05T06:00:00.000Z',
-              trialEndDate: null,
-              isInTrial: false,
-              hasUsedTrial: true
-            });
-          }
-        }
-      }
-      
-      // FALLBACK: Try auth middleware approach
-      const userId = (req as any).user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Non autenticato" });
-      }
-      
+      const userId = (req as any).user.claims.sub;
       const user = await storage.getUser(userId);
+      
       if (!user) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
-
-      console.log(`🔍 AUTHENTICATED USER: ${user.email} (ID: ${user.id})`);
 
       console.log(`🔍 Checking subscription for user ${user.email}:`, {
         subscriptionStatus: user.subscriptionStatus,
@@ -3006,171 +2892,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Errore nel recupero statistiche" });
-    }
-  });
-
-  // Temporary endpoint to send email to Maria
-  app.post("/api/send-maria-email", async (req, res) => {
-    try {
-      console.log('📧 Sending email to Maria...');
-      
-      const nodemailer = require('nodemailer');
-      
-      if (!process.env.GMAIL_USER) {
-        throw new Error('Gmail credentials not configured');
-      }
-
-      const transporter = nodemailer.createTransporter({
-        service: 'gmail',
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASSWORD
-        }
-      });
-
-      const mailOptions = {
-        from: process.env.GMAIL_USER,
-        to: 'ayetta@me.com',
-        subject: '🔑 Nuova Password - La Mia Gazzella',
-        html: `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
-<h2 style="color: #22c55e;">Ciao Maria!</h2>
-<p>Abbiamo aggiornato la tua password per garantire l'accesso all'app.</p>
-<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI AGGIORNATE:</h3>
-<ul><li><strong>Email:</strong> ayetta@me.com</li><li><strong>Nuova Password:</strong> maria2025</li></ul></div>
-<p>Puoi ora accedere normalmente all'app e utilizzare tutte le funzionalità premium.</p>
-<div style="text-align: center; margin: 30px 0;">
-<a href="https://lamiagazzella.replit.app" style="background-color: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">ACCEDI ALL'APP</a>
-</div>
-<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
-</body></html>`
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully to Maria!');
-      
-      res.json({ success: true, message: 'Email sent to Maria' });
-    } catch (error) {
-      console.error('❌ Error sending email:', error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
-
-  // Temporary endpoint to send email to okkiv73
-  app.post("/api/send-okkiv73-email", async (req, res) => {
-    try {
-      console.log('📧 Sending email to okkiv73...');
-      
-      const nodemailer = require('nodemailer');
-      
-      if (!process.env.GMAIL_USER) {
-        throw new Error('Gmail credentials not configured');
-      }
-
-      const transporter = nodemailer.createTransporter({
-        service: 'gmail',
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASSWORD
-        }
-      });
-
-      const mailOptions = {
-        from: process.env.GMAIL_USER,
-        to: 'okkiv73@gmail.com',
-        subject: '✅ PROBLEMA RISOLTO - La Mia Gazzella ora funziona perfettamente!',
-        html: `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
-<h2 style="color: #22c55e;">Buongiorno!</h2>
-<p><strong>Ottima notizia!</strong> Abbiamo risolto tutti i problemi tecnici che stavi riscontrando con l'app La Mia Gazzella.</p>
-<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid #dc2626;">
-<h3 style="color: #dc2626; margin-top: 0;">🔧 PROBLEMA RISOLTO:</h3>
-<p>✅ App che si bloccava durante la prova gratuita<br>
-✅ Schermata nera quando cercavi di proseguire<br>
-✅ Impossibilità di creare piani alimentari</p></div>
-<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI:</h3>
-<ul><li><strong>Email:</strong> okkiv73@gmail.com</li><li><strong>Password:</strong> fwqobcmpV82095ER</li></ul></div>
-<h3 style="color: #22c55e;">✅ ORA PUOI USARE TUTTO:</h3>
-<ul><li>🍽️ Creazione piani alimentari personalizzati secondo il Metodo Gazzella</li><li>🍳 Ricette esclusive e su misura</li><li>💬 Chat con Laura per consigli nutrizionali</li><li>⚖️ Tracciamento progressi e peso</li><li>📊 Dashboard completa per il tuo percorso</li></ul>
-<div style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-<h3 style="color: #6b7280; margin-top: 0;">💰 ABBONAMENTO ATTIVO:</h3>
-<ul><li>Piano Premium: €29/mese</li><li>Valido fino: 5 Ottobre 2025</li><li>Accesso completo a tutte le funzionalità</li></ul></div>
-<div style="text-align: center; margin: 30px 0;">
-<a href="https://lamiagazzella.replit.app" style="background-color: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">ACCEDI SUBITO ALL'APP</a>
-</div>
-<p><strong>Ora puoi finalmente creare il tuo piano alimentare!</strong> L'app funziona perfettamente e hai accesso a tutto.</p>
-<p>Ci scusiamo per l'inconveniente tecnico e ti ringraziamo per la pazienza. Benvenuto nella famiglia Gazzella! 🦌</p>
-<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
-</body></html>`
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully to okkiv73!');
-      
-      res.json({ success: true, message: 'Email sent to okkiv73' });
-    } catch (error) {
-      console.error('❌ Error sending email:', error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
-
-  // Temporary endpoint to send email to Cristina
-  app.post("/api/send-cristina-email", async (req, res) => {
-    try {
-      console.log('📧 Sending email to Cristina...');
-      
-      const nodemailer = require('nodemailer');
-      
-      if (!process.env.GMAIL_USER) {
-        throw new Error('Gmail credentials not configured');
-      }
-
-      const transporter = nodemailer.createTransporter({
-        service: 'gmail',
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_PASSWORD
-        }
-      });
-
-      const mailOptions = {
-        from: process.env.GMAIL_USER,
-        to: 'cristinapaparo@me.com',
-        subject: '✅ Tutto risolto - La tua app La Mia Gazzella è perfettamente funzionante!',
-        html: `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
-<h2 style="color: #22c55e;">Ciao Cristina,</h2>
-<p>Ottima notizia! Abbiamo risolto tutti i problemi tecnici e il tuo account La Mia Gazzella è ora <strong>completamente operativo</strong> con accesso a tutte le funzionalità premium.</p>
-<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI:</h3>
-<ul><li><strong>Email:</strong> cristinapaparo@me.com</li><li><strong>Password:</strong> 6iz66w79444F7YIK</li></ul></div>
-<h3 style="color: #22c55e;">✅ TUTTO FUNZIONA:</h3>
-<ul><li>🍽️ Piani alimentari personalizzati</li><li>🍳 Ricette esclusive</li><li>💬 Chat con Laura</li><li>⚖️ Tracciamento peso</li></ul>
-<div style="background-color: #f6f8fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
-<h3 style="color: #6b7280; margin-top: 0;">💰 ABBONAMENTO ATTIVO:</h3>
-<ul><li>Piano: €29/mese</li><li>Valido fino: 5 Ottobre 2025</li></ul></div>
-<p>Benvenuta nella famiglia Gazzella! 🦌</p>
-<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
-</body></html>`
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('✅ Email sent successfully to Cristina!');
-      
-      res.json({ success: true, message: 'Email sent to Cristina' });
-    } catch (error) {
-      console.error('❌ Error sending email:', error);
-      res.status(500).json({ success: false, error: error.message });
     }
   });
 

@@ -2,7 +2,7 @@ import { type User, type InsertUser, type UserProfile, type InsertUserProfile, t
 import { randomUUID } from "crypto";
 import { db } from "./db";
 import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory, adminUsers, activityLogs } from "@shared/schema";
-import { eq, lt, desc, gte, and, sql } from "drizzle-orm";
+import { eq, lt, desc, gte, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -550,34 +550,7 @@ export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    if (!user) return undefined;
-    
-    // CRITICAL FIX: Drizzle mapping bug for subscription_end_date
-    console.log(`🆘 DEBUG getUser: ${user.email}, status=${user.subscriptionStatus}, endDate=${user.subscriptionEndDate}`);
-    if (user.subscriptionStatus === 'active' && !user.subscriptionEndDate) {
-      console.log(`🆘 FIXING USER: ${user.email}`);
-      try {
-        const result = await db.execute(sql`
-          SELECT subscription_end_date 
-          FROM users 
-          WHERE id = ${id}
-        `);
-        const rawDate = result.rows[0]?.subscription_end_date;
-        console.log(`🆘 RAW DATE: ${rawDate}`);
-        if (rawDate) {
-          const fixedUser = {
-            ...user,
-            subscriptionEndDate: new Date(rawDate as string)
-          };
-          console.log(`🆘 FIXED: ${fixedUser.email} -> ${fixedUser.subscriptionEndDate}`);
-          return fixedUser;
-        }
-      } catch (error) {
-        console.error('Fix subscription date error:', error);
-      }
-    }
-    
-    return user;
+    return user || undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
@@ -587,29 +560,7 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
-    if (!user) return undefined;
-    
-    // CRITICAL FIX: Drizzle mapping bug for subscription_end_date
-    if (user.subscriptionStatus === 'active' && !user.subscriptionEndDate) {
-      try {
-        const result = await db.execute(sql`
-          SELECT subscription_end_date 
-          FROM users 
-          WHERE email = ${email}
-        `);
-        const rawDate = result.rows[0]?.subscription_end_date;
-        if (rawDate) {
-          return {
-            ...user,
-            subscriptionEndDate: new Date(rawDate as string)
-          };
-        }
-      } catch (error) {
-        console.error('Fix subscription date error:', error);
-      }
-    }
-    
-    return user;
+    return user || undefined;
   }
 
   async updateUserPassword(id: string, hashedPassword: string): Promise<User | undefined> {
