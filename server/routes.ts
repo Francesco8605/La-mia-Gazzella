@@ -83,8 +83,9 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     let hasActiveSubscription = false;
 
     if (user.subscriptionStatus === 'active') {
-      // Check if subscription hasn't expired
-      if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
+      // Se subscriptionEndDate è null = abbonamento attivo senza scadenza
+      // Se subscriptionEndDate è definito = controlla che non sia scaduto
+      if (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now) {
         hasActiveSubscription = true;
       }
     } else if (user.subscriptionStatus === 'trialing') {
