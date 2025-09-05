@@ -92,7 +92,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     console.log("🔍 DEBUG: userId in middleware:", userId);
     const premiumCustomers = [
       "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
-      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina
+      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina (ID dal database)
     ];
     
     if (premiumCustomers.includes(userId)) {
@@ -936,7 +936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // 🆘 HARDCODE BYPASS FOR PREMIUM CUSTOMERS
       const allowedUsers = [
         "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
-        "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina
+        "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina (ID dal database)
       ];
       
       if (!allowedUsers.includes(userId)) {
