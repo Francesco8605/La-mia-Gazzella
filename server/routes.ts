@@ -2590,10 +2590,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          user.trialEndDate && 
                          new Date(user.trialEndDate) > now;
                          
-      // Determine active subscription status  
+      // Determine active subscription status - FIX: null endDate = active unlimited
       const isActiveSubscription = user.subscriptionStatus === 'active' &&
-                                    user.subscriptionEndDate &&
-                                    new Date(user.subscriptionEndDate) > now;
+                                    (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now);
                          
       const hasActiveSubscription = isActiveSubscription || isTrialing;
 
