@@ -260,8 +260,15 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
     // Il protocollo Gazzella è applicabile a tutte le donne
     // Rimuoviamo la restrizione di età per rendere l'app più accessibile
 
-    const excludedFoods = request.userProfile.excludedFoods || [];
-    const allergies = request.userProfile.allergies || [];
+    // SAFETY: Always ensure allergies and excludedFoods are arrays
+    const safeProfile = {
+      ...request.userProfile,
+      allergies: Array.isArray(request.userProfile.allergies) ? request.userProfile.allergies : (request.userProfile.allergies ? [request.userProfile.allergies] : []),
+      excludedFoods: Array.isArray(request.userProfile.excludedFoods) ? request.userProfile.excludedFoods : (request.userProfile.excludedFoods ? [request.userProfile.excludedFoods] : [])
+    };
+
+    const excludedFoods = safeProfile.excludedFoods || [];
+    const allergies = safeProfile.allergies || [];
     const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
 
     // Calcolo grammature precise per questa specifica cliente
@@ -773,8 +780,8 @@ export async function generateRecipe(request: RecipeRequest): Promise<{
 REQUISITI RICETTA:
 
 Target Calories: ${request.targetCalories}
-Dietary Preferences: ${request.dietaryPreferences.join(", ") || "None"}
-Allergies to Avoid: ${request.allergies?.join(", ") || "None"}
+Dietary Preferences: ${Array.isArray(request.dietaryPreferences) ? request.dietaryPreferences.join(", ") : (request.dietaryPreferences || "None")}
+Allergies to Avoid: ${Array.isArray(request.allergies) ? request.allergies.join(", ") : (request.allergies || "None")}
 Preferred Cuisine: ${request.cuisine || "Any"}
 
 Please create a complete recipe that includes:
@@ -958,7 +965,7 @@ Calcolati specificamente per cliente ${clientProfile.peso}kg, altezza ${clientPr
 OBIETTIVI:
 - Calorie target: ${request.targetCalories}
 - Supporto obiettivo peso: ${clientProfile.pesoObbiettivo}kg
-- Allergie da evitare: ${request.allergies?.join(", ") || "nessuna"}
+- Allergie da evitare: ${Array.isArray(request.allergies) ? request.allergies.join(", ") : (request.allergies || "nessuna")}
 
 🎯 LIVELLO DIFFICOLTÀ RICHIESTO: ${request.difficulty || "facile"}
 ${request.difficulty === "facile" ? `
