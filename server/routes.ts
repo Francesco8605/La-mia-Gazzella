@@ -54,12 +54,17 @@ async function isAuthenticated(req: any, res: any, next: any) {
     const userId = (session.sess as any).userId;
     console.log("✅ User authenticated:", userId);
     
-    // CRITICAL HARDCODE: Force Maria's authentication
-    if (userId === "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c") {
-      console.log("🆘 HARDCODE AUTH FOR MARIA");
+    // CRITICAL HARDCODE: Force authentication for premium customers
+    const premiumUsers = {
+      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c": "Maria",
+      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6": "Cristina"
+    };
+    
+    if (premiumUsers[userId]) {
+      console.log(`🆘 HARDCODE AUTH FOR ${premiumUsers[userId]}`);
       req.user = {
         claims: {
-          sub: "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c"
+          sub: userId
         }
       };
       return next();
@@ -922,11 +927,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (session.sess as any).userId;
       console.log("🔍 User ID from session:", userId);
       
-      // 🆘 MARIA HARDCODE
-      if (userId !== "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c") {
-        console.log("🚫 BLOCKING non-Maria user:", userId);
+      // 🆘 HARDCODE BYPASS FOR PREMIUM CUSTOMERS
+      const allowedUsers = [
+        "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
+        "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina
+      ];
+      
+      if (!allowedUsers.includes(userId)) {
+        console.log("🚫 BLOCKING user:", userId);
         return res.status(403).json({
-          message: "HARDCODE: Solo Maria può accedere",
+          message: "Abbonamento richiesto",
           requiresSubscription: true
         });
       }
