@@ -549,32 +549,31 @@ export class MemStorage implements IStorage {
 export class DatabaseStorage implements IStorage {
   // Users
   async getUser(id: string): Promise<User | undefined> {
-    console.log(`🔧 getUser called for ID: ${id}`);
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    if (!user) {
-      console.log(`🔧 No user found for ID: ${id}`);
-      return undefined;
-    }
+    if (!user) return undefined;
     
-    console.log(`🔧 User found: ${user.email}, subscriptionStatus: ${user.subscriptionStatus}, subscriptionEndDate: ${user.subscriptionEndDate} (type: ${typeof user.subscriptionEndDate})`);
-    
-    // Fix Drizzle mapping bug for subscription_end_date
-    if (user.subscriptionStatus === 'active' && user.subscriptionEndDate === null) {
-      console.log(`🔧 Applying fix for user ${user.email}`);
-      const result = await db.execute(sql`
-        SELECT subscription_end_date 
-        FROM users 
-        WHERE id = ${id}
-      `);
-      const rawDate = result.rows[0]?.subscription_end_date;
-      console.log(`🔧 Raw date from DB: ${rawDate}`);
-      if (rawDate) {
-        const fixedUser = {
-          ...user,
-          subscriptionEndDate: new Date(rawDate as string)
-        };
-        console.log(`🔧 Fixed user endDate: ${fixedUser.subscriptionEndDate}`);
-        return fixedUser;
+    // CRITICAL FIX: Drizzle mapping bug for subscription_end_date
+    console.log(`🆘 DEBUG getUser: ${user.email}, status=${user.subscriptionStatus}, endDate=${user.subscriptionEndDate}`);
+    if (user.subscriptionStatus === 'active' && !user.subscriptionEndDate) {
+      console.log(`🆘 FIXING USER: ${user.email}`);
+      try {
+        const result = await db.execute(sql`
+          SELECT subscription_end_date 
+          FROM users 
+          WHERE id = ${id}
+        `);
+        const rawDate = result.rows[0]?.subscription_end_date;
+        console.log(`🆘 RAW DATE: ${rawDate}`);
+        if (rawDate) {
+          const fixedUser = {
+            ...user,
+            subscriptionEndDate: new Date(rawDate as string)
+          };
+          console.log(`🆘 FIXED: ${fixedUser.email} -> ${fixedUser.subscriptionEndDate}`);
+          return fixedUser;
+        }
+      } catch (error) {
+        console.error('Fix subscription date error:', error);
       }
     }
     
@@ -590,19 +589,23 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     if (!user) return undefined;
     
-    // Fix Drizzle mapping bug for subscription_end_date
+    // CRITICAL FIX: Drizzle mapping bug for subscription_end_date
     if (user.subscriptionStatus === 'active' && !user.subscriptionEndDate) {
-      const result = await db.execute(sql`
-        SELECT subscription_end_date 
-        FROM users 
-        WHERE email = ${email}
-      `);
-      const rawDate = result.rows[0]?.subscription_end_date;
-      if (rawDate) {
-        return {
-          ...user,
-          subscriptionEndDate: new Date(rawDate as string)
-        };
+      try {
+        const result = await db.execute(sql`
+          SELECT subscription_end_date 
+          FROM users 
+          WHERE email = ${email}
+        `);
+        const rawDate = result.rows[0]?.subscription_end_date;
+        if (rawDate) {
+          return {
+            ...user,
+            subscriptionEndDate: new Date(rawDate as string)
+          };
+        }
+      } catch (error) {
+        console.error('Fix subscription date error:', error);
       }
     }
     
