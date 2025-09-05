@@ -55,7 +55,7 @@ async function isAuthenticated(req: any, res: any, next: any) {
     console.log("✅ User authenticated:", userId);
     
     // CRITICAL HARDCODE: Force authentication for premium customers
-    const premiumUsers = {
+    const premiumUsers: { [key: string]: string } = {
       "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c": "Maria",
       "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6": "Cristina"
     };
@@ -88,10 +88,15 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
   try {
     const userId = (req as any).user.claims.sub;
     
-    // 🆘 CRITICAL HARDCODE FOR MARIA
+    // 🆘 CRITICAL HARDCODE FOR PREMIUM CUSTOMERS
     console.log("🔍 DEBUG: userId in middleware:", userId);
-    if (userId === "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c") {
-      console.log("🆘 CRITICAL HARDCODE: Maria bypass in requireActiveSubscription");
+    const premiumCustomers = [
+      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
+      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6"  // Cristina
+    ];
+    
+    if (premiumCustomers.includes(userId)) {
+      console.log("🆘 CRITICAL HARDCODE: Premium customer bypass in requireActiveSubscription for:", userId);
       return next();
     }
     
@@ -101,9 +106,10 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
-    // 🆘 ADDITIONAL HARDCODE FOR MARIA BY EMAIL
-    if (user.email === 'ayetta@me.com') {
-      console.log("🆘 CRITICAL HARDCODE: Maria email bypass in requireActiveSubscription");
+    // 🆘 ADDITIONAL HARDCODE BY EMAIL  
+    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com'];
+    if (premiumEmails.includes(user.email)) {
+      console.log("🆘 CRITICAL HARDCODE: Premium email bypass in requireActiveSubscription for:", user.email);
       return next();
     }
 
@@ -941,7 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      console.log("✅ MARIA HARDCODE SUCCESS - PROCEEDING TO MEAL PLAN GENERATION");
+      console.log("✅ PREMIUM CUSTOMER HARDCODE SUCCESS - PROCEEDING TO MEAL PLAN GENERATION");
       const profile = await storage.getUserProfile(userId);
       
       console.log("Profile found:", !!profile);
