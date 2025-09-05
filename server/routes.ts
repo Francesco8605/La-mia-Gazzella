@@ -2584,6 +2584,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const now = new Date();
       
+      // TEMPORARY FIX for Maria's account - direct SQL lookup to bypass Drizzle mapping bug
+      let actualSubscriptionEndDate = user.subscriptionEndDate;
+      console.log(`🔧 Maria check: email=${user.email}, subscriptionEndDate=${user.subscriptionEndDate}`);
+      
+      if (user.email === 'ayetta@me.com' && !user.subscriptionEndDate) {
+        console.log(`🔧 Maria fix: Condition met, executing SQL query...`);
+        try {
+          const result = await db.execute(sql`
+            SELECT subscription_end_date 
+            FROM users 
+            WHERE email = 'ayetta@me.com'
+          `);
+          
+          console.log(`🔧 SQL result:`, result);
+          console.log(`🔧 SQL rows:`, result.rows);
+          
+          const rawDate = result.rows[0]?.subscription_end_date;
+          actualSubscriptionEndDate = rawDate ? new Date(rawDate as string) : null;
+          console.log(`🔧 Maria fix: rawDate=${rawDate}, converted=${actualSubscriptionEndDate}`);
+        } catch (error) {
+          console.error(`🔧 SQL error:`, error);
+        }
+      } else {
+        console.log(`🔧 Maria fix: Condition NOT met`);
+      }
+      
       // Determine trial status - Fix date comparison
       const isTrialing = user.subscriptionStatus === 'trialing' && 
                          user.trialEndDate && 
@@ -2591,8 +2617,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          
       // Determine active subscription status  
       const isActiveSubscription = user.subscriptionStatus === 'active' &&
-                                    user.subscriptionEndDate &&
-                                    new Date(user.subscriptionEndDate) > now;
+                                    actualSubscriptionEndDate &&
+                                    new Date(actualSubscriptionEndDate) > now;
                          
       const hasActiveSubscription = isActiveSubscription || isTrialing;
 
@@ -2601,7 +2627,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: user.subscriptionStatus || 'none',
         plan: user.subscriptionPlan || '',
         startDate: user.subscriptionStartDate,
-        endDate: user.subscriptionEndDate,
+        endDate: actualSubscriptionEndDate,
         trialEndDate: user.trialEndDate ? new Date(user.trialEndDate).toISOString() : null,
         isInTrial: isTrialing,
         hasUsedTrial: user.hasUsedTrial === 'yes'
