@@ -91,8 +91,8 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     // 🆘 CRITICAL HARDCODE FOR PREMIUM CUSTOMERS
     console.log("🔍 DEBUG: userId in middleware:", userId);
     const premiumCustomers = [
-      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
-      "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6", // Cristina (ID dal database)
+      "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
+      "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
       "a0cd6991-9383-4ddd-90eb-7a828d0662fd"  // okkiv73 (ID REALE dal database)
     ];
     
@@ -936,8 +936,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // 🆘 HARDCODE BYPASS FOR PREMIUM CUSTOMERS
       const allowedUsers = [
-        "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria
-        "50b6c8f3-a3f3-4dcd-aa16-287f31d918a6", // Cristina (ID dal database)
+        "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
+        "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
         "a0cd6991-9383-4ddd-90eb-7a828d0662fd"  // okkiv73 (ID REALE dal database)
       ];
       
@@ -3004,6 +3004,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
       res.status(500).json({ message: "Errore nel recupero statistiche" });
+    }
+  });
+
+  // Temporary endpoint to send email to Maria
+  app.post("/api/send-maria-email", async (req, res) => {
+    try {
+      console.log('📧 Sending email to Maria...');
+      
+      const nodemailer = require('nodemailer');
+      
+      if (!process.env.GMAIL_USER) {
+        throw new Error('Gmail credentials not configured');
+      }
+
+      const transporter = nodemailer.createTransporter({
+        service: 'gmail',
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASSWORD
+        }
+      });
+
+      const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to: 'ayetta@me.com',
+        subject: '🔑 Nuova Password - La Mia Gazzella',
+        html: `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>La Mia Gazzella</title></head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+<div style="text-align: center; margin-bottom: 30px;"><h1 style="color: #22c55e;">🦌 La Mia Gazzella</h1></div>
+<h2 style="color: #22c55e;">Ciao Maria!</h2>
+<p>Abbiamo aggiornato la tua password per garantire l'accesso all'app.</p>
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+<h3 style="color: #22c55e; margin-top: 0;">🔑 LE TUE CREDENZIALI AGGIORNATE:</h3>
+<ul><li><strong>Email:</strong> ayetta@me.com</li><li><strong>Nuova Password:</strong> maria2025</li></ul></div>
+<p>Puoi ora accedere normalmente all'app e utilizzare tutte le funzionalità premium.</p>
+<div style="text-align: center; margin: 30px 0;">
+<a href="https://lamiagazzella.replit.app" style="background-color: #22c55e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">ACCEDI ALL'APP</a>
+</div>
+<p>Un caro saluto,<br><strong>Il Team La Mia Gazzella</strong></p>
+</body></html>`
+      };
+
+      await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent successfully to Maria!');
+      
+      res.json({ success: true, message: 'Email sent to Maria' });
+    } catch (error) {
+      console.error('❌ Error sending email:', error);
+      res.status(500).json({ success: false, error: error.message });
     }
   });
 
