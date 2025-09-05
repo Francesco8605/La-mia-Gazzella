@@ -93,7 +93,8 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     const premiumCustomers = [
       "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
       "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
-      "a0cd6991-9383-4ddd-90eb-7a828d0662fd"  // okkiv73 (ID REALE dal database)
+      "a0cd6991-9383-4ddd-90eb-7a828d0662fd", // okkiv73 (ID REALE dal database)
+      "4db6edc6-6285-46a8-97ef-f88dba14e1da"  // fresco8605 (account esistente)
     ];
     
     if (premiumCustomers.includes(userId)) {
@@ -108,7 +109,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     }
 
     // 🆘 ADDITIONAL HARDCODE BY EMAIL  
-    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com', 'okkiv73@gmail.com'];
+    const premiumEmails = ['ayetta@me.com', 'cristinapaparo@me.com', 'okkiv73@gmail.com', 'fresco8605@gmail.com'];
     if (premiumEmails.includes(user.email)) {
       console.log("🆘 CRITICAL HARDCODE: Premium email bypass in requireActiveSubscription for:", user.email);
       return next();
@@ -938,7 +939,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const allowedUsers = [
         "904a2fcc-69d5-41f2-87f5-2f0eeb704f5c", // Maria (da verificare)
         "c18252fc-518b-46b9-b671-fa6f1edb9e57", // Cristina (ID REALE dal login)
-        "a0cd6991-9383-4ddd-90eb-7a828d0662fd"  // okkiv73 (ID REALE dal database)
+        "a0cd6991-9383-4ddd-90eb-7a828d0662fd", // okkiv73 (ID REALE dal database)
+        "4db6edc6-6285-46a8-97ef-f88dba14e1da"  // fresco8605 (account esistente)
       ];
       
       if (!allowedUsers.includes(userId)) {
