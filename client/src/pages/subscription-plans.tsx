@@ -3,7 +3,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Crown, Star } from "lucide-react";
+import { CheckCircle, Crown, Star, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
@@ -253,6 +253,20 @@ export default function SubscriptionPlans() {
               ⚠️ STOP a diete fallimentari, consulenze costose e risultati temporanei
             </p>
           </div>
+          
+          {/* First CTA - Right after value proposition */}
+          <div className="text-center mb-8">
+            <Button
+              onClick={() => handleSubscribe("monthly-29")}
+              disabled={createCheckoutMutation.isPending}
+              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            >
+              🚀 Inizia Prova Gratuita di 3 Giorni
+            </Button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Poi solo €29/mese • Cancella in qualsiasi momento
+            </p>
+          </div>
         </div>
 
         {/* Comparison Section */}
@@ -298,15 +312,33 @@ export default function SubscriptionPlans() {
                 </tr>
                 <tr>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Consulenza Nutrizionale</td>
-                  <td className="px-6 py-4 text-center text-red-500">✗</td>
-                  <td className="px-6 py-4 text-center text-red-500">✗</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">✓ Esperto sempre disponibile</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-red-500 text-2xl">❌</span>
+                    <p className="text-xs text-red-600 mt-1">Non inclusa</p>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-red-500 text-2xl">❌</span>
+                    <p className="text-xs text-red-600 mt-1">Non inclusa</p>
+                  </td>
+                  <td className="px-6 py-4 text-center bg-emerald-50 dark:bg-emerald-900/30">
+                    <span className="text-emerald-600 text-2xl">✅</span>
+                    <p className="text-sm font-semibold text-emerald-600">Esperto 24/7</p>
+                  </td>
                 </tr>
                 <tr className="bg-gray-50 dark:bg-gray-700/50">
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Metodo Scientifico</td>
-                  <td className="px-6 py-4 text-center text-yellow-600">Generico</td>
-                  <td className="px-6 py-4 text-center text-red-500">✗</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">✓ Protocollo Gazzella</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-yellow-500 text-xl">⚠️</span>
+                    <p className="text-xs text-yellow-600 mt-1">Generico</p>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-red-500 text-2xl">❌</span>
+                    <p className="text-xs text-red-600 mt-1">Non scientifico</p>
+                  </td>
+                  <td className="px-6 py-4 text-center bg-emerald-50 dark:bg-emerald-900/30">
+                    <span className="text-emerald-600 text-2xl">✅</span>
+                    <p className="text-sm font-semibold text-emerald-600">Protocollo Gazzella</p>
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 border-t-2 border-gray-300">TOTALE ANNUALE</td>
@@ -322,8 +354,20 @@ export default function SubscriptionPlans() {
             <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
               RISPARMIA fino a €23.751 all'anno! 
             </p>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mt-2">
+            <p className="text-lg text-gray-600 dark:text-gray-400 mt-2 mb-6">
               Ottieni risultati superiori a una frazione del costo
+            </p>
+            
+            {/* CTA after comparison table */}
+            <Button
+              onClick={() => handleSubscribe("monthly-29")}
+              disabled={createCheckoutMutation.isPending}
+              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            >
+              💰 Inizia a Risparmiare Ora - Prova Gratuita
+            </Button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              3 giorni gratis, poi €29/mese • Risparmia €2.150+ all'anno
             </p>
           </div>
         </div>
@@ -375,7 +419,7 @@ export default function SubscriptionPlans() {
             Perché le Donne Scelgono La Mia Gazzella
           </h2>
           
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div className="text-center">
               <div className="text-4xl font-bold text-emerald-600 mb-2">94%</div>
               <p className="text-gray-600 dark:text-gray-400">delle utenti raggiunge i suoi obiettivi nei primi 3 mesi</p>
@@ -388,6 +432,20 @@ export default function SubscriptionPlans() {
               <div className="text-4xl font-bold text-emerald-600 mb-2">4.9/5</div>
               <p className="text-gray-600 dark:text-gray-400">valutazione media di soddisfazione</p>
             </div>
+          </div>
+          
+          {/* CTA after social proof */}
+          <div className="text-center">
+            <Button
+              onClick={() => handleSubscribe("monthly-29")}
+              disabled={createCheckoutMutation.isPending}
+              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+            >
+              📊 Unisciti al 94% di Successo - Inizia Gratis
+            </Button>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              Risultati garantiti • 3 giorni gratis • Solo €29/mese
+            </p>
           </div>
         </div>
 
@@ -504,7 +562,7 @@ export default function SubscriptionPlans() {
                   <Button
                     onClick={() => handleSubscribe(plan.id)}
                     disabled={createCheckoutMutation.isPending || isCurrentPlan}
-                    className="w-full text-white font-semibold py-4 text-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50"
+                    className="w-full text-white font-semibold py-4 text-lg bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     data-testid={`subscribe-button-${plan.id}`}
                   >
                     {createCheckoutMutation.isPending ? (
@@ -515,11 +573,20 @@ export default function SubscriptionPlans() {
                     ) : isCurrentPlan ? (
                       "Piano Attuale"
                     ) : userSubscription && userSubscription.hasUsedTrial ? (
-                      `Abbonati Ora`
+                      `🚀 Abbonati Ora - €29/mese`
                     ) : (
-                      `Inizia Prova Gratuita`
+                      `🎯 Inizia Prova Gratuita di 3 Giorni`
                     )}
                   </Button>
+                  
+                  {/* Additional micro-CTA below main button */}
+                  {!isCurrentPlan && (
+                    <div className="text-center mt-3">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        ⚡ Attivazione istantanea • 💳 Pagamenti sicuri con Stripe
+                      </p>
+                    </div>
+                  )}
 
                 </CardContent>
               </Card>
@@ -581,6 +648,29 @@ export default function SubscriptionPlans() {
                 "Menopausa + metabolismo lento = incubo! Con il protocollo Gazzella personalizzato ho ritrovato energia e perso 6kg in 10 settimane. Le ricette sono sempre diverse e deliziose!"
               </p>
               <div className="flex text-yellow-400">★★★★★</div>
+            </div>
+          </div>
+          
+          {/* CTA after testimonials */}
+          <div className="text-center mt-12">
+            <div className="bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-xl p-6 max-w-2xl mx-auto mb-6">
+              <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-3">
+                💬 Anche Tu Puoi Avere Questi Risultati
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300 mb-4">
+                Migliaia di donne come te hanno trasformato la loro vita con La Mia Gazzella. 
+                È il tuo turno!
+              </p>
+              <Button
+                onClick={() => handleSubscribe("monthly-29")}
+                disabled={createCheckoutMutation.isPending}
+                className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              >
+                ⭐ Inizia la Tua Trasformazione - Prova Gratis
+              </Button>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                3 giorni gratuiti • Nessun impegno • Cancella quando vuoi
+              </p>
             </div>
           </div>
         </div>
