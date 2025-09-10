@@ -259,7 +259,7 @@ export default function SubscriptionPlans() {
             <Button
               onClick={() => handleSubscribe("monthly-29")}
               disabled={createCheckoutMutation.isPending}
-              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="w-full sm:w-auto text-white font-bold py-4 px-6 sm:px-8 text-lg sm:text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
               🚀 Inizia Prova Gratuita di 3 Giorni
             </Button>
@@ -387,7 +387,7 @@ export default function SubscriptionPlans() {
               <Button
                 onClick={() => handleSubscribe("monthly-29")}
                 disabled={createCheckoutMutation.isPending}
-                className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                className="w-full sm:w-auto text-white font-bold py-4 px-6 sm:px-8 text-lg sm:text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
               >
                 🔓 Inizia Senza Vincoli - Prova Gratuita
               </Button>
@@ -465,7 +465,7 @@ export default function SubscriptionPlans() {
             <Button
               onClick={() => handleSubscribe("monthly-29")}
               disabled={createCheckoutMutation.isPending}
-              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              className="w-full sm:w-auto text-white font-bold py-4 px-6 sm:px-8 text-lg sm:text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
             >
               📊 Unisciti al 94% di Successo - Inizia Gratis
             </Button>
@@ -690,7 +690,7 @@ export default function SubscriptionPlans() {
               <Button
                 onClick={() => handleSubscribe("monthly-29")}
                 disabled={createCheckoutMutation.isPending}
-                className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+                className="w-full sm:w-auto text-white font-bold py-4 px-6 sm:px-8 text-lg sm:text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
               >
                 ⭐ Inizia la Tua Trasformazione - Prova Gratis
               </Button>
@@ -717,6 +717,70 @@ export default function SubscriptionPlans() {
               <p className="text-lg font-semibold">
                 💡 Ricorda: ogni giorno che aspetti è un giorno in meno verso i tuoi obiettivi
               </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Coffee Price Analogy Section */}
+        <div className="mb-16">
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl p-8 max-w-4xl mx-auto border-2 border-amber-200 dark:border-amber-700">
+            <div className="text-center">
+              <div className="text-6xl mb-4">☕</div>
+              <h2 className="text-3xl md:text-4xl font-bold text-amber-800 dark:text-amber-200 mb-6">
+                Meno di un Caffè al Giorno
+              </h2>
+              <div className="grid md:grid-cols-3 gap-6 mb-8">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                  <div className="text-3xl mb-3">☕</div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Un Caffè al Bar</h3>
+                  <p className="text-2xl font-bold text-amber-600">€1.20</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">al giorno</p>
+                </div>
+                <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-xl p-6 shadow-lg border-2 border-emerald-300 dark:border-emerald-700">
+                  <div className="text-3xl mb-3">🥗</div>
+                  <h3 className="text-lg font-bold text-emerald-800 dark:text-emerald-200 mb-2">La Mia Gazzella</h3>
+                  <p className="text-2xl font-bold text-emerald-600">€0.97</p>
+                  <p className="text-sm text-emerald-700 dark:text-emerald-300">al giorno (€29/mese)</p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                  <div className="text-3xl mb-3">💰</div>
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-2">Risparmio</h3>
+                  <p className="text-2xl font-bold text-green-600">€0.23</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">al giorno</p>
+                </div>
+              </div>
+              
+              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                  Con meno di un caffè al giorno ottieni:
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6 text-left">
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">👨‍🍳</span>
+                      <h4 className="font-bold text-gray-800 dark:text-gray-200">Uno Chef Personale</h4>
+                    </div>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-8">
+                      <li>• Ricette personalizzate infinite</li>
+                      <li>• Adattate alle tue preferenze</li>
+                      <li>• Sempre nuove e mai ripetitive</li>
+                      <li>• Con ingredienti facilmente reperibili</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-2xl">🧠</span>
+                      <h4 className="font-bold text-gray-800 dark:text-gray-200">Un Esperto Nutrizionale</h4>
+                    </div>
+                    <ul className="text-sm text-gray-600 dark:text-gray-400 space-y-1 ml-8">
+                      <li>• Piani personalizzati con grammature precise</li>
+                      <li>• Aggiornamenti continui in base ai tuoi progressi</li>
+                      <li>• Consulenza 24/7 quando ne hai bisogno</li>
+                      <li>• Adattamento al tuo profilo e obiettivi</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -753,10 +817,56 @@ export default function SubscriptionPlans() {
               </div>
             </div>
           </div>
-          
-          <p className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
-            🚀 Inizia ora la tua trasformazione. I tuoi risultati ti stanno aspettando!
-          </p>
+        </div>
+
+        {/* Final Ultimate CTA */}
+        <div className="text-center mt-16 mb-12">
+          <div className="bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-600 rounded-3xl p-8 md:p-12 text-white max-w-4xl mx-auto shadow-2xl">
+            <div className="text-6xl md:text-7xl mb-6">🎯</div>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6">
+              È Ora di Iniziare!
+            </h2>
+            <p className="text-xl md:text-2xl mb-8 max-w-2xl mx-auto">
+              Smetti di rimandare. Smetti di sperare. <br />
+              <span className="font-bold">Inizia oggi a trasformare la tua vita.</span>
+            </p>
+            
+            <div className="bg-white/10 rounded-2xl p-6 mb-8 max-w-2xl mx-auto">
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold">3</div>
+                  <div className="text-sm">giorni gratis</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">€0.97</div>
+                  <div className="text-sm">al giorno dopo</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-sm">vincoli temporali</div>
+                </div>
+              </div>
+            </div>
+            
+            <Button
+              onClick={() => handleSubscribe("monthly-29")}
+              disabled={createCheckoutMutation.isPending}
+              className="w-full sm:w-auto text-emerald-800 font-bold py-6 px-8 sm:px-12 text-xl sm:text-2xl bg-white hover:bg-gray-100 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all mb-4"
+            >
+              {createCheckoutMutation.isPending ? (
+                <div className="flex items-center gap-3">
+                  <div className="animate-spin w-6 h-6 border-3 border-emerald-600 border-t-transparent rounded-full" />
+                  Attivazione in corso...
+                </div>
+              ) : (
+                <>🚀 INIZIA GRATIS ORA - La Tua Trasformazione Ti Aspetta!</>
+              )}
+            </Button>
+            
+            <p className="text-lg opacity-90 mt-4">
+              ⚡ Attivazione istantanea • 🔒 Pagamenti sicuri • 📱 Cancella in un click
+            </p>
+          </div>
         </div>
       </div>
     </div>
