@@ -82,14 +82,20 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
     const now = new Date();
     let hasActiveSubscription = false;
 
+    // Active subscription - attivo senza scadenza o non ancora scaduto
     if (user.subscriptionStatus === 'active') {
-      // Se subscriptionEndDate è null = abbonamento attivo senza scadenza
-      // Se subscriptionEndDate è definito = controlla che non sia scaduto
       if (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now) {
         hasActiveSubscription = true;
       }
-    } else if (user.subscriptionStatus === 'trialing') {
-      // Check if trial hasn't expired
+    }
+    // Canceled/paused subscription - ma ancora valido fino alla data di scadenza
+    else if (['canceled', 'cancelled', 'past_due', 'paused'].includes(user.subscriptionStatus || '')) {
+      if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
+        hasActiveSubscription = true;
+      }
+    }
+    // Trial period
+    else if (user.subscriptionStatus === 'trialing') {
       if (user.trialEndDate && new Date(user.trialEndDate) > now) {
         hasActiveSubscription = true;
       }
@@ -2590,9 +2596,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          user.trialEndDate && 
                          new Date(user.trialEndDate) > now;
                          
-      // Determine active subscription status - FIX: null endDate = active unlimited
-      const isActiveSubscription = user.subscriptionStatus === 'active' &&
-                                    (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now);
+      // Determine active subscription status - Include canceled but still valid subscriptions
+      const isActiveSubscription = (
+        (user.subscriptionStatus === 'active' && (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now)) ||
+        (['canceled', 'cancelled', 'past_due', 'paused'].includes(user.subscriptionStatus || '') && user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now)
+      );
                          
       const hasActiveSubscription = isActiveSubscription || isTrialing;
 
