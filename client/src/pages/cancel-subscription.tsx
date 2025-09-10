@@ -116,14 +116,32 @@ export default function CancelSubscription() {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-slate-600">Stato:</span>
-                      <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-sm">
-                        {subscription?.isInTrial ? 'In Prova' : 'Attivo'}
+                      <span className={`px-2 py-1 rounded-full text-sm ${
+                        subscription?.status === 'canceled' 
+                          ? 'bg-orange-100 text-orange-800' 
+                          : subscription?.isInTrial 
+                            ? 'bg-blue-100 text-blue-800' 
+                            : 'bg-emerald-100 text-emerald-800'
+                      }`}>
+                        {subscription?.status === 'canceled' 
+                          ? 'Cancellato' 
+                          : subscription?.isInTrial 
+                            ? 'In Prova' 
+                            : 'Attivo'}
                       </span>
                     </div>
                     {subscription?.endDate && (
                       <div className="flex justify-between items-center">
-                        <span className="text-slate-600">Prossimo rinnovo:</span>
-                        <span className="font-semibold">
+                        <span className="text-slate-600">
+                          {subscription?.status === 'canceled' 
+                            ? 'Scadenza accesso:' 
+                            : subscription?.isInTrial 
+                              ? 'Fine periodo prova:' 
+                              : 'Prossimo rinnovo:'}
+                        </span>
+                        <span className={`font-semibold ${
+                          subscription?.status === 'canceled' ? 'text-orange-600' : ''
+                        }`}>
                           {new Date(subscription.endDate).toLocaleDateString('it-IT')}
                         </span>
                       </div>
@@ -132,19 +150,34 @@ export default function CancelSubscription() {
                 </CardContent>
               </Card>
 
-              {/* What Happens Warning */}
-              <Alert className="mb-6 border-amber-200 bg-amber-50">
-                <AlertTriangle className="h-4 w-4 text-amber-600" />
-                <AlertDescription className="text-amber-800">
-                  <strong>Cosa succede quando cancelli:</strong>
-                  <ul className="mt-2 space-y-1 list-disc list-inside">
-                    <li>Il tuo abbonamento rimarrà attivo fino alla fine del periodo di fatturazione corrente</li>
-                    <li>Non verrai più addebitato per i rinnovi futuri</li>
-                    <li>Manterrai l'accesso a tutte le funzionalità premium fino alla scadenza</li>
-                    <li>I tuoi dati e piani personalizzati saranno conservati</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
+              {/* Status Info for canceled subscription */}
+              {subscription?.status === 'canceled' ? (
+                <Alert className="mb-6 border-orange-200 bg-orange-50">
+                  <AlertTriangle className="h-4 w-4 text-orange-600" />
+                  <AlertDescription className="text-orange-800">
+                    <strong>Abbonamento già cancellato:</strong>
+                    <ul className="mt-2 space-y-1 list-disc list-inside">
+                      <li>Il tuo abbonamento è stato cancellato ma rimane attivo fino al {subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString('it-IT') : 'termine del periodo'}</li>
+                      <li>Non verrai più addebitato automaticamente</li>
+                      <li>Puoi riattivare l'abbonamento in qualsiasi momento</li>
+                      <li>I tuoi dati e piani personalizzati sono conservati</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              ) : (
+                <Alert className="mb-6 border-amber-200 bg-amber-50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800">
+                    <strong>Cosa succede quando cancelli:</strong>
+                    <ul className="mt-2 space-y-1 list-disc list-inside">
+                      <li>Il tuo abbonamento rimarrà attivo fino alla fine del periodo di fatturazione corrente</li>
+                      <li>Non verrai più addebitato per i rinnovi futuri</li>
+                      <li>Manterrai l'accesso a tutte le funzionalità premium fino alla scadenza</li>
+                      <li>I tuoi dati e piani personalizzati saranno conservati</li>
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {/* Alternative Options */}
               <Card className="mb-6">
@@ -180,16 +213,35 @@ export default function CancelSubscription() {
 
               <Separator className="my-6" />
 
-              {/* Cancel Button */}
+              {/* Cancel Button or Reactivate */}
               <div className="text-center">
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  onClick={() => setShowConfirmation(true)}
-                  className="min-w-[200px]"
-                >
-                  Procedi con la Cancellazione
-                </Button>
+                {subscription?.status === 'canceled' ? (
+                  <div className="space-y-4">
+                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                      <h3 className="font-medium text-slate-800 mb-2">
+                        Abbonamento già cancellato
+                      </h3>
+                      <p className="text-sm text-slate-600 mb-4">
+                        Il tuo abbonamento è stato cancellato ma rimane attivo fino al {subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString('it-IT') : 'termine del periodo'}.
+                      </p>
+                      <Button
+                        onClick={() => setLocation("/piani-abbonamento")}
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                      >
+                        Riattiva Abbonamento
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button
+                    variant="destructive"
+                    size="lg"
+                    onClick={() => setShowConfirmation(true)}
+                    className="min-w-[200px]"
+                  >
+                    Procedi con la Cancellazione
+                  </Button>
+                )}
               </div>
             </>
           ) : (
