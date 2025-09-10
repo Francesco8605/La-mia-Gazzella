@@ -78,6 +78,7 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
 
 
 
+
     // Check if user has active subscription
     const now = new Date();
     let hasActiveSubscription = false;
@@ -2581,6 +2582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
+
 
       console.log(`🔍 Checking subscription for user ${user.email}:`, {
         subscriptionStatus: user.subscriptionStatus,
