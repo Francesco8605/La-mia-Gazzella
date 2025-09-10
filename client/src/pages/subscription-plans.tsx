@@ -269,106 +269,132 @@ export default function SubscriptionPlans() {
           </div>
         </div>
 
-        {/* Comparison Section */}
+        {/* Flexibility & Freedom Section */}
         <div className="mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-gray-800 dark:text-gray-200">
-            Confronto: Servizi Tradizionali vs La Mia Gazzella
+            Massima Flessibilità, Zero Vincoli
           </h2>
           
-          <div className="overflow-x-auto">
-            <table className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-2xl overflow-hidden">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900 dark:text-gray-100">Servizio</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">Nutrizionista Privato</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">Chef Personale</th>
-                  <th className="px-6 py-4 text-center text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30">La Mia Gazzella</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                <tr>
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Costo Mensile</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-semibold">€200-500</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-semibold">€800-2000</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-900/30">€29</td>
-                </tr>
-                <tr className="bg-gray-50 dark:bg-gray-700/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Disponibilità</td>
-                  <td className="px-6 py-4 text-center text-gray-600">1h/settimana</td>
-                  <td className="px-6 py-4 text-center text-gray-600">Su appuntamento</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">24/7</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Piani Personalizzati</td>
-                  <td className="px-6 py-4 text-center text-gray-600">1 ogni 2-3 mesi</td>
-                  <td className="px-6 py-4 text-center text-gray-600">Menu settimanale</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">Illimitati</td>
-                </tr>
-                <tr className="bg-gray-50 dark:bg-gray-700/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Ricette Generate</td>
-                  <td className="px-6 py-4 text-center text-gray-600">Standard</td>
-                  <td className="px-6 py-4 text-center text-gray-600">10-15/mese</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-semibold bg-emerald-50 dark:bg-emerald-900/30">Infinite e personalizzate</td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Consulenza Nutrizionale</td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-red-500 text-2xl">❌</span>
-                    <p className="text-xs text-red-600 mt-1">Non inclusa</p>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-red-500 text-2xl">❌</span>
-                    <p className="text-xs text-red-600 mt-1">Non inclusa</p>
-                  </td>
-                  <td className="px-6 py-4 text-center bg-emerald-50 dark:bg-emerald-900/30">
-                    <span className="text-emerald-600 text-2xl">✅</span>
-                    <p className="text-sm font-semibold text-emerald-600">Esperto 24/7</p>
-                  </td>
-                </tr>
-                <tr className="bg-gray-50 dark:bg-gray-700/50">
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100">Metodo Scientifico</td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-yellow-500 text-xl">⚠️</span>
-                    <p className="text-xs text-yellow-600 mt-1">Generico</p>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <span className="text-red-500 text-2xl">❌</span>
-                    <p className="text-xs text-red-600 mt-1">Non scientifico</p>
-                  </td>
-                  <td className="px-6 py-4 text-center bg-emerald-50 dark:bg-emerald-900/30">
-                    <span className="text-emerald-600 text-2xl">✅</span>
-                    <p className="text-sm font-semibold text-emerald-600">Protocollo Gazzella</p>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 border-t-2 border-gray-300">TOTALE ANNUALE</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-bold text-lg border-t-2 border-gray-300">€2.400-6.000</td>
-                  <td className="px-6 py-4 text-center text-red-600 font-bold text-lg border-t-2 border-gray-300">€9.600-24.000</td>
-                  <td className="px-6 py-4 text-center text-emerald-600 font-bold text-2xl bg-emerald-100 dark:bg-emerald-900/50 border-t-2 border-emerald-400">€249</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="text-center mt-8">
-            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-              RISPARMIA fino a €23.751 all'anno! 
-            </p>
-            <p className="text-lg text-gray-600 dark:text-gray-400 mt-2 mb-6">
-              Ottieni risultati superiori a una frazione del costo
-            </p>
-            
-            {/* CTA after comparison table */}
-            <Button
-              onClick={() => handleSubscribe("monthly-29")}
-              disabled={createCheckoutMutation.isPending}
-              className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
-            >
-              💰 Inizia a Risparmiare Ora - Prova Gratuita
-            </Button>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              3 giorni gratis, poi €29/mese • Risparmia €2.150+ all'anno
-            </p>
+          <div className="max-w-4xl mx-auto">
+            {/* Freedom Guarantee */}
+            <div className="bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-2xl p-8 mb-8">
+              <div className="text-center">
+                <div className="text-6xl mb-4">🔓</div>
+                <h3 className="text-3xl font-bold text-green-800 dark:text-green-200 mb-4">
+                  NESSUN VINCOLO TEMPORALE
+                </h3>
+                <p className="text-xl text-green-700 dark:text-green-300 mb-6">
+                  Puoi cancellare il tuo abbonamento in qualsiasi momento con un semplice click. 
+                  Non siamo come le palestre che ti vincolano per anni!
+                </p>
+                <div className="grid md:grid-cols-3 gap-6 text-center">
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg">
+                    <div className="text-2xl mb-2">⚡</div>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200">Cancellazione Immediata</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Un click e sei libera</p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg">
+                    <div className="text-2xl mb-2">💳</div>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200">Pagamento Mensile</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Solo €29 al mese, quando vuoi</p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-lg">
+                    <div className="text-2xl mb-2">🚫</div>
+                    <h4 className="font-bold text-gray-800 dark:text-gray-200">Zero Penali</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Nessun costo nascosto</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Value Proposition Cards */}
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-emerald-100 dark:bg-emerald-900/30 rounded-full p-3 mr-4">
+                    <CheckCircle className="h-8 w-8 text-emerald-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">Quello che Ottieni</h3>
+                </div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <span className="text-green-500">✅</span>
+                    <span>Consulente nutrizionale 24/7</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-green-500">✅</span>
+                    <span>Piani alimentari illimitati</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-green-500">✅</span>
+                    <span>Ricette personalizzate infinite</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-green-500">✅</span>
+                    <span>Monitoraggio progressi avanzato</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-green-500">✅</span>
+                    <span>Supporto via chat dedicato</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl shadow-lg p-6">
+                <div className="flex items-center mb-4">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 rounded-full p-3 mr-4">
+                    <Crown className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200">I Tuoi Diritti</h3>
+                </div>
+                <ul className="space-y-3">
+                  <li className="flex items-center gap-3">
+                    <span className="text-blue-500">🔒</span>
+                    <span>Cancella quando vuoi, senza penali</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-blue-500">🔒</span>
+                    <span>Dati sempre protetti e privati</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-blue-500">🔒</span>
+                    <span>Pagamenti sicuri con Stripe</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-blue-500">🔒</span>
+                    <span>Supporto tecnico sempre disponibile</span>
+                  </li>
+                  <li className="flex items-center gap-3">
+                    <span className="text-blue-500">🔒</span>
+                    <span>Trasparenza totale sui costi</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/30 dark:to-teal-900/30 rounded-xl p-6 mb-6">
+                <h3 className="text-2xl font-bold text-emerald-800 dark:text-emerald-200 mb-3">
+                  💡 La Filosofia La Mia Gazzella
+                </h3>
+                <p className="text-lg text-emerald-700 dark:text-emerald-300">
+                  Crediamo nella libertà di scelta. Se i nostri risultati non ti convincono, 
+                  puoi andartene in qualsiasi momento. Punto.
+                </p>
+              </div>
+              
+              {/* CTA after flexibility section */}
+              <Button
+                onClick={() => handleSubscribe("monthly-29")}
+                disabled={createCheckoutMutation.isPending}
+                className="text-white font-bold py-4 px-8 text-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
+              >
+                🔓 Inizia Senza Vincoli - Prova Gratuita
+              </Button>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                3 giorni gratis • Poi solo €29/mese • Cancella in un click
+              </p>
+            </div>
           </div>
         </div>
 
