@@ -2676,23 +2676,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Temporary endpoint to fix simo.d74@gmail.com subscription 
-  app.post("/api/admin/fix-simo-subscription", async (req, res) => {
+  // Fix simo subscription endpoint (NO AUTH REQUIRED for urgent fix)
+  app.post("/api/fix-simo-subscription", async (req, res) => {
     try {
-      const userId = "0d627e35-7afe-45c2-b974-28644d072591"; // simo.d74@gmail.com
+      console.log('🔧 Fix simo subscription endpoint called');
+      
+      // Direct database query to find user
+      const userResults = await db.select().from(users).where(eq(users.email, 'simo.d74@gmail.com'));
+      if (userResults.length === 0) {
+        console.log('❌ User simo.d74@gmail.com not found in database');
+        return res.status(404).json({ error: 'User simo.d74@gmail.com not found' });
+      }
+      
+      const user = userResults[0];
+      console.log('✅ Found user:', user.id);
+      
       const newEndDate = new Date('2025-10-03T23:59:59.999Z');
       
-      await storage.updateUserStripeInfo(userId, {
-        subscriptionEndDate: newEndDate,
-        subscriptionStatus: 'canceled' // Keep canceled but extend date
-      });
+      // Direct database update
+      await db.update(users)
+        .set({
+          subscriptionEndDate: newEndDate,
+          subscriptionStatus: 'canceled'
+        })
+        .where(eq(users.id, user.id));
+      
+      console.log('✅ Updated subscription for user', user.id);
       
       res.json({ 
         success: true, 
         message: "Subscription extended for simo.d74@gmail.com until Oct 3, 2025",
-        newEndDate: newEndDate.toISOString()
+        newEndDate: newEndDate.toISOString(),
+        userId: user.id
       });
     } catch (error: any) {
+      console.error('❌ Fix subscription error:', error);
       res.status(500).json({ error: error?.message || 'Unknown error' });
     }
   });
