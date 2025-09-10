@@ -2676,6 +2676,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Temporary endpoint to fix simo.d74@gmail.com subscription 
+  app.post("/api/admin/fix-simo-subscription", async (req, res) => {
+    try {
+      const userId = "0d627e35-7afe-45c2-b974-28644d072591"; // simo.d74@gmail.com
+      const newEndDate = new Date('2025-10-03T23:59:59.999Z');
+      
+      await storage.updateUserStripeInfo(userId, {
+        subscriptionEndDate: newEndDate,
+        subscriptionStatus: 'canceled' // Keep canceled but extend date
+      });
+      
+      res.json({ 
+        success: true, 
+        message: "Subscription extended for simo.d74@gmail.com until Oct 3, 2025",
+        newEndDate: newEndDate.toISOString()
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: error?.message || 'Unknown error' });
+    }
+  });
+
   // =================
   // ADMIN DASHBOARD ROUTES
   // =================
