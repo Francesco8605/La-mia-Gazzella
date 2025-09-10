@@ -76,31 +76,16 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
       return res.status(404).json({ message: "Utente non trovato" });
     }
 
-
-
-
-    // Check if user has active subscription
+    // CORREZIONE FINALE: Date parsing esplicito
     const now = new Date();
-    let hasActiveSubscription = false;
-
-    // Active subscription - attivo senza scadenza o non ancora scaduto
-    if (user.subscriptionStatus === 'active') {
-      if (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now) {
-        hasActiveSubscription = true;
-      }
-    }
-    // Canceled/paused subscription - ma ancora valido fino alla data di scadenza
-    else if (['canceled', 'cancelled', 'past_due', 'paused'].includes(user.subscriptionStatus || '')) {
-      if (user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now) {
-        hasActiveSubscription = true;
-      }
-    }
-    // Trial period
-    else if (user.subscriptionStatus === 'trialing') {
-      if (user.trialEndDate && new Date(user.trialEndDate) > now) {
-        hasActiveSubscription = true;
-      }
-    }
+    const endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : null;
+    const trialDate = user.trialEndDate ? new Date(user.trialEndDate) : null;
+    
+    const hasActiveSubscription = (
+      user.subscriptionStatus === 'active' || 
+      (user.subscriptionStatus === 'canceled' && endDate && endDate.getTime() > now.getTime()) ||
+      (user.subscriptionStatus === 'trialing' && trialDate && trialDate.getTime() > now.getTime())
+    );
 
     if (!hasActiveSubscription) {
       return res.status(403).json({ 
@@ -108,7 +93,6 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
         requiresSubscription: true 
       });
     }
-
     next();
   } catch (error) {
     console.error("Error checking subscription:", error);
@@ -2598,10 +2582,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                          user.trialEndDate && 
                          new Date(user.trialEndDate) > now;
                          
-      // Determine active subscription status - Include canceled but still valid subscriptions
+      // CORREZIONE FINALE: Date parsing esplicito
+      const endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : null;
       const isActiveSubscription = (
-        (user.subscriptionStatus === 'active' && (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > now)) ||
-        (['canceled', 'cancelled', 'past_due', 'paused'].includes(user.subscriptionStatus || '') && user.subscriptionEndDate && new Date(user.subscriptionEndDate) > now)
+        user.subscriptionStatus === 'active' || 
+        (user.subscriptionStatus === 'canceled' && endDate && endDate.getTime() > now.getTime())
       );
                          
       const hasActiveSubscription = isActiveSubscription || isTrialing;
@@ -2675,6 +2660,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore nella cancellazione dell'abbonamento" });
     }
   });
+
 
 
   // =================
