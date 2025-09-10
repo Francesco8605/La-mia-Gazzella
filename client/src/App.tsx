@@ -187,6 +187,9 @@ function Router() {
           }}
         </Route>
         
+        <Route path="/abbonamenti" component={UpdateProfile} />
+        <Route path="/gestisci-abbonamento" component={UpdateProfile} />
+        
         <Route path="/cancella-abbonamento" component={CancelSubscription} />
         <Route path="/cancel-subscription" component={CancelSubscription} />
         
