@@ -1,67 +1,28 @@
-import { useState, useRef, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Send, Bot, User, Heart, AlertTriangle, Loader2, MessageCircle, Phone } from "lucide-react";
-import lauraProfileImage from "@assets/0ADDBA68-68CF-4572-8888-BB7E018FE99E_1_105_c_1756389814359.jpeg";
+import { Heart, AlertTriangle, Loader2, MessageCircle, Phone } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-// Check if error is unauthorized
-const isUnauthorizedError = (error: Error): boolean => {
-  return /^401: .*Unauthorized/.test(error.message);
-};
-
-interface ChatMessage {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-  timestamp: Date;
-  containsHealthWarning?: boolean;
-}
-
-interface ChatSession {
-  id: string;
-  messages: ChatMessage[];
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export default function AIChat() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputMessage, setInputMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Redirect to login if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast({
-        title: "Accesso Richiesto",
-        description: "Effettua il login per accedere alla tua consulente nutrizionale personale.",
-        variant: "destructive",
-      });
-      setTimeout(() => {
-        window.location.href = "/api/login";
-      }, 500);
-      return;
-    }
-  }, [isAuthenticated, authLoading, toast]);
+  if (!authLoading && !isAuthenticated) {
+    toast({
+      title: "Accesso Richiesto",
+      description: "Effettua il login per accedere alla consulenza nutrizionale.",
+      variant: "destructive",
+    });
+    setTimeout(() => {
+      window.location.href = "/api/login";
+    }, 500);
+    return null;
+  }
 
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Fetch user profile and meal plans for context
+  // Fetch user profile for context
   const { data: userProfile } = useQuery({
     queryKey: ["/api/user-profiles/current"],
     enabled: isAuthenticated,
@@ -83,105 +44,6 @@ export default function AIChat() {
     staleTime: 1000 * 60 * 5, // 5 minuti di cache
   });
 
-  // Add welcome message when starting new conversation
-  useEffect(() => {
-    if (isAuthenticated && messages.length === 0 && !currentConversationId) {
-      setMessages([{
-        id: 'welcome',
-        role: 'assistant',
-        content: `Ciao! Sono Laura, la tua consulente nutrizionale personale del Manuale della Gazzella. 
-
-${userProfile ? 
-  `Vedo che hai completato il tuo profilo (${(userProfile as any).weight}kg, ${(userProfile as any).height}cm, ${(userProfile as any).age} anni). Perfetto! 
-
-Ho anche accesso ai tuoi ${(mealPlans as any)?.length || 0} piani nutrizionali e ${(recipes as any)?.length || 0} ricette personalizzate.` 
-: 
-  `Per offrirti consigli personalizzati, ti consiglio di completare il tuo profilo con peso, altezza ed età nella sezione "Il Mio Profilo".`
-}
-
-Sono qui per aiutarti con qualsiasi domanda sulla tua alimentazione, spiegarti il Manuale della Gazzella, aiutarti con i tuoi piani pasto e supportarti nel tuo percorso di benessere.
-
-Cosa posso fare per te oggi? 😊`,
-        timestamp: new Date(),
-        containsHealthWarning: false
-      }]);
-    }
-  }, [isAuthenticated, userProfile, mealPlans, recipes, messages.length, currentConversationId]);
-
-  // Send message mutation
-  const sendMessageMutation = useMutation({
-    mutationFn: async (message: string) => {
-      return await apiRequest("/api/ai-chat/message", {
-        message,
-        conversationId: currentConversationId,
-        userProfile,
-        mealPlans,
-        recipes
-      }, "POST");
-    },
-    onSuccess: (response) => {
-      // Update conversation ID if this is a new conversation
-      if (!currentConversationId && response.conversationId) {
-        setCurrentConversationId(response.conversationId);
-      }
-
-      const assistantMessage: ChatMessage = {
-        id: response.messageId || `assistant-${Date.now()}`,
-        role: "assistant",
-        content: response.message,
-        timestamp: new Date(),
-        containsHealthWarning: response.containsHealthWarning || false
-      };
-      
-      setMessages(prev => [...prev, assistantMessage]);
-      setIsTyping(false);
-    },
-    onError: (error) => {
-      setIsTyping(false);
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Sessione Scaduta",
-          description: "La tua sessione è scaduta. Effettua nuovamente il login.",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      
-      toast({
-        title: "Errore",
-        description: "Impossibile inviare il messaggio. Riprova tra poco.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || sendMessageMutation.isPending) return;
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: inputMessage.trim(),
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage("");
-    setIsTyping(true);
-
-    sendMessageMutation.mutate(inputMessage.trim());
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -197,22 +59,13 @@ Cosa posso fare per te oggi? 😊`,
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative w-12 h-12 rounded-full overflow-hidden shadow-lg ring-2 ring-pink-500/30">
-            <img 
-              src={lauraProfileImage} 
-              alt="Laura - Consulente Nutrizionale" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              Laura - Consulente Nutrizionale Gazzella
-            </h1>
-            <p className="text-muted-foreground">
-              La tua consulente nutrizionale personale del Manuale della Gazzella
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-4">
+            Consulenza Nutrizionale Personalizzata
+          </h1>
+          <p className="text-muted-foreground text-lg">
+            Contatta direttamente la nostra nutrizionista esperta del Manuale della Gazzella
+          </p>
         </div>
 
         {/* User Context Summary */}
@@ -259,7 +112,7 @@ Cosa posso fare per te oggi? 😊`,
                   Importante: Disclaimer Medico
                 </p>
                 <p className="text-orange-700 dark:text-orange-300">
-                  Questa consulente fornisce informazioni nutrizionali basate sul Manuale della Gazzella. 
+                  Questa consulenza fornisce informazioni nutrizionali basate sul Manuale della Gazzella. 
                   Non sostituisce il parere medico professionale. Per problemi di salute gravi o condizioni 
                   mediche specifiche, consulta sempre un medico di persona.
                 </p>
@@ -271,16 +124,29 @@ Cosa posso fare per te oggi? 😊`,
         {/* WhatsApp Consultation Card */}
         <Card className="border-green-200 bg-green-50 dark:bg-green-900/10 mb-6">
           <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-start gap-3">
-                <MessageCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="font-medium text-green-800 dark:text-green-200 mb-1">
-                    Consulenza Nutrizionale Personale
-                  </p>
-                  <p className="text-green-700 dark:text-green-300 text-sm">
-                    Hai bisogno di una consulenza più approfondita? Contatta direttamente la nostra nutrizionista su WhatsApp per un supporto personalizzato.
-                  </p>
+            <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                <MessageCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-2">
+                Consulenza Nutrizionale Diretta
+              </h3>
+              <p className="text-green-700 dark:text-green-300 mb-6 max-w-2xl mx-auto">
+                Hai bisogno di una consulenza personalizzata? Contatta direttamente la nostra nutrizionista 
+                esperta su WhatsApp per un supporto professionale e mirato alle tue esigenze specifiche.
+              </p>
+              <div className="space-y-3 mb-6">
+                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-300">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span className="text-sm">Consulenze personalizzate</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-300">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span className="text-sm">Supporto per il Manuale della Gazzella</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-300">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span className="text-sm">Consigli nutrizionali professionali</span>
                 </div>
               </div>
               <Button
@@ -288,148 +154,19 @@ Cosa posso fare per te oggi? 😊`,
                   const whatsappUrl = `https://wa.me/393296180642?text=${encodeURIComponent('Ciao! Sono interessato/a ad una consulenza nutrizionale personalizzata del Manuale della Gazzella.')}`;
                   window.open(whatsappUrl, '_blank');
                 }}
-                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2 text-lg px-8 py-3 rounded-lg"
                 data-testid="button-whatsapp-consultation"
               >
-                <Phone className="h-4 w-4" />
+                <Phone className="h-5 w-5" />
                 Contatta su WhatsApp
               </Button>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-3">
+                Risposta entro 24 ore nei giorni lavorativi
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Chat Interface */}
-      <Card className="h-[600px] flex flex-col">
-        <CardHeader>
-          <CardTitle className="text-lg">Chat con Laura</CardTitle>
-          <Separator />
-        </CardHeader>
-        
-        <CardContent className="flex-1 flex flex-col p-0">
-          {/* Messages Area */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.length === 0 && (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden shadow-xl ring-4 ring-pink-500/20">
-                    <img 
-                      src={lauraProfileImage} 
-                      alt="Laura - Consulente Nutrizionale" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-lg font-medium mb-2">Ciao! Sono Laura, la tua Consulente Nutrizionale</h3>
-                  <p className="text-muted-foreground max-w-md mx-auto">
-                    Sono qui per aiutarti con domande sul Manuale della Gazzella, i tuoi piani nutrizionali, 
-                    ricette e tutto ciò che riguarda il tuo percorso di benessere.
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center mt-4">
-                    <Badge variant="secondary" className="text-xs">Domande sui pasti</Badge>
-                    <Badge variant="secondary" className="text-xs">Consigli nutrizionali</Badge>
-                    <Badge variant="secondary" className="text-xs">Spiegazioni ricette</Badge>
-                    <Badge variant="secondary" className="text-xs">Modifiche al piano</Badge>
-                  </div>
-                </div>
-              )}
-              
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : ""}`}
-                >
-                  <div className={`w-8 h-8 rounded-full flex-shrink-0 overflow-hidden ${
-                    message.role === "user" 
-                      ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white flex items-center justify-center"
-                      : "shadow-md ring-1 ring-pink-500/30"
-                  }`}>
-                    {message.role === "user" ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <img 
-                        src={lauraProfileImage} 
-                        alt="Laura" 
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  
-                  <div className={`flex-1 max-w-[80%] ${message.role === "user" ? "text-right" : ""}`}>
-                    <div className={`inline-block p-3 rounded-lg ${
-                      message.role === "user"
-                        ? "bg-gradient-to-br from-blue-500 to-cyan-600 text-white"
-                        : "bg-muted"
-                    }`}>
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.containsHealthWarning && (
-                        <div className="mt-2 p-2 bg-orange-100 dark:bg-orange-900/20 rounded text-orange-800 dark:text-orange-200 text-xs flex items-center gap-1">
-                          <AlertTriangle className="h-3 w-3" />
-                          Consultare un medico per problemi di salute gravi
-                        </div>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {message.timestamp.toLocaleTimeString("it-IT", { 
-                        hour: "2-digit", 
-                        minute: "2-digit" 
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full overflow-hidden shadow-md ring-1 ring-pink-500/30">
-                    <img 
-                      src={lauraProfileImage} 
-                      alt="Laura" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
-          
-          {/* Input Area */}
-          <div className="border-t p-4">
-            <div className="flex gap-2">
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Scrivi la tua domanda sul Manuale della Gazzella..."
-                disabled={sendMessageMutation.isPending}
-                className="flex-1"
-                data-testid="input-chat-message"
-              />
-              <Button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || sendMessageMutation.isPending}
-                size="icon"
-                className="bg-gradient-to-br from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-                data-testid="button-send-message"
-              >
-                {sendMessageMutation.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }
