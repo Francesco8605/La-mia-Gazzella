@@ -50,7 +50,7 @@ export default function AdminDashboard() {
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("users");
+  const [activeTab, setActiveTab] = useState("all-users");
   const [expandedItems, setExpandedItems] = useState<{[key: string]: boolean}>({});
 
   // Login function
@@ -110,11 +110,41 @@ export default function AdminDashboard() {
     enabled: isAuthenticated,
   });
 
-  // Fetch users list
-  const { data: usersData } = useQuery<{ users: User[] }>({
-    queryKey: ["/api/admin/users"],
+  // Fetch all users
+  const { data: allUsersData } = useQuery<{ users: User[]; stats: any }>({
+    queryKey: ["/api/admin/users", "all"],
     queryFn: async () => {
-      const response = await fetchWithAuth("/api/admin/users");
+      const response = await fetchWithAuth("/api/admin/users?status=all");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Fetch trial users
+  const { data: trialUsersData } = useQuery<{ users: User[] }>({
+    queryKey: ["/api/admin/users", "trial"],
+    queryFn: async () => {
+      const response = await fetchWithAuth("/api/admin/users?status=trial");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Fetch active users
+  const { data: activeUsersData } = useQuery<{ users: User[] }>({
+    queryKey: ["/api/admin/users", "active"],
+    queryFn: async () => {
+      const response = await fetchWithAuth("/api/admin/users?status=active");
+      return response.json();
+    },
+    enabled: isAuthenticated,
+  });
+
+  // Fetch canceled users
+  const { data: canceledUsersData } = useQuery<{ users: User[] }>({
+    queryKey: ["/api/admin/users", "canceled"],
+    queryFn: async () => {
+      const response = await fetchWithAuth("/api/admin/users?status=canceled");
       return response.json();
     },
     enabled: isAuthenticated,
@@ -182,9 +212,24 @@ export default function AdminDashboard() {
     );
   }
 
-  const filteredUsers = usersData?.users.filter(user =>
+  // Get users by tab
+  const getUsersByTab = (tab: string) => {
+    switch (tab) {
+      case 'trial-users':
+        return trialUsersData?.users || [];
+      case 'active-users':
+        return activeUsersData?.users || [];
+      case 'canceled-users':
+        return canceledUsersData?.users || [];
+      default:
+        return allUsersData?.users || [];
+    }
+  };
+
+  const currentUsers = getUsersByTab(activeTab);
+  const filteredUsers = currentUsers.filter((user: any) =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   // Main dashboard
   return (
@@ -205,56 +250,73 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Utenti Totali</CardTitle>
+              <CardTitle className="text-sm font-medium">Tutte le Utenti</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.stats.totalUsers || 0}</div>
+              <div className="text-2xl font-bold">{allUsersData?.stats?.totalUsers || stats?.stats.totalUsers || 0}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Utenti Trial</CardTitle>
+              <TrendingUp className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{allUsersData?.stats?.trialUsers || 0}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Abbonamenti Attivi</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <FileText className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.stats.activeSubscriptions || 0}</div>
+              <div className="text-2xl font-bold">{allUsersData?.stats?.activeUsers || 0}</div>
             </CardContent>
           </Card>
           
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Piani Alimentari</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Account Cancellati</CardTitle>
+              <Activity className="h-4 w-4 text-red-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats?.stats.totalMealPlans || 0}</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Ricette Generate</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats?.stats.totalRecipes || 0}</div>
+              <div className="text-2xl font-bold">{allUsersData?.stats?.canceledUsers || 0}</div>
             </CardContent>
           </Card>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="users">Utenti</TabsTrigger>
-            <TabsTrigger value="user-detail" disabled={!selectedUserId}>Dettaglio Utente</TabsTrigger>
-            <TabsTrigger value="activity">Attività Recente</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="all-users">
+              <Users className="w-4 h-4 mr-2" />
+              Tutte le Utenti ({allUsersData?.stats?.totalUsers || 0})
+            </TabsTrigger>
+            <TabsTrigger value="trial-users">
+              <TrendingUp className="w-4 h-4 mr-2 text-orange-500" />
+              Trial ({allUsersData?.stats?.trialUsers || 0})
+            </TabsTrigger>
+            <TabsTrigger value="active-users">
+              <FileText className="w-4 h-4 mr-2 text-green-500" />
+              Pagato ({allUsersData?.stats?.activeUsers || 0})
+            </TabsTrigger>
+            <TabsTrigger value="canceled-users">
+              <Activity className="w-4 h-4 mr-2 text-red-500" />
+              Cancellati ({allUsersData?.stats?.canceledUsers || 0})
+            </TabsTrigger>
+            <TabsTrigger value="user-detail" disabled={!selectedUserId}>
+              Dettaglio Utente
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="users" className="space-y-6">
+          {/* All Users Tab */}
+          <TabsContent value="all-users" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Lista Utenti</CardTitle>
+                <CardTitle>📋 Tutte le Utenti Registrate</CardTitle>
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
@@ -271,26 +333,223 @@ export default function AdminDashboard() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Email</TableHead>
-                      <TableHead>Stato Abbonamento</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead>Piani</TableHead>
+                      <TableHead>Ricette</TableHead>
                       <TableHead>Ultima Attività</TableHead>
                       <TableHead>Registrazione</TableHead>
                       <TableHead>Azioni</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((user: any) => (
                       <TableRow key={user.id}>
                         <TableCell className="font-medium">{user.email}</TableCell>
                         <TableCell>
-                          <Badge variant={user.subscriptionStatus === 'active' ? 'default' : 'secondary'}>
-                            {user.subscriptionStatus || 'Nessun abbonamento'}
+                          <Badge variant={user.subscriptionStatus === 'active' ? 'default' : 
+                                         user.subscriptionStatus === 'trialing' ? 'secondary' : 'outline'}>
+                            {user.subscriptionStatus || 'Nessuno'}
                           </Badge>
                         </TableCell>
+                        <TableCell>{user.mealPlansCount || 0}</TableCell>
+                        <TableCell>{user.recipesCount || 0}</TableCell>
                         <TableCell>
                           {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString('it-IT') : 'Mai'}
                         </TableCell>
                         <TableCell>
                           {new Date(user.createdAt).toLocaleDateString('it-IT')}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setActiveTab("user-detail");
+                            }}
+                            data-testid={`view-user-${user.id}`}
+                          >
+                            Visualizza
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Trial Users Tab */}
+          <TabsContent value="trial-users" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>🆓 Utenti in Periodo di Prova</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Cerca per email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                    data-testid="search-users"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Scadenza Trial</TableHead>
+                      <TableHead>Piani</TableHead>
+                      <TableHead>Ricette</TableHead>
+                      <TableHead>Ultima Attività</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">
+                            {user.trialEndDate ? new Date(user.trialEndDate).toLocaleDateString('it-IT') : 'N/A'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{user.mealPlansCount || 0}</TableCell>
+                        <TableCell>{user.recipesCount || 0}</TableCell>
+                        <TableCell>
+                          {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString('it-IT') : 'Mai'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setActiveTab("user-detail");
+                            }}
+                            data-testid={`view-user-${user.id}`}
+                          >
+                            Visualizza
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Active Users Tab */}
+          <TabsContent value="active-users" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>💰 Utenti con Abbonamento Pagato</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Cerca per email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                    data-testid="search-users"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Piano</TableHead>
+                      <TableHead>Piani Gen.</TableHead>
+                      <TableHead>Ricette Gen.</TableHead>
+                      <TableHead>Data Inizio</TableHead>
+                      <TableHead>Prossimo Rinnovo</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="default">{user.subscriptionPlan || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell>{user.mealPlansCount || 0}</TableCell>
+                        <TableCell>{user.recipesCount || 0}</TableCell>
+                        <TableCell>
+                          {user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString('it-IT') : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          {user.subscriptionEndDate ? new Date(user.subscriptionEndDate).toLocaleDateString('it-IT') : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUserId(user.id);
+                              setActiveTab("user-detail");
+                            }}
+                            data-testid={`view-user-${user.id}`}
+                          >
+                            Visualizza
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Canceled Users Tab */}
+          <TabsContent value="canceled-users" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>❌ Utenti con Abbonamenti Cancellati</CardTitle>
+                <div className="flex items-center space-x-2">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Cerca per email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
+                    data-testid="search-users"
+                  />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Piano Cancellato</TableHead>
+                      <TableHead>Piani Gen.</TableHead>
+                      <TableHead>Ricette Gen.</TableHead>
+                      <TableHead>Data Cancellazione</TableHead>
+                      <TableHead>Scadenza</TableHead>
+                      <TableHead>Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.map((user: any) => (
+                      <TableRow key={user.id}>
+                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{user.subscriptionPlan || 'N/A'}</Badge>
+                        </TableCell>
+                        <TableCell>{user.mealPlansCount || 0}</TableCell>
+                        <TableCell>{user.recipesCount || 0}</TableCell>
+                        <TableCell>
+                          {user.subscriptionStartDate ? new Date(user.subscriptionStartDate).toLocaleDateString('it-IT') : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="destructive">
+                            {user.subscriptionEndDate ? new Date(user.subscriptionEndDate).toLocaleDateString('it-IT') : 'N/A'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Button

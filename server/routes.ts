@@ -2762,17 +2762,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users for dashboard
   app.get("/api/admin/users", isAdminAuthenticated, async (req: any, res) => {
     try {
-      const { page = 1, limit = 20, search, status } = req.query;
+      const { page = 1, limit = 100, search, status } = req.query;
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
-      // Get all users with profiles and subscription info
-      const allUsers = await db
+      // Build query with optional status filter
+      let baseQuery = db
         .select({
           id: users.id,
           email: users.email,
           username: users.username,
           subscriptionStatus: users.subscriptionStatus,
           subscriptionPlan: users.subscriptionPlan,
+          subscriptionStartDate: users.subscriptionStartDate,
+          subscriptionEndDate: users.subscriptionEndDate,
           trialEndDate: users.trialEndDate,
           hasUsedTrial: users.hasUsedTrial,
           createdAt: users.createdAt,
@@ -2784,13 +2786,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         })
         .from(users)
-        .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
+        .leftJoin(userProfiles, eq(users.id, userProfiles.userId));
+
+      // Apply status filter if provided
+      if (status && status !== 'all') {
+        if (status === 'trial') {
+          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'trialing'));
+        } else if (status === 'active') {
+          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'active'));
+        } else if (status === 'canceled') {
+          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'canceled'));
+        }
+      }
+
+      const allUsers = await baseQuery
         .limit(parseInt(limit))
         .offset(offset)
         .orderBy(desc(users.createdAt));
 
-      // Get activity logs for each user (last activity)
-      const usersWithActivity = await Promise.all(
+      // Get activity logs for each user (last activity) and enhanced data
+      const usersWithEnhancedData = await Promise.all(
         allUsers.map(async (user) => {
           const lastActivity = await db
             .select()
@@ -2799,16 +2814,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .orderBy(desc(activityLogs.createdAt))
             .limit(1);
 
+          // Get meal plans count
+          const mealPlansCount = await db
+            .select({ count: sql`count(*)` })
+            .from(mealPlans)
+            .where(eq(mealPlans.userId, user.id));
+
+          // Get recipes count
+          const recipesCount = await db
+            .select({ count: sql`count(*)` })
+            .from(recipes)
+            .where(eq(recipes.userId, user.id));
+
+          // Determine subscription status with dates
+          const now = new Date();
+          const trialDate = user.trialEndDate ? new Date(user.trialEndDate) : null;
+          const endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : null;
+          
+          const isTrialing = user.subscriptionStatus === 'trialing' && trialDate && trialDate.getTime() > now.getTime();
+          const isActiveSubscription = user.subscriptionStatus === 'active' || 
+                                       (user.subscriptionStatus === 'canceled' && endDate && endDate.getTime() > now.getTime());
+
           return {
             ...user,
             lastActivity: lastActivity[0]?.createdAt || null,
-            lastAction: lastActivity[0]?.action || null
+            lastAction: lastActivity[0]?.action || null,
+            mealPlansCount: mealPlansCount[0]?.count || 0,
+            recipesCount: recipesCount[0]?.count || 0,
+            isTrialing,
+            isActiveSubscription,
+            hasActiveSubscription: isActiveSubscription || isTrialing
           };
         })
       );
 
-      res.json({
-        users: usersWithActivity,
+      // Get count by status for stats (without status filter for complete stats)
+      const allUsersForStats = await db
+        .select({
+          subscriptionStatus: users.subscriptionStatus,
+          trialEndDate: users.trialEndDate,
+          subscriptionEndDate: users.subscriptionEndDate
+        })
+        .from(users);
+        
+      const now = new Date();
+      let totalUsers = allUsersForStats.length;
+      let trialUsers = 0;
+      let activeUsers = 0;  
+      let canceledUsers = 0;
+
+      allUsersForStats.forEach(u => {
+        const trialDate = u.trialEndDate ? new Date(u.trialEndDate) : null;
+        const endDate = u.subscriptionEndDate ? new Date(u.subscriptionEndDate) : null;
+        
+        if (u.subscriptionStatus === 'trialing' && trialDate && trialDate.getTime() > now.getTime()) {
+          trialUsers++;
+        } else if (u.subscriptionStatus === 'active') {
+          activeUsers++;
+        } else if (u.subscriptionStatus === 'canceled') {
+          canceledUsers++;
+        }
+      });
+
+      res.json({ 
+        users: usersWithEnhancedData,
+        stats: {
+          totalUsers,
+          trialUsers,
+          activeUsers,
+          canceledUsers
+        },
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
