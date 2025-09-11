@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Send, Bot, User, Heart, AlertTriangle, Loader2 } from "lucide-react";
+import { Send, Bot, User, Heart, AlertTriangle, Loader2, MessageCircle, Phone } from "lucide-react";
 import lauraProfileImage from "@assets/0ADDBA68-68CF-4572-8888-BB7E018FE99E_1_105_c_1756389814359.jpeg";
 import { useAuth } from "@/hooks/useAuth";
 import { apiRequest } from "@/lib/queryClient";
@@ -92,9 +92,9 @@ export default function AIChat() {
         content: `Ciao! Sono Laura, la tua consulente nutrizionale personale del Manuale della Gazzella. 
 
 ${userProfile ? 
-  `Vedo che hai completato il tuo profilo (${userProfile.weight}kg, ${userProfile.height}cm, ${userProfile.age} anni). Perfetto! 
+  `Vedo che hai completato il tuo profilo (${(userProfile as any).weight}kg, ${(userProfile as any).height}cm, ${(userProfile as any).age} anni). Perfetto! 
 
-Ho anche accesso ai tuoi ${mealPlans?.length || 0} piani nutrizionali e ${recipes?.length || 0} ricette personalizzate.` 
+Ho anche accesso ai tuoi ${(mealPlans as any)?.length || 0} piani nutrizionali e ${(recipes as any)?.length || 0} ricette personalizzate.` 
 : 
   `Per offrirti consigli personalizzati, ti consiglio di completare il tuo profilo con peso, altezza ed età nella sezione "Il Mio Profilo".`
 }
@@ -264,6 +264,36 @@ Cosa posso fare per te oggi? 😊`,
                   mediche specifiche, consulta sempre un medico di persona.
                 </p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* WhatsApp Consultation Card */}
+        <Card className="border-green-200 bg-green-50 dark:bg-green-900/10 mb-6">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-start gap-3">
+                <MessageCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-green-800 dark:text-green-200 mb-1">
+                    Consulenza Nutrizionale Personale
+                  </p>
+                  <p className="text-green-700 dark:text-green-300 text-sm">
+                    Hai bisogno di una consulenza più approfondita? Contatta direttamente la nostra nutrizionista su WhatsApp per un supporto personalizzato.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => {
+                  const whatsappUrl = `https://wa.me/393296180642?text=${encodeURIComponent('Ciao! Sono interessato/a ad una consulenza nutrizionale personalizzata del Manuale della Gazzella.')}`;
+                  window.open(whatsappUrl, '_blank');
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white flex items-center gap-2"
+                data-testid="button-whatsapp-consultation"
+              >
+                <Phone className="h-4 w-4" />
+                Contatta su WhatsApp
+              </Button>
             </div>
           </CardContent>
         </Card>
