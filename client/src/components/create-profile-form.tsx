@@ -225,7 +225,7 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Problemi alla tiroide</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "no"}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleziona..." />
@@ -248,7 +248,7 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Problemi intestinali</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "mai"}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleziona..." />
@@ -339,7 +339,7 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Bevi almeno 2 litri d'acqua al giorno?</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "si"}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleziona..." />
@@ -366,7 +366,7 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Obiettivo principale</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "weight_loss"}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleziona il tuo obiettivo..." />
@@ -390,7 +390,7 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Stai assumendo la Formula Gazzella?</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <Select onValueChange={field.onChange} defaultValue={field.value || "no"}>
                               <FormControl>
                                 <SelectTrigger>
                                   <SelectValue placeholder="Seleziona..." />
