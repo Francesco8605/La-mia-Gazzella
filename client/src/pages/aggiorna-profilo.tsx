@@ -78,17 +78,39 @@ export default function AggiornaProfiloPage() {
   // Check for mobile device and enable fallback if needed
   useEffect(() => {
     const isMobile = isMobileDevice();
-    const isXiaomi = /MIUI|Redmi|Xiaomi/i.test(navigator.userAgent);
     const userAgent = navigator.userAgent;
     
+    // Extended detection for all Xiaomi device variants including Redmi 15 Pro
+    const isXiaomi = /MIUI|Redmi|Xiaomi|Mi\s|HyperOS/i.test(userAgent);
+    const isBrowser = /Chrome|WebView|MiuiBrowser/i.test(userAgent);
+    const isAndroid = /Android/i.test(userAgent);
+    
+    console.log("🔍 Profile Page - DEVICE DEBUG:");
     console.log("User Agent:", userAgent);
     console.log("Is Mobile:", isMobile);
-    console.log("Is Xiaomi:", isXiaomi);
+    console.log("Is Android:", isAndroid);
+    console.log("Is Xiaomi (extended):", isXiaomi);
+    console.log("Browser detected:", isBrowser);
     
-    // Enable fallback for all Xiaomi/MIUI devices or if explicitly forced
-    if ((isMobile && isXiaomi) || userAgent.includes('MIUI') || userAgent.includes('Redmi')) {
-      console.log("Enabling fallback mode for device compatibility");
+    // More aggressive fallback detection for Xiaomi devices
+    const shouldUseFallback = (
+      (isMobile && isXiaomi) ||
+      (isAndroid && isXiaomi) ||
+      userAgent.includes('MIUI') || 
+      userAgent.includes('Redmi') || 
+      userAgent.includes('Xiaomi') ||
+      userAgent.includes('HyperOS') ||
+      userAgent.includes('Mi ') ||
+      // Force fallback for all Android mobile devices temporarily for testing
+      (isAndroid && isMobile && userAgent.includes('Mobile'))
+    );
+    
+    if (shouldUseFallback) {
+      console.log("🚨 Profile Page - ENABLING FALLBACK MODE for device compatibility");
+      console.log("Detected device type: Xiaomi/MIUI/Redmi/HyperOS");
       setUseFallback(true);
+    } else {
+      console.log("✅ Profile Page - Using standard UI components");
     }
   }, []);
 
