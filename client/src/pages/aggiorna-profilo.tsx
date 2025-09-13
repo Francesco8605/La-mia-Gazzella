@@ -15,10 +15,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { UserProfile } from "@shared/schema";
 
+// Detect mobile device for fallback
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 export default function AggiornaProfiloPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [useFallback, setUseFallback] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -68,6 +74,16 @@ export default function AggiornaProfiloPage() {
   });
 
   const latestWeight = weightEntries.length > 0 ? weightEntries[weightEntries.length - 1]?.weight : undefined;
+
+  // Check for mobile device and enable fallback if needed
+  useEffect(() => {
+    const isMobile = isMobileDevice();
+    const isXiaomi = /MIUI|Redmi|Xiaomi/i.test(navigator.userAgent);
+    if (isMobile && isXiaomi) {
+      console.log("Detected Xiaomi mobile device, enabling fallback mode");
+      setUseFallback(true);
+    }
+  }, []);
 
   // Update form when profile loads
   useEffect(() => {
@@ -121,14 +137,36 @@ export default function AggiornaProfiloPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting profile with data:", formData);
+    
+    // Extra validation for thyroid field
+    if (!formData.thyroidIssues) {
+      console.warn("thyroidIssues is empty, setting default");
+      setFormData(prev => ({ ...prev, thyroidIssues: "no" }));
+      return;
+    }
+    
     updateProfileMutation.mutate(formData);
   };
 
   const handleInputChange = (field: string, value: string | string[]) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    console.log(`Updating field: ${field} with value:`, value);
+    try {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value
+      }));
+      console.log(`Successfully updated ${field}`);
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      // Fallback for problematic devices
+      setTimeout(() => {
+        setFormData(prev => ({
+          ...prev,
+          [field]: value
+        }));
+      }, 10);
+    }
   };
 
   const addToArray = (field: 'excludedFoods' | 'allergies', value: string) => {
@@ -243,16 +281,46 @@ export default function AggiornaProfiloPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="thyroid">Problemi di Tiroide</Label>
-                <Select value={formData.thyroidIssues} onValueChange={(value) => handleInputChange('thyroidIssues', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="si">Sì</SelectItem>
-                    <SelectItem value="eutirox">Prendo Eutirox</SelectItem>
-                  </SelectContent>
-                </Select>
+                {useFallback ? (
+                  <select
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    value={formData.thyroidIssues}
+                    onChange={(e) => {
+                      console.log("Thyroid native select changed to:", e.target.value);
+                      handleInputChange('thyroidIssues', e.target.value);
+                    }}
+                    data-testid="thyroid-native-select"
+                  >
+                    <option value="">Seleziona...</option>
+                    <option value="no">No</option>
+                    <option value="si">Sì</option>
+                    <option value="eutirox">Prendo Eutirox</option>
+                  </select>
+                ) : (
+                  <Select 
+                    value={formData.thyroidIssues} 
+                    onValueChange={(value) => {
+                      console.log("Thyroid value changed to:", value);
+                      handleInputChange('thyroidIssues', value);
+                    }}
+                  >
+                    <SelectTrigger 
+                      className="relative z-10"
+                      data-testid="thyroid-select-trigger"
+                    >
+                      <SelectValue placeholder="Seleziona..." />
+                    </SelectTrigger>
+                    <SelectContent 
+                      className="z-[100]"
+                      position="popper"
+                      data-testid="thyroid-select-content"
+                    >
+                      <SelectItem value="no" data-testid="thyroid-option-no">No</SelectItem>
+                      <SelectItem value="si" data-testid="thyroid-option-si">Sì</SelectItem>
+                      <SelectItem value="eutirox" data-testid="thyroid-option-eutirox">Prendo Eutirox</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div>
                 <Label htmlFor="intestinal">Problemi Intestinali</Label>
