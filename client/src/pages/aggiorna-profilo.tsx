@@ -79,8 +79,15 @@ export default function AggiornaProfiloPage() {
   useEffect(() => {
     const isMobile = isMobileDevice();
     const isXiaomi = /MIUI|Redmi|Xiaomi/i.test(navigator.userAgent);
-    if (isMobile && isXiaomi) {
-      console.log("Detected Xiaomi mobile device, enabling fallback mode");
+    const userAgent = navigator.userAgent;
+    
+    console.log("User Agent:", userAgent);
+    console.log("Is Mobile:", isMobile);
+    console.log("Is Xiaomi:", isXiaomi);
+    
+    // Enable fallback for all Xiaomi/MIUI devices or if explicitly forced
+    if ((isMobile && isXiaomi) || userAgent.includes('MIUI') || userAgent.includes('Redmi')) {
+      console.log("Enabling fallback mode for device compatibility");
       setUseFallback(true);
     }
   }, []);
@@ -324,16 +331,33 @@ export default function AggiornaProfiloPage() {
               </div>
               <div>
                 <Label htmlFor="intestinal">Problemi Intestinali</Label>
-                <Select value={formData.intestinalIssues} onValueChange={(value) => handleInputChange('intestinalIssues', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mai">Mai</SelectItem>
-                    <SelectItem value="qualche_volta">Qualche volta</SelectItem>
-                    <SelectItem value="spesso">Spesso</SelectItem>
-                  </SelectContent>
-                </Select>
+                {useFallback ? (
+                  <select
+                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    value={formData.intestinalIssues}
+                    onChange={(e) => {
+                      console.log("Intestinal native select changed to:", e.target.value);
+                      handleInputChange('intestinalIssues', e.target.value);
+                    }}
+                    data-testid="intestinal-native-select"
+                  >
+                    <option value="">Seleziona...</option>
+                    <option value="mai">Mai</option>
+                    <option value="qualche_volta">Qualche volta</option>
+                    <option value="spesso">Spesso</option>
+                  </select>
+                ) : (
+                  <Select value={formData.intestinalIssues} onValueChange={(value) => handleInputChange('intestinalIssues', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleziona..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mai">Mai</SelectItem>
+                      <SelectItem value="qualche_volta">Qualche volta</SelectItem>
+                      <SelectItem value="spesso">Spesso</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
           </CardContent>
@@ -415,15 +439,31 @@ export default function AggiornaProfiloPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="water">Bevi almeno 2 litri d'acqua al giorno?</Label>
-              <Select value={formData.dailyWaterIntake} onValueChange={(value) => handleInputChange('dailyWaterIntake', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="si">Sì</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
+              {useFallback ? (
+                <select
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  value={formData.dailyWaterIntake}
+                  onChange={(e) => {
+                    console.log("Water intake native select changed to:", e.target.value);
+                    handleInputChange('dailyWaterIntake', e.target.value);
+                  }}
+                  data-testid="water-native-select"
+                >
+                  <option value="">Seleziona...</option>
+                  <option value="si">Sì</option>
+                  <option value="no">No</option>
+                </select>
+              ) : (
+                <Select value={formData.dailyWaterIntake} onValueChange={(value) => handleInputChange('dailyWaterIntake', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="si">Sì</SelectItem>
+                    <SelectItem value="no">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -469,16 +509,33 @@ export default function AggiornaProfiloPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="formula">Prendi la Formula Gazzella?</Label>
-              <Select value={formData.takingFormulaGazzella} onValueChange={(value) => handleInputChange('takingFormulaGazzella', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="si">Sì</SelectItem>
-                  <SelectItem value="ho_iniziato">Ho iniziato di recente</SelectItem>
-                </SelectContent>
-              </Select>
+              {useFallback ? (
+                <select
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  value={formData.takingFormulaGazzella}
+                  onChange={(e) => {
+                    console.log("Formula Gazzella native select changed to:", e.target.value);
+                    handleInputChange('takingFormulaGazzella', e.target.value);
+                  }}
+                  data-testid="formula-native-select"
+                >
+                  <option value="">Seleziona...</option>
+                  <option value="no">No</option>
+                  <option value="si">Sì</option>
+                  <option value="ho_iniziato">Ho iniziato di recente</option>
+                </select>
+              ) : (
+                <Select value={formData.takingFormulaGazzella} onValueChange={(value) => handleInputChange('takingFormulaGazzella', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="si">Sì</SelectItem>
+                    <SelectItem value="ho_iniziato">Ho iniziato di recente</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </CardContent>
         </Card>
