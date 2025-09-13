@@ -80,7 +80,7 @@ export default function RecipeGenerator() {
     console.log("Is Xiaomi (extended):", isXiaomi);
     console.log("Browser detected:", isBrowser);
     
-    // More aggressive fallback detection for Xiaomi devices
+    // Precise detection for Xiaomi/MIUI devices with compatibility issues
     const shouldUseFallback = (
       (isMobile && isXiaomi) ||
       (isAndroid && isXiaomi) ||
@@ -89,8 +89,8 @@ export default function RecipeGenerator() {
       userAgent.includes('Xiaomi') ||
       userAgent.includes('HyperOS') ||
       userAgent.includes('Mi ') ||
-      // Force fallback for all Android mobile devices temporarily for testing
-      (isAndroid && isMobile && userAgent.includes('Mobile'))
+      // Specific problematic browsers on Xiaomi devices
+      (isAndroid && /MiuiBrowser|XiaoMi/i.test(userAgent))
     );
     
     if (shouldUseFallback) {
