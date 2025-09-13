@@ -16,7 +16,7 @@ import Stripe from "stripe";
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
-console.log("🔧 Stripe initialized with key:", process.env.STRIPE_SECRET_KEY?.substring(0, 12) + "...");
+console.log("🔧 Stripe initialized successfully");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function generateSessionId(): string {
@@ -33,8 +33,6 @@ function getSessionExpiryDate(): Date {
 async function isAuthenticated(req: any, res: any, next: any) {
   try {
     console.log("🔐 Authentication check for:", req.url);
-    console.log("🍪 All cookies:", req.cookies);
-    console.log("🔍 Session cookie:", req.cookies?.session);
     
     const sessionId = req.cookies?.session;
     if (!sessionId) {
@@ -109,12 +107,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         environment: process.env.NODE_ENV || 'development',
         timestamp: new Date().toISOString(),
         database: {
-          connected: !!process.env.DATABASE_URL,
-          urlPrefix: process.env.DATABASE_URL?.substring(0, 30) || 'N/A'
+          connected: !!process.env.DATABASE_URL
         },
         stripe: {
-          configured: !!process.env.STRIPE_SECRET_KEY,
-          keyPrefix: process.env.STRIPE_SECRET_KEY?.substring(0, 10) || 'N/A'
+          configured: !!process.env.STRIPE_SECRET_KEY
         }
       };
 
@@ -164,7 +160,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SHOPIFY_STORE_DOMAIN: !!process.env.SHOPIFY_STORE_DOMAIN,
         SHOPIFY_API_SECRET: !!process.env.SHOPIFY_API_SECRET,
         storeUrl: process.env.SHOPIFY_STORE_DOMAIN || 'NOT_SET',
-        tokenPrefix: process.env.SHOPIFY_API_SECRET?.substring(0, 8) || 'NOT_SET'
+        tokenConfigured: !!process.env.SHOPIFY_API_SECRET
       };
       
       console.log('🔍 Environment variables:', envCheck);
@@ -204,8 +200,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const envCheck = {
         WHATSAPP_API_KEY_3333401566: !!process.env.WHATSAPP_API_KEY_3333401566,
         WHATSAPP_API_KEY_3884480928: !!process.env.WHATSAPP_API_KEY_3884480928,
-        apiKey3333401566Prefix: process.env.WHATSAPP_API_KEY_3333401566?.substring(0, 8) || 'NOT_SET',
-        apiKey3884480928Prefix: process.env.WHATSAPP_API_KEY_3884480928?.substring(0, 8) || 'NOT_SET'
+        apiKey3333401566Configured: !!process.env.WHATSAPP_API_KEY_3333401566,
+        apiKey3884480928Configured: !!process.env.WHATSAPP_API_KEY_3884480928
       };
       
       console.log('🔍 WhatsApp environment variables:', envCheck);
@@ -1607,8 +1603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/create-checkout-session", isAuthenticated, async (req, res) => {
     try {
       console.log("🏪 Creating checkout session...");
-      console.log("🔑 Stripe Secret Key exists:", !!process.env.STRIPE_SECRET_KEY);
-      console.log("🔑 Stripe Secret Key starts with:", process.env.STRIPE_SECRET_KEY?.substring(0, 7));
+      console.log("🔑 Stripe configuration verified");
       
       const userId = (req as any).user.claims.sub;
       const { planId } = req.body;
