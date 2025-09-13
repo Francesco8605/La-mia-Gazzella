@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -51,11 +51,34 @@ interface GeneratedRecipe {
   dietaryTags: string[];
 }
 
+// Helper function to detect mobile devices
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(navigator.userAgent);
+};
+
 export default function RecipeGenerator() {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [showQuickProfileDialog, setShowQuickProfileDialog] = useState(false);
   const [pendingRecipeData, setPendingRecipeData] = useState<RecipeFormData | null>(null);
+  const [useFallback, setUseFallback] = useState(false);
   const { toast } = useToast();
+
+  // Check for mobile device and enable fallback if needed
+  useEffect(() => {
+    const isMobile = isMobileDevice();
+    const isXiaomi = /MIUI|Redmi|Xiaomi/i.test(navigator.userAgent);
+    const userAgent = navigator.userAgent;
+    
+    console.log("Recipe Generator - User Agent:", userAgent);
+    console.log("Recipe Generator - Is Mobile:", isMobile);
+    console.log("Recipe Generator - Is Xiaomi:", isXiaomi);
+    
+    // Enable fallback for all Xiaomi/MIUI devices or if explicitly forced
+    if ((isMobile && isXiaomi) || userAgent.includes('MIUI') || userAgent.includes('Redmi')) {
+      console.log("Recipe Generator - Enabling fallback mode for device compatibility");
+      setUseFallback(true);
+    }
+  }, []);
 
   // Controlla se esistono piani personalizzati salvati
   const { data: mealPlans, isLoading: mealPlansLoading } = useQuery({
@@ -218,17 +241,35 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo di Piatto</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          {useFallback ? (
                             <FormControl>
-                              <SelectTrigger data-testid="select-dish-type">
-                                <SelectValue placeholder="Seleziona tipo di piatto" />
-                              </SelectTrigger>
+                              <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                value={field.value}
+                                onChange={(e) => {
+                                  console.log("DishType native select changed to:", e.target.value);
+                                  field.onChange(e.target.value);
+                                }}
+                                data-testid="dishtype-native-select"
+                              >
+                                <option value="">Seleziona tipo di piatto</option>
+                                <option value="primo">Primo Piatto</option>
+                                <option value="secondo">Secondo Piatto</option>
+                              </select>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="primo">Primo Piatto</SelectItem>
-                              <SelectItem value="secondo">Secondo Piatto</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          ) : (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-dish-type">
+                                  <SelectValue placeholder="Seleziona tipo di piatto" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="primo">Primo Piatto</SelectItem>
+                                <SelectItem value="secondo">Secondo Piatto</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -240,18 +281,37 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Base del Piatto</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          {useFallback ? (
                             <FormControl>
-                              <SelectTrigger data-testid="select-meat-fish">
-                                <SelectValue placeholder="Seleziona base" />
-                              </SelectTrigger>
+                              <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                value={field.value}
+                                onChange={(e) => {
+                                  console.log("MeatOrFish native select changed to:", e.target.value);
+                                  field.onChange(e.target.value);
+                                }}
+                                data-testid="meatfish-native-select"
+                              >
+                                <option value="">Seleziona base</option>
+                                <option value="carne">A base di Carne</option>
+                                <option value="pesce">A base di Pesce</option>
+                                <option value="uova">A base di Uova</option>
+                              </select>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="carne">A base di Carne</SelectItem>
-                              <SelectItem value="pesce">A base di Pesce</SelectItem>
-                              <SelectItem value="uova">A base di Uova</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          ) : (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-meat-fish">
+                                  <SelectValue placeholder="Seleziona base" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="carne">A base di Carne</SelectItem>
+                                <SelectItem value="pesce">A base di Pesce</SelectItem>
+                                <SelectItem value="uova">A base di Uova</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -263,18 +323,37 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Difficoltà</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          {useFallback ? (
                             <FormControl>
-                              <SelectTrigger data-testid="select-difficulty">
-                                <SelectValue placeholder="Seleziona difficoltà" />
-                              </SelectTrigger>
+                              <select
+                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                                value={field.value}
+                                onChange={(e) => {
+                                  console.log("Difficulty native select changed to:", e.target.value);
+                                  field.onChange(e.target.value);
+                                }}
+                                data-testid="difficulty-native-select"
+                              >
+                                <option value="">Seleziona difficoltà</option>
+                                <option value="facile">Facile</option>
+                                <option value="media">Media</option>
+                                <option value="difficile">Difficile</option>
+                              </select>
                             </FormControl>
-                            <SelectContent>
-                              <SelectItem value="facile">Facile</SelectItem>
-                              <SelectItem value="media">Media</SelectItem>
-                              <SelectItem value="difficile">Difficile</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          ) : (
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                              <FormControl>
+                                <SelectTrigger data-testid="select-difficulty">
+                                  <SelectValue placeholder="Seleziona difficoltà" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem value="facile">Facile</SelectItem>
+                                <SelectItem value="media">Media</SelectItem>
+                                <SelectItem value="difficile">Difficile</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
