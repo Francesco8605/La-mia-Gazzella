@@ -13,11 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Schema semplificato per le ricette - richiede solo il tipo di piatto
+// Schema con campi di testo libero per personalizzazione AI
 const recipeFormSchema = z.object({
-  dishType: z.enum(["primo", "secondo"], { required_error: "Seleziona tipo di piatto" }),
-  meatOrFish: z.enum(["carne", "pesce", "uova"], { required_error: "Seleziona base del piatto" }),
-  difficulty: z.enum(["facile", "media", "difficile"], { required_error: "Seleziona difficoltà" }),
+  dishType: z.string().min(1, "Descrivi che tipo di piatto vuoi"),
+  meatOrFish: z.string().min(1, "Descrivi la base proteica che preferisci"),
+  difficulty: z.string().min(1, "Descrivi il livello di difficoltà che preferisci"),
   preferredProteins: z.string().min(1, "Specifica le proteine preferite"),
   preferredFish: z.string().optional(),
   foodIntolerances: z.string().optional(),
@@ -72,9 +72,9 @@ export default function RecipeGenerator() {
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
-      dishType: "secondo",
-      meatOrFish: "pesce",
-      difficulty: "facile",
+      dishType: "",
+      meatOrFish: "",
+      difficulty: "",
       preferredProteins: "",
       preferredFish: "",
       foodIntolerances: "",
@@ -134,11 +134,14 @@ export default function RecipeGenerator() {
         ciboSgarroPreferito: ""
       };
 
-      const proteinType = recipeData.meatOrFish === "carne" ? "carne" : 
-                         recipeData.meatOrFish === "pesce" ? "pesce" : "uova";
+      // Determina il tipo di piatto dalla descrizione testuale
+      const isPrimoFromText = recipeData.dishType.toLowerCase().includes('primo') || 
+                             recipeData.dishType.toLowerCase().includes('pasta') ||
+                             recipeData.dishType.toLowerCase().includes('riso') ||
+                             recipeData.dishType.toLowerCase().includes('carboidrat');
 
       const recipeRequest = {
-        mealName: `${recipeData.dishType === "primo" ? "Primo piatto" : "Secondo piatto"} a base di ${proteinType}`,
+        mealName: `${recipeData.dishType} con ${recipeData.meatOrFish}`,
         dietaryPreferences: [
           "menopausa",
           "no legumi",
@@ -146,7 +149,7 @@ export default function RecipeGenerator() {
           "no affettati",
           "no ultra-processati"
         ],
-        targetCalories: recipeData.dishType === "primo" ? 400 : 350,
+        targetCalories: isPrimoFromText ? 400 : 350,
         allergies: recipeData.foodIntolerances ? recipeData.foodIntolerances.split(",").map(s => s.trim()) : [],
         cuisine: "italiana",
         difficulty: recipeData.difficulty,
@@ -156,7 +159,7 @@ export default function RecipeGenerator() {
           preferredFish: recipeData.preferredFish || "",
           meatOrFish: recipeData.meatOrFish,
           excludedFoods: recipeData.excludedFoods || "",
-          additionalDetails: ""
+          additionalDetails: `Richiesta: "${recipeData.dishType}". Base: "${recipeData.meatOrFish}". Preparazione: "${recipeData.difficulty}".`
         }
       };
 
@@ -251,17 +254,16 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo di Piatto</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-dish-type">
-                                <SelectValue placeholder="Seleziona tipo di piatto" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="primo">Primo Piatto</SelectItem>
-                              <SelectItem value="secondo">Secondo Piatto</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormControl>
+                            <Input 
+                              placeholder="Descrivi che tipo di piatto vuoi"
+                              {...field}
+                              data-testid="input-dish-type"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Es: "Primo piatto con pasta", "Secondo di pesce leggero", "Piatto unico sostanzioso", "Secondo vegetariano con uova", ecc.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -272,19 +274,17 @@ export default function RecipeGenerator() {
                       name="meatOrFish"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Base del Piatto</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-meat-fish">
-                                <SelectValue placeholder="Seleziona base" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="carne">A base di Carne</SelectItem>
-                              <SelectItem value="pesce">A base di Pesce</SelectItem>
-                              <SelectItem value="uova">A base di Uova</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Base Proteica del Piatto</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Descrivi la base proteica che preferisci"
+                              {...field}
+                              data-testid="input-meat-fish"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Es: "Pesce bianco delicato", "Carne rossa magra", "Uova strapazzate", "Salmone grigliato", "Pollo ai ferri", ecc.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -295,19 +295,17 @@ export default function RecipeGenerator() {
                       name="difficulty"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Difficoltà</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger data-testid="select-difficulty">
-                                <SelectValue placeholder="Seleziona difficoltà" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="facile">Facile</SelectItem>
-                              <SelectItem value="media">Media</SelectItem>
-                              <SelectItem value="difficile">Difficile</SelectItem>
-                            </SelectContent>
-                          </Select>
+                          <FormLabel>Livello di Preparazione</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="Descrivi il livello di difficoltà che preferisci"
+                              {...field}
+                              data-testid="input-difficulty"
+                            />
+                          </FormControl>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Es: "Veloce e semplice", "Elaborato ma fattibile", "Ricetta gourmet", "Preparazione in 15 minuti", "Con cottura lunga", ecc.
+                          </p>
                           <FormMessage />
                         </FormItem>
                       )}

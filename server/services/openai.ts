@@ -875,6 +875,7 @@ export async function generatePersonalizedRecipe(request: {
     preferredFish?: string;
     meatOrFish: "carne" | "pesce" | "uova";
     excludedFoods?: string;
+    additionalDetails?: string;
   };
   existingRecipes?: string[]; // List of existing recipe titles to avoid duplicates
   requireUnique?: boolean; // Force unique generation
@@ -936,12 +937,16 @@ ${clientProfile.allergie?.length ? `- Allergie: ${clientProfile.allergie.join(",
 
 ⚠️ PERSONALIZZA LA RICETTA considerando tutte queste informazioni per creare una soluzione perfetta per le sue esigenze specifiche!
 
-PREFERENZE RICETTA:
+PREFERENZE RICETTA PERSONALIZZATE:
+- Tipo di piatto richiesto: ${request.mealName}
+- Base proteica desiderata: ${recipePreferences.meatOrFish}
+- Livello preparazione: ${request.difficulty || "facile"}
 - Proteine preferite: ${recipePreferences.preferredProteins}
-- Base: ${recipePreferences.meatOrFish}
-- Livello difficoltà richiesto: ${request.difficulty || "facile"}
 ${recipePreferences.preferredFish ? `- Pesci preferiti: ${recipePreferences.preferredFish}` : ''}
 ${recipePreferences.excludedFoods ? `- Cibi da evitare: ${recipePreferences.excludedFoods}` : ''}
+${recipePreferences.additionalDetails ? `- Dettagli aggiuntivi: ${recipePreferences.additionalDetails}` : ''}
+
+⚠️ INTERPRETA LE RICHIESTE: Leggi attentamente le descrizioni di testo libero per capire cosa vuole la cliente e crea la ricetta perfetta per le sue esigenze specifiche!
 
 ⛔ REGOLE GAZZELLA ASSOLUTE - TABELLA UFFICIALE 2025:
 
