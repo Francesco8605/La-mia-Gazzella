@@ -40,20 +40,20 @@ export default function CreateProfileForm() {
       age: undefined,
       weight: undefined,
       height: undefined,
-      thyroidIssues: "no",
-      intestinalIssues: "mai",
+      thyroidIssues: "",
+      intestinalIssues: "",
       weeklyExercise: 0,
       breakfastTime: "08:00",
       lunchTime: "13:00",
       dinnerTime: "20:00",
       excludedFoods: [],
       allergies: [],
-      dailyWaterIntake: "si",
+      dailyWaterIntake: "",
       cravingTimeFrame: "",
       preferredCheatFood: "",
-      takingFormulaGazzella: "no",
+      takingFormulaGazzella: "",
       dietaryPreferences: ["gazzella"],
-      healthGoal: "weight_loss",
+      healthGoal: "",
       activityLevel: "moderate",
     },
   });
@@ -225,18 +225,15 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Problemi alla tiroide</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "no"}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="no">No</SelectItem>
-                                <SelectItem value="si">Sì</SelectItem>
-                                <SelectItem value="eutirox">Assumo Eutirox</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Input
+                                placeholder="Descrivi eventuali problemi alla tiroide o scrivi 'no' se non ne hai"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "No", "Sì, ipotiroidismo", "Assumo Eutirox 50mg", "Ipertiroidismo in cura", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -248,18 +245,15 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Problemi intestinali</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "mai"}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="mai">Mai</SelectItem>
-                                <SelectItem value="qualche_volta">Qualche volta</SelectItem>
-                                <SelectItem value="spesso">Spesso</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Input
+                                placeholder="Descrivi eventuali problemi intestinali o scrivi 'mai' se non ne hai"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "Mai", "Stitichezza occasionale", "Colon irritabile", "Spesso gonfiore", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -338,18 +332,16 @@ export default function CreateProfileForm() {
                         name="dailyWaterIntake"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300">Bevi almeno 2 litri d'acqua al giorno?</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "si"}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="si">Sì</SelectItem>
-                                <SelectItem value="no">No</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormLabel className="text-gray-700 dark:text-gray-300">Abitudini di idratazione</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Descrivi le tue abitudini di idratazione quotidiana"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "Bevo almeno 2 litri al giorno", "1-1.5 litri, spesso dimentico", "Solo caffè e tè", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -366,19 +358,15 @@ export default function CreateProfileForm() {
                         render={({ field }) => (
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Obiettivo principale</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "weight_loss"}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona il tuo obiettivo..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="weight_loss">Perdere peso</SelectItem>
-                                <SelectItem value="maintenance">Mantenere il peso</SelectItem>
-                                <SelectItem value="muscle_building">Tonificare</SelectItem>
-                                <SelectItem value="general_health">Salute generale</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormControl>
+                              <Input
+                                placeholder="Descrivi il tuo obiettivo principale di salute e benessere"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "Perdere 10kg", "Mantenere peso e migliorare energia", "Tonificare e sentirmi meglio", "Gestire stress e digestione", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -389,19 +377,16 @@ export default function CreateProfileForm() {
                         name="takingFormulaGazzella"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="text-gray-700 dark:text-gray-300">Stai assumendo la Formula Gazzella?</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value || "no"}>
-                              <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Seleziona..." />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="no">No</SelectItem>
-                                <SelectItem value="si">Sì</SelectItem>
-                                <SelectItem value="ho_iniziato">Ho appena iniziato</SelectItem>
-                              </SelectContent>
-                            </Select>
+                            <FormLabel className="text-gray-700 dark:text-gray-300">Formula Gazzella</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Descrivi se e come assumi la Formula Gazzella"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "No, non la prendo", "Sì, da 3 mesi", "Ho appena iniziato ieri", "La prendo irregolarmente", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}

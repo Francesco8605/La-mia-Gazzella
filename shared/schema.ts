@@ -36,9 +36,9 @@ export const userProfiles = pgTable("user_profiles", {
   age: integer("age"),
   weight: numeric("weight", { precision: 5, scale: 1 }),
   height: integer("height"),
-  // Condizioni di salute
-  thyroidIssues: text("thyroid_issues"), // "si" | "no" | "eutirox"
-  intestinalIssues: text("intestinal_issues"), // "mai" | "qualche_volta" | "spesso"
+  // Condizioni di salute (testo libero)
+  thyroidIssues: text("thyroid_issues"), // Testo libero per problemi alla tiroide
+  intestinalIssues: text("intestinal_issues"), // Testo libero per problemi intestinali
   // Abitudini di esercizio
   weeklyExercise: integer("weekly_exercise"), // volte a settimana
   // Orari dei pasti
@@ -48,13 +48,13 @@ export const userProfiles = pgTable("user_profiles", {
   // Preferenze alimentari
   excludedFoods: json("excluded_foods").$type<string[]>(),
   allergies: json("allergies").$type<string[]>(),
-  // Abitudini idriche
-  dailyWaterIntake: text("daily_water_intake"), // "si" | "no"
+  // Abitudini idriche (testo libero)
+  dailyWaterIntake: text("daily_water_intake"), // Testo libero per abitudini di idratazione
   // Comportamenti alimentari
   cravingTimeFrame: text("craving_time_frame"),
   preferredCheatFood: text("preferred_cheat_food"),
-  // Integratori
-  takingFormulaGazzella: text("taking_formula_gazzella"), // "si" | "no" | "ho_iniziato"
+  // Integratori (testo libero)
+  takingFormulaGazzella: text("taking_formula_gazzella"), // Testo libero per uso Formula Gazzella
   // Campi legacy per compatibilità
   dietaryPreferences: json("dietary_preferences").$type<string[]>(),
   healthGoal: text("health_goal"),
@@ -266,13 +266,9 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   age: z.number().min(13, "Età minima 13 anni").max(120, "Età massima 120 anni"),
   weight: z.number().min(30, "Peso minimo 30 kg").max(300, "Peso massimo 300 kg"),
   height: z.number().min(100, "Altezza minima 100 cm").max(250, "Altezza massima 250 cm"),
-  // Condizioni di salute
-  thyroidIssues: z.enum(["no", "si", "eutirox"], {
-    errorMap: () => ({ message: "Seleziona un'opzione valida" })
-  }),
-  intestinalIssues: z.enum(["mai", "qualche_volta", "spesso"], {
-    errorMap: () => ({ message: "Seleziona un'opzione valida" })
-  }),
+  // Condizioni di salute (testo libero)
+  thyroidIssues: z.string().min(1, "Descrivi eventuali problemi alla tiroide o scrivi 'no'"),
+  intestinalIssues: z.string().min(1, "Descrivi eventuali problemi intestinali o scrivi 'mai'"),
   // Abitudini di esercizio
   weeklyExercise: z.number().min(0, "Minimo 0 volte").max(14, "Massimo 14 volte a settimana"),
   // Orari dei pasti
@@ -282,20 +278,16 @@ export const insertUserProfileSchema = createInsertSchema(userProfiles).omit({
   // Preferenze alimentari
   excludedFoods: z.array(z.string()).default([]),
   allergies: z.array(z.string()).default([]),
-  // Abitudini idriche
-  dailyWaterIntake: z.enum(["si", "no"], {
-    errorMap: () => ({ message: "Seleziona un'opzione valida" })
-  }),
+  // Abitudini idriche (testo libero)
+  dailyWaterIntake: z.string().min(1, "Descrivi le tue abitudini di idratazione"),
   // Comportamenti alimentari
   cravingTimeFrame: z.string().min(1, "Inserisci la fascia oraria"),
   preferredCheatFood: z.string().min(1, "Inserisci il tipo di cibo sgarro"),
-  // Integratori
-  takingFormulaGazzella: z.enum(["no", "si", "ho_iniziato"], {
-    errorMap: () => ({ message: "Seleziona un'opzione valida" })
-  }),
+  // Integratori (testo libero)
+  takingFormulaGazzella: z.string().min(1, "Descrivi se e come assumi la Formula Gazzella"),
   // Campi legacy per compatibilità
   dietaryPreferences: z.array(z.string()).default([]),
-  healthGoal: z.enum(["weight_loss", "weight_gain", "muscle_building", "maintenance", "general_health"]).optional(),
+  healthGoal: z.string().min(1, "Descrivi il tuo obiettivo principale di salute").optional(),
   activityLevel: z.enum(["sedentary", "moderate", "active", "very_active"]).optional(),
 });
 
