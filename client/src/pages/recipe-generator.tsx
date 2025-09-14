@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,11 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Schema per ricette con risposte aperte
+// Schema semplificato per le ricette - richiede solo il tipo di piatto
 const recipeFormSchema = z.object({
-  dishType: z.string().min(1, "Specifica il tipo di piatto"),
-  meatOrFish: z.string().min(1, "Specifica la base del piatto"),
-  difficulty: z.string().min(1, "Specifica la difficoltà desiderata"),
+  dishType: z.enum(["primo", "secondo"], { required_error: "Seleziona tipo di piatto" }),
+  meatOrFish: z.enum(["carne", "pesce", "uova"], { required_error: "Seleziona base del piatto" }),
+  difficulty: z.enum(["facile", "media", "difficile"], { required_error: "Seleziona difficoltà" }),
   preferredProteins: z.string().min(1, "Specifica le proteine preferite"),
   preferredFish: z.string().optional(),
   foodIntolerances: z.string().optional(),
@@ -51,56 +51,11 @@ interface GeneratedRecipe {
   dietaryTags: string[];
 }
 
-// Helper function to detect mobile devices
-const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|mobile|CriOS/i.test(navigator.userAgent);
-};
-
 export default function RecipeGenerator() {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [showQuickProfileDialog, setShowQuickProfileDialog] = useState(false);
   const [pendingRecipeData, setPendingRecipeData] = useState<RecipeFormData | null>(null);
-  const [useFallback, setUseFallback] = useState(false);
   const { toast } = useToast();
-
-  // Check for mobile device and enable fallback if needed
-  useEffect(() => {
-    const isMobile = isMobileDevice();
-    const userAgent = navigator.userAgent;
-    
-    // Extended detection for all Xiaomi device variants including Redmi 15 Pro
-    const isXiaomi = /MIUI|Redmi|Xiaomi|Mi\s|HyperOS/i.test(userAgent);
-    const isBrowser = /Chrome|WebView|MiuiBrowser/i.test(userAgent);
-    const isAndroid = /Android/i.test(userAgent);
-    
-    console.log("🔍 Recipe Generator - DEVICE DEBUG:");
-    console.log("User Agent:", userAgent);
-    console.log("Is Mobile:", isMobile);
-    console.log("Is Android:", isAndroid);
-    console.log("Is Xiaomi (extended):", isXiaomi);
-    console.log("Browser detected:", isBrowser);
-    
-    // Precise detection for Xiaomi/MIUI devices with compatibility issues
-    const shouldUseFallback = (
-      (isMobile && isXiaomi) ||
-      (isAndroid && isXiaomi) ||
-      userAgent.includes('MIUI') || 
-      userAgent.includes('Redmi') || 
-      userAgent.includes('Xiaomi') ||
-      userAgent.includes('HyperOS') ||
-      userAgent.includes('Mi ') ||
-      // Specific problematic browsers on Xiaomi devices
-      (isAndroid && /MiuiBrowser|XiaoMi/i.test(userAgent))
-    );
-    
-    if (shouldUseFallback) {
-      console.log("🚨 Recipe Generator - ENABLING FALLBACK MODE for device compatibility");
-      console.log("Detected device type: Xiaomi/MIUI/Redmi/HyperOS");
-      setUseFallback(true);
-    } else {
-      console.log("✅ Recipe Generator - Using standard UI components");
-    }
-  }, []);
 
   // Controlla se esistono piani personalizzati salvati
   const { data: mealPlans, isLoading: mealPlansLoading } = useQuery({
@@ -117,9 +72,9 @@ export default function RecipeGenerator() {
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
-      dishType: "",
-      meatOrFish: "",
-      difficulty: "",
+      dishType: "secondo",
+      meatOrFish: "pesce",
+      difficulty: "facile",
       preferredProteins: "",
       preferredFish: "",
       foodIntolerances: "",
@@ -146,8 +101,8 @@ export default function RecipeGenerator() {
         pesoObbiettivo: 65,
       };
 
-      // Use the open text field directly as protein type
-      const proteinType = recipeData.meatOrFish || "varie";
+      const proteinType = recipeData.meatOrFish === "carne" ? "carne" : 
+                         recipeData.meatOrFish === "pesce" ? "pesce" : "uova";
 
       const recipeRequest = {
         mealName: `${recipeData.dishType === "primo" ? "Primo piatto" : "Secondo piatto"} a base di ${proteinType}`,
@@ -263,13 +218,17 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo di Piatto</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="es. primo piatto, secondo piatto, antipasto, contorno..." 
-                              {...field} 
-                              data-testid="input-dish-type"
-                            />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-dish-type">
+                                <SelectValue placeholder="Seleziona tipo di piatto" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="primo">Primo Piatto</SelectItem>
+                              <SelectItem value="secondo">Secondo Piatto</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -281,13 +240,18 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Base del Piatto</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="es. carne, pesce, uova, verdure, legumi, cereali..." 
-                              {...field} 
-                              data-testid="input-meat-fish"
-                            />
-                          </FormControl>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-meat-fish">
+                                <SelectValue placeholder="Seleziona base" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="carne">A base di Carne</SelectItem>
+                              <SelectItem value="pesce">A base di Pesce</SelectItem>
+                              <SelectItem value="uova">A base di Uova</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -298,14 +262,19 @@ export default function RecipeGenerator() {
                       name="difficulty"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Difficoltà Desiderata</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="es. facile, veloce, media, elaborata, semplice..." 
-                              {...field} 
-                              data-testid="input-difficulty"
-                            />
-                          </FormControl>
+                          <FormLabel>Difficoltà</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger data-testid="select-difficulty">
+                                <SelectValue placeholder="Seleziona difficoltà" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="facile">Facile</SelectItem>
+                              <SelectItem value="media">Media</SelectItem>
+                              <SelectItem value="difficile">Difficile</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -329,23 +298,25 @@ export default function RecipeGenerator() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="preferredFish"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Tipi di Pesce/Mare Preferiti (opzionale)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="es. salmone, tonno, orata, crostacei, molluschi..." 
-                              {...field} 
-                              data-testid="input-preferred-fish"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {form.watch("meatOrFish") === "pesce" && (
+                      <FormField
+                        control={form.control}
+                        name="preferredFish"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Tipi di Pesce Preferiti (opzionale)</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="es. salmone, tonno, orata..." 
+                                {...field} 
+                                data-testid="input-preferred-fish"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
 
                     <FormField
                       control={form.control}

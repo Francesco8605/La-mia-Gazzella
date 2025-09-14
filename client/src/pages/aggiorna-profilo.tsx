@@ -15,16 +15,10 @@ import { useToast } from "@/hooks/use-toast";
 import { Link } from "wouter";
 import type { UserProfile } from "@shared/schema";
 
-// Detect mobile device for fallback
-const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-};
-
 export default function AggiornaProfiloPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [useFallback, setUseFallback] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -74,45 +68,6 @@ export default function AggiornaProfiloPage() {
   });
 
   const latestWeight = weightEntries.length > 0 ? weightEntries[weightEntries.length - 1]?.weight : undefined;
-
-  // Check for mobile device and enable fallback if needed
-  useEffect(() => {
-    const isMobile = isMobileDevice();
-    const userAgent = navigator.userAgent;
-    
-    // Extended detection for all Xiaomi device variants including Redmi 15 Pro
-    const isXiaomi = /MIUI|Redmi|Xiaomi|Mi\s|HyperOS/i.test(userAgent);
-    const isBrowser = /Chrome|WebView|MiuiBrowser/i.test(userAgent);
-    const isAndroid = /Android/i.test(userAgent);
-    
-    console.log("🔍 Profile Page - DEVICE DEBUG:");
-    console.log("User Agent:", userAgent);
-    console.log("Is Mobile:", isMobile);
-    console.log("Is Android:", isAndroid);
-    console.log("Is Xiaomi (extended):", isXiaomi);
-    console.log("Browser detected:", isBrowser);
-    
-    // Precise detection for Xiaomi/MIUI devices with compatibility issues
-    const shouldUseFallback = (
-      (isMobile && isXiaomi) ||
-      (isAndroid && isXiaomi) ||
-      userAgent.includes('MIUI') || 
-      userAgent.includes('Redmi') || 
-      userAgent.includes('Xiaomi') ||
-      userAgent.includes('HyperOS') ||
-      userAgent.includes('Mi ') ||
-      // Specific problematic browsers on Xiaomi devices
-      (isAndroid && /MiuiBrowser|XiaoMi/i.test(userAgent))
-    );
-    
-    if (shouldUseFallback) {
-      console.log("🚨 Profile Page - ENABLING FALLBACK MODE for device compatibility");
-      console.log("Detected device type: Xiaomi/MIUI/Redmi/HyperOS");
-      setUseFallback(true);
-    } else {
-      console.log("✅ Profile Page - Using standard UI components");
-    }
-  }, []);
 
   // Update form when profile loads
   useEffect(() => {
@@ -166,36 +121,14 @@ export default function AggiornaProfiloPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Submitting profile with data:", formData);
-    
-    // Extra validation for thyroid field
-    if (!formData.thyroidIssues) {
-      console.warn("thyroidIssues is empty, setting default");
-      setFormData(prev => ({ ...prev, thyroidIssues: "no" }));
-      return;
-    }
-    
     updateProfileMutation.mutate(formData);
   };
 
   const handleInputChange = (field: string, value: string | string[]) => {
-    console.log(`Updating field: ${field} with value:`, value);
-    try {
-      setFormData(prev => ({
-        ...prev,
-        [field]: value
-      }));
-      console.log(`Successfully updated ${field}`);
-    } catch (error) {
-      console.error(`Error updating ${field}:`, error);
-      // Fallback for problematic devices
-      setTimeout(() => {
-        setFormData(prev => ({
-          ...prev,
-          [field]: value
-        }));
-      }, 10);
-    }
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   const addToArray = (field: 'excludedFoods' | 'allergies', value: string) => {
@@ -310,76 +243,29 @@ export default function AggiornaProfiloPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="thyroid">Problemi di Tiroide</Label>
-                {useFallback ? (
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    value={formData.thyroidIssues}
-                    onChange={(e) => {
-                      console.log("Thyroid native select changed to:", e.target.value);
-                      handleInputChange('thyroidIssues', e.target.value);
-                    }}
-                    data-testid="thyroid-native-select"
-                  >
-                    <option value="">Seleziona...</option>
-                    <option value="no">No</option>
-                    <option value="si">Sì</option>
-                    <option value="eutirox">Prendo Eutirox</option>
-                  </select>
-                ) : (
-                  <Select 
-                    value={formData.thyroidIssues} 
-                    onValueChange={(value) => {
-                      console.log("Thyroid value changed to:", value);
-                      handleInputChange('thyroidIssues', value);
-                    }}
-                  >
-                    <SelectTrigger 
-                      className="relative z-10"
-                      data-testid="thyroid-select-trigger"
-                    >
-                      <SelectValue placeholder="Seleziona..." />
-                    </SelectTrigger>
-                    <SelectContent 
-                      className="z-[100]"
-                      position="popper"
-                      data-testid="thyroid-select-content"
-                    >
-                      <SelectItem value="no" data-testid="thyroid-option-no">No</SelectItem>
-                      <SelectItem value="si" data-testid="thyroid-option-si">Sì</SelectItem>
-                      <SelectItem value="eutirox" data-testid="thyroid-option-eutirox">Prendo Eutirox</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select value={formData.thyroidIssues} onValueChange={(value) => handleInputChange('thyroidIssues', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="no">No</SelectItem>
+                    <SelectItem value="si">Sì</SelectItem>
+                    <SelectItem value="eutirox">Prendo Eutirox</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="intestinal">Problemi Intestinali</Label>
-                {useFallback ? (
-                  <select
-                    className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                    value={formData.intestinalIssues}
-                    onChange={(e) => {
-                      console.log("Intestinal native select changed to:", e.target.value);
-                      handleInputChange('intestinalIssues', e.target.value);
-                    }}
-                    data-testid="intestinal-native-select"
-                  >
-                    <option value="">Seleziona...</option>
-                    <option value="mai">Mai</option>
-                    <option value="qualche_volta">Qualche volta</option>
-                    <option value="spesso">Spesso</option>
-                  </select>
-                ) : (
-                  <Select value={formData.intestinalIssues} onValueChange={(value) => handleInputChange('intestinalIssues', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Seleziona..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mai">Mai</SelectItem>
-                      <SelectItem value="qualche_volta">Qualche volta</SelectItem>
-                      <SelectItem value="spesso">Spesso</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select value={formData.intestinalIssues} onValueChange={(value) => handleInputChange('intestinalIssues', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleziona..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mai">Mai</SelectItem>
+                    <SelectItem value="qualche_volta">Qualche volta</SelectItem>
+                    <SelectItem value="spesso">Spesso</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>
@@ -461,31 +347,15 @@ export default function AggiornaProfiloPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="water">Bevi almeno 2 litri d'acqua al giorno?</Label>
-              {useFallback ? (
-                <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  value={formData.dailyWaterIntake}
-                  onChange={(e) => {
-                    console.log("Water intake native select changed to:", e.target.value);
-                    handleInputChange('dailyWaterIntake', e.target.value);
-                  }}
-                  data-testid="water-native-select"
-                >
-                  <option value="">Seleziona...</option>
-                  <option value="si">Sì</option>
-                  <option value="no">No</option>
-                </select>
-              ) : (
-                <Select value={formData.dailyWaterIntake} onValueChange={(value) => handleInputChange('dailyWaterIntake', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="si">Sì</SelectItem>
-                    <SelectItem value="no">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={formData.dailyWaterIntake} onValueChange={(value) => handleInputChange('dailyWaterIntake', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="si">Sì</SelectItem>
+                  <SelectItem value="no">No</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
@@ -531,33 +401,16 @@ export default function AggiornaProfiloPage() {
           <CardContent className="space-y-4">
             <div>
               <Label htmlFor="formula">Prendi la Formula Gazzella?</Label>
-              {useFallback ? (
-                <select
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  value={formData.takingFormulaGazzella}
-                  onChange={(e) => {
-                    console.log("Formula Gazzella native select changed to:", e.target.value);
-                    handleInputChange('takingFormulaGazzella', e.target.value);
-                  }}
-                  data-testid="formula-native-select"
-                >
-                  <option value="">Seleziona...</option>
-                  <option value="no">No</option>
-                  <option value="si">Sì</option>
-                  <option value="ho_iniziato">Ho iniziato di recente</option>
-                </select>
-              ) : (
-                <Select value={formData.takingFormulaGazzella} onValueChange={(value) => handleInputChange('takingFormulaGazzella', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="si">Sì</SelectItem>
-                    <SelectItem value="ho_iniziato">Ho iniziato di recente</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
+              <Select value={formData.takingFormulaGazzella} onValueChange={(value) => handleInputChange('takingFormulaGazzella', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleziona..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="no">No</SelectItem>
+                  <SelectItem value="si">Sì</SelectItem>
+                  <SelectItem value="ho_iniziato">Ho iniziato di recente</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
