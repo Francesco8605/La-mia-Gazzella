@@ -93,12 +93,45 @@ export default function RecipeGenerator() {
 
   const generateRecipeMutation = useMutation({
     mutationFn: async (recipeData: RecipeFormData) => {
-      // Semplice: sempre usiamo dati di default per ora
-      const clientProfile = {
+      // Usa il profilo utente reale con le risposte aperte, oppure dati di default
+      const profile = userProfile as any; // Cast per evitare errori TypeScript
+      const clientProfile = profile && profile.age ? {
+        eta: profile.age || 45,
+        peso: profile.currentWeight || 70,
+        altezza: profile.height || 165,
+        pesoObbiettivo: profile.goalWeight || 65,
+        // Includi tutte le risposte aperte per personalizzazione AI
+        problemiTiroide: profile.thyroidIssues || "",
+        problemiIntestinali: profile.intestinalIssues || "",
+        orarioColazione: profile.breakfastTime || "",
+        orarioPranzo: profile.lunchTime || "",
+        orarioCena: profile.dinnerTime || "",
+        abitudiniAcqua: profile.dailyWaterIntake || "",
+        obiettivoSalute: profile.healthGoal || "",
+        formulaGazzella: profile.takingFormulaGazzella || "",
+        esercizioSettimanale: profile.weeklyExercise || 0,
+        alimentiEsclusi: profile.excludedFoods || [],
+        allergie: profile.allergies || [],
+        orarioFameSgarri: profile.cravingTimeFrame || "",
+        ciboSgarroPreferito: profile.preferredCheatFood || ""
+      } : {
         eta: 45,
         peso: 70,
         altezza: 165,
         pesoObbiettivo: 65,
+        problemiTiroide: "",
+        problemiIntestinali: "",
+        orarioColazione: "",
+        orarioPranzo: "",
+        orarioCena: "",
+        abitudiniAcqua: "",
+        obiettivoSalute: "",
+        formulaGazzella: "",
+        esercizioSettimanale: 0,
+        alimentiEsclusi: [],
+        allergie: [],
+        orarioFameSgarri: "",
+        ciboSgarroPreferito: ""
       };
 
       const proteinType = recipeData.meatOrFish === "carne" ? "carne" : 

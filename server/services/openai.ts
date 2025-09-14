@@ -855,6 +855,20 @@ export async function generatePersonalizedRecipe(request: {
     peso: number;
     altezza: number;
     pesoObbiettivo: number;
+    // Risposte aperte per personalizzazione AI
+    problemiTiroide?: string;
+    problemiIntestinali?: string;
+    orarioColazione?: string;
+    orarioPranzo?: string;
+    orarioCena?: string;
+    abitudiniAcqua?: string;
+    obiettivoSalute?: string;
+    formulaGazzella?: string;
+    esercizioSettimanale?: number;
+    alimentiEsclusi?: string[];
+    allergie?: string[];
+    orarioFameSgarri?: string;
+    ciboSgarroPreferito?: string;
   };
   recipePreferences: {
     preferredProteins: string;
@@ -904,6 +918,23 @@ DATI CLIENTE:
 - Peso obiettivo: ${clientProfile.pesoObbiettivo}kg
 - BMI: ${bmi.toFixed(1)}
 - Categoria peso: ${weightCategory}
+
+CONDIZIONI E PREFERENZE PERSONALI:
+${clientProfile.problemiTiroide ? `- Problemi tiroide: ${clientProfile.problemiTiroide}` : ''}
+${clientProfile.problemiIntestinali ? `- Problemi intestinali: ${clientProfile.problemiIntestinali}` : ''}
+${clientProfile.orarioColazione ? `- Orario colazione: ${clientProfile.orarioColazione}` : ''}
+${clientProfile.orarioPranzo ? `- Orario pranzo: ${clientProfile.orarioPranzo}` : ''}
+${clientProfile.orarioCena ? `- Orario cena: ${clientProfile.orarioCena}` : ''}
+${clientProfile.abitudiniAcqua ? `- Abitudini idratazione: ${clientProfile.abitudiniAcqua}` : ''}
+${clientProfile.obiettivoSalute ? `- Obiettivo salute: ${clientProfile.obiettivoSalute}` : ''}
+${clientProfile.formulaGazzella ? `- Formula Gazzella: ${clientProfile.formulaGazzella}` : ''}
+${clientProfile.esercizioSettimanale ? `- Esercizio settimanale: ${clientProfile.esercizioSettimanale} volte` : ''}
+${clientProfile.orarioFameSgarri ? `- Orario fame/sgarri: ${clientProfile.orarioFameSgarri}` : ''}
+${clientProfile.ciboSgarroPreferito ? `- Cibo sgarro preferito: ${clientProfile.ciboSgarroPreferito}` : ''}
+${clientProfile.alimentiEsclusi?.length ? `- Alimenti esclusi: ${clientProfile.alimentiEsclusi.join(", ")}` : ''}
+${clientProfile.allergie?.length ? `- Allergie: ${clientProfile.allergie.join(", ")}` : ''}
+
+⚠️ PERSONALIZZA LA RICETTA considerando tutte queste informazioni per creare una soluzione perfetta per le sue esigenze specifiche!
 
 PREFERENZE RICETTA:
 - Proteine preferite: ${recipePreferences.preferredProteins}
