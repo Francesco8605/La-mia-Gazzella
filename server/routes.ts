@@ -1248,17 +1248,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetCalories: z.number().min(50).max(2000),
         allergies: z.array(z.string()).optional(),
         cuisine: z.string().optional(),
-        difficulty: z.enum(["facile", "media", "difficile"]).optional(),
+        difficulty: z.string().optional(), // Ora accetta testo libero come "elaborato per fare bella figura"
         clientProfile: z.object({
           eta: z.number(),
           peso: z.number(),
           altezza: z.number(),
           pesoObbiettivo: z.number(),
+          // Campi opzionali per risposte aperte del profilo
+          problemiTiroide: z.string().optional(),
+          problemiIntestinali: z.string().optional(),
+          orarioColazione: z.string().optional(),
+          orarioPranzo: z.string().optional(),
+          orarioCena: z.string().optional(),
+          abitudiniAcqua: z.string().optional(),
+          obiettivoSalute: z.string().optional(),
+          formulaGazzella: z.string().optional(),
+          esercizioSettimanale: z.number().optional(),
+          alimentiEsclusi: z.array(z.string()).optional(),
+          allergie: z.array(z.string()).optional(),
+          orarioFameSgarri: z.string().optional(),
+          ciboSgarroPreferito: z.string().optional(),
         }),
         recipePreferences: z.object({
           preferredProteins: z.string(),
           preferredFish: z.string().optional(),
-          meatOrFish: z.enum(["carne", "pesce", "uova"]),
+          meatOrFish: z.string(), // Ora accetta testo libero come "pesce bianco delicato"
           excludedFoods: z.string().optional(),
           additionalDetails: z.string().optional(),
         }),

@@ -849,7 +849,7 @@ export async function generatePersonalizedRecipe(request: {
   targetCalories: number;
   allergies?: string[];
   cuisine?: string;
-  difficulty?: "facile" | "media" | "difficile";
+  difficulty?: string; // Ora accetta testo libero
   clientProfile: {
     eta: number;
     peso: number;
@@ -873,7 +873,7 @@ export async function generatePersonalizedRecipe(request: {
   recipePreferences: {
     preferredProteins: string;
     preferredFish?: string;
-    meatOrFish: "carne" | "pesce" | "uova";
+    meatOrFish: string; // Ora accetta testo libero come "pesce bianco delicato"
     excludedFoods?: string;
     additionalDetails?: string;
   };
