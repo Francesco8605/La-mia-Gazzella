@@ -13,11 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-// Schema semplificato per le ricette - richiede solo il tipo di piatto
+// Schema per ricette con risposte aperte
 const recipeFormSchema = z.object({
-  dishType: z.enum(["primo", "secondo"], { required_error: "Seleziona tipo di piatto" }),
-  meatOrFish: z.enum(["carne", "pesce", "uova"], { required_error: "Seleziona base del piatto" }),
-  difficulty: z.enum(["facile", "media", "difficile"], { required_error: "Seleziona difficoltà" }),
+  dishType: z.string().min(1, "Specifica il tipo di piatto"),
+  meatOrFish: z.string().min(1, "Specifica la base del piatto"),
+  difficulty: z.string().min(1, "Specifica la difficoltà desiderata"),
   preferredProteins: z.string().min(1, "Specifica le proteine preferite"),
   preferredFish: z.string().optional(),
   foodIntolerances: z.string().optional(),
@@ -117,9 +117,9 @@ export default function RecipeGenerator() {
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(recipeFormSchema),
     defaultValues: {
-      dishType: "secondo",
-      meatOrFish: "pesce",
-      difficulty: "facile",
+      dishType: "",
+      meatOrFish: "",
+      difficulty: "",
       preferredProteins: "",
       preferredFish: "",
       foodIntolerances: "",
@@ -146,8 +146,8 @@ export default function RecipeGenerator() {
         pesoObbiettivo: 65,
       };
 
-      const proteinType = recipeData.meatOrFish === "carne" ? "carne" : 
-                         recipeData.meatOrFish === "pesce" ? "pesce" : "uova";
+      // Use the open text field directly as protein type
+      const proteinType = recipeData.meatOrFish || "varie";
 
       const recipeRequest = {
         mealName: `${recipeData.dishType === "primo" ? "Primo piatto" : "Secondo piatto"} a base di ${proteinType}`,
@@ -263,35 +263,13 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Tipo di Piatto</FormLabel>
-                          {useFallback ? (
-                            <FormControl>
-                              <select
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                value={field.value}
-                                onChange={(e) => {
-                                  console.log("DishType native select changed to:", e.target.value);
-                                  field.onChange(e.target.value);
-                                }}
-                                data-testid="dishtype-native-select"
-                              >
-                                <option value="">Seleziona tipo di piatto</option>
-                                <option value="primo">Primo Piatto</option>
-                                <option value="secondo">Secondo Piatto</option>
-                              </select>
-                            </FormControl>
-                          ) : (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-dish-type">
-                                  <SelectValue placeholder="Seleziona tipo di piatto" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="primo">Primo Piatto</SelectItem>
-                                <SelectItem value="secondo">Secondo Piatto</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
+                          <FormControl>
+                            <Input 
+                              placeholder="es. primo piatto, secondo piatto, antipasto, contorno..." 
+                              {...field} 
+                              data-testid="input-dish-type"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -303,37 +281,13 @@ export default function RecipeGenerator() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Base del Piatto</FormLabel>
-                          {useFallback ? (
-                            <FormControl>
-                              <select
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                value={field.value}
-                                onChange={(e) => {
-                                  console.log("MeatOrFish native select changed to:", e.target.value);
-                                  field.onChange(e.target.value);
-                                }}
-                                data-testid="meatfish-native-select"
-                              >
-                                <option value="">Seleziona base</option>
-                                <option value="carne">A base di Carne</option>
-                                <option value="pesce">A base di Pesce</option>
-                                <option value="uova">A base di Uova</option>
-                              </select>
-                            </FormControl>
-                          ) : (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-meat-fish">
-                                  <SelectValue placeholder="Seleziona base" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="carne">A base di Carne</SelectItem>
-                                <SelectItem value="pesce">A base di Pesce</SelectItem>
-                                <SelectItem value="uova">A base di Uova</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
+                          <FormControl>
+                            <Input 
+                              placeholder="es. carne, pesce, uova, verdure, legumi, cereali..." 
+                              {...field} 
+                              data-testid="input-meat-fish"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -344,38 +298,14 @@ export default function RecipeGenerator() {
                       name="difficulty"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Difficoltà</FormLabel>
-                          {useFallback ? (
-                            <FormControl>
-                              <select
-                                className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                value={field.value}
-                                onChange={(e) => {
-                                  console.log("Difficulty native select changed to:", e.target.value);
-                                  field.onChange(e.target.value);
-                                }}
-                                data-testid="difficulty-native-select"
-                              >
-                                <option value="">Seleziona difficoltà</option>
-                                <option value="facile">Facile</option>
-                                <option value="media">Media</option>
-                                <option value="difficile">Difficile</option>
-                              </select>
-                            </FormControl>
-                          ) : (
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                              <FormControl>
-                                <SelectTrigger data-testid="select-difficulty">
-                                  <SelectValue placeholder="Seleziona difficoltà" />
-                                </SelectTrigger>
-                              </FormControl>
-                              <SelectContent>
-                                <SelectItem value="facile">Facile</SelectItem>
-                                <SelectItem value="media">Media</SelectItem>
-                                <SelectItem value="difficile">Difficile</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          )}
+                          <FormLabel>Difficoltà Desiderata</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="es. facile, veloce, media, elaborata, semplice..." 
+                              {...field} 
+                              data-testid="input-difficulty"
+                            />
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -399,25 +329,23 @@ export default function RecipeGenerator() {
                       )}
                     />
 
-                    {form.watch("meatOrFish") === "pesce" && (
-                      <FormField
-                        control={form.control}
-                        name="preferredFish"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Tipi di Pesce Preferiti (opzionale)</FormLabel>
-                            <FormControl>
-                              <Input 
-                                placeholder="es. salmone, tonno, orata..." 
-                                {...field} 
-                                data-testid="input-preferred-fish"
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    )}
+                    <FormField
+                      control={form.control}
+                      name="preferredFish"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tipi di Pesce/Mare Preferiti (opzionale)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="es. salmone, tonno, orata, crostacei, molluschi..." 
+                              {...field} 
+                              data-testid="input-preferred-fish"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
                     <FormField
                       control={form.control}
