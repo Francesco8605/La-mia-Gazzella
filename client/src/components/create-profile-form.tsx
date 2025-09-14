@@ -292,8 +292,14 @@ export default function CreateProfileForm() {
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Orario colazione *</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} />
+                              <Input
+                                placeholder="Descrivi quando fai colazione"
+                                {...field}
+                              />
                             </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "Ore 7:30", "Tra le 7 e le 8", "Presto verso le 6:30", "Mai, digiuno", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -306,8 +312,14 @@ export default function CreateProfileForm() {
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Orario pranzo *</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} />
+                              <Input
+                                placeholder="Descrivi quando pranzi"
+                                {...field}
+                              />
                             </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "13:00 preciso", "Tra le 12:30 e 13:30", "Tardi verso le 14", "Variabile in base al lavoro", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -320,8 +332,14 @@ export default function CreateProfileForm() {
                           <FormItem>
                             <FormLabel className="text-gray-700 dark:text-gray-300">Orario cena *</FormLabel>
                             <FormControl>
-                              <Input type="time" {...field} />
+                              <Input
+                                placeholder="Descrivi quando ceni"
+                                {...field}
+                              />
                             </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Es: "20:00 fisso", "Tra le 19 e 20:30", "Molto tardi dopo le 21", "Presto alle 18:30", ecc.
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}

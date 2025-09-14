@@ -308,31 +308,43 @@ export default function AggiornaProfiloPage() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="breakfast">Colazione</Label>
+                <Label htmlFor="breakfast">Orario Colazione</Label>
                 <Input
                   id="breakfast"
-                  type="time"
+                  type="text"
                   value={formData.breakfastTime}
                   onChange={(e) => handleInputChange('breakfastTime', e.target.value)}
+                  placeholder="Descrivi quando fai colazione"
                 />
+                <p className="text-xs text-slate-500 mt-1">
+                  Es: "Ore 7:30", "Tra le 7 e le 8", "Presto verso le 6:30", "Mai, digiuno", ecc.
+                </p>
               </div>
               <div>
-                <Label htmlFor="lunch">Pranzo</Label>
+                <Label htmlFor="lunch">Orario Pranzo</Label>
                 <Input
                   id="lunch"
-                  type="time"
+                  type="text"
                   value={formData.lunchTime}
                   onChange={(e) => handleInputChange('lunchTime', e.target.value)}
+                  placeholder="Descrivi quando pranzi"
                 />
+                <p className="text-xs text-slate-500 mt-1">
+                  Es: "13:00 preciso", "Tra le 12:30 e 13:30", "Tardi verso le 14", "Variabile in base al lavoro", ecc.
+                </p>
               </div>
               <div>
-                <Label htmlFor="dinner">Cena</Label>
+                <Label htmlFor="dinner">Orario Cena</Label>
                 <Input
                   id="dinner"
-                  type="time"
+                  type="text"
                   value={formData.dinnerTime}
                   onChange={(e) => handleInputChange('dinnerTime', e.target.value)}
+                  placeholder="Descrivi quando ceni"
                 />
+                <p className="text-xs text-slate-500 mt-1">
+                  Es: "20:00 fisso", "Tra le 19 e 20:30", "Molto tardi dopo le 21", "Presto alle 18:30", ecc.
+                </p>
               </div>
             </div>
           </CardContent>
