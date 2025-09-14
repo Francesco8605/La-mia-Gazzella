@@ -53,6 +53,9 @@ export default function AggiornaProfiloPage() {
     // Integratori
     takingFormulaGazzella: "",
     
+    // Obiettivo di salute
+    healthGoal: "",
+    
   });
 
   // Fetch current profile
@@ -88,6 +91,7 @@ export default function AggiornaProfiloPage() {
         cravingTimeFrame: profile.cravingTimeFrame || "",
         preferredCheatFood: profile.preferredCheatFood || "",
         takingFormulaGazzella: profile.takingFormulaGazzella || "",
+        healthGoal: profile.healthGoal || "",
       });
     }
   }, [profile, latestWeight]);
@@ -243,29 +247,27 @@ export default function AggiornaProfiloPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="thyroid">Problemi di Tiroide</Label>
-                <Select value={formData.thyroidIssues} onValueChange={(value) => handleInputChange('thyroidIssues', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="no">No</SelectItem>
-                    <SelectItem value="si">Sì</SelectItem>
-                    <SelectItem value="eutirox">Prendo Eutirox</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="thyroid"
+                  value={formData.thyroidIssues}
+                  onChange={(e) => handleInputChange('thyroidIssues', e.target.value)}
+                  placeholder="Descrivi eventuali problemi alla tiroide o scrivi 'no' se non ne hai"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Es: "No", "Sì, ipotiroidismo", "Assumo Eutirox 50mg", "Ipertiroidismo in cura", ecc.
+                </p>
               </div>
               <div>
                 <Label htmlFor="intestinal">Problemi Intestinali</Label>
-                <Select value={formData.intestinalIssues} onValueChange={(value) => handleInputChange('intestinalIssues', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleziona..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mai">Mai</SelectItem>
-                    <SelectItem value="qualche_volta">Qualche volta</SelectItem>
-                    <SelectItem value="spesso">Spesso</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="intestinal"
+                  value={formData.intestinalIssues}
+                  onChange={(e) => handleInputChange('intestinalIssues', e.target.value)}
+                  placeholder="Descrivi eventuali problemi intestinali o scrivi 'mai' se non ne hai"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Es: "Mai", "Stitichezza occasionale", "Colon irritabile", "Spesso gonfiore", ecc.
+                </p>
               </div>
             </div>
           </CardContent>
@@ -346,16 +348,16 @@ export default function AggiornaProfiloPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="water">Bevi almeno 2 litri d'acqua al giorno?</Label>
-              <Select value={formData.dailyWaterIntake} onValueChange={(value) => handleInputChange('dailyWaterIntake', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="si">Sì</SelectItem>
-                  <SelectItem value="no">No</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="water">Abitudini di idratazione</Label>
+              <Input
+                id="water"
+                value={formData.dailyWaterIntake}
+                onChange={(e) => handleInputChange('dailyWaterIntake', e.target.value)}
+                placeholder="Descrivi le tue abitudini di idratazione quotidiana"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Es: "Bevo almeno 2 litri al giorno", "1-1.5 litri, spesso dimentico", "Solo caffè e tè", ecc.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -387,6 +389,18 @@ export default function AggiornaProfiloPage() {
                 placeholder="es. Dolci, salato, pizza..."
               />
             </div>
+            <div>
+              <Label htmlFor="healthGoal">Obiettivo principale</Label>
+              <Input
+                id="healthGoal"
+                value={formData.healthGoal}
+                onChange={(e) => handleInputChange('healthGoal', e.target.value)}
+                placeholder="Descrivi il tuo obiettivo principale di salute e benessere"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Es: "Perdere 10kg", "Mantenere peso e migliorare energia", "Tonificare e sentirmi meglio", "Gestire stress e digestione", ecc.
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -400,17 +414,16 @@ export default function AggiornaProfiloPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="formula">Prendi la Formula Gazzella?</Label>
-              <Select value={formData.takingFormulaGazzella} onValueChange={(value) => handleInputChange('takingFormulaGazzella', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Seleziona..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="no">No</SelectItem>
-                  <SelectItem value="si">Sì</SelectItem>
-                  <SelectItem value="ho_iniziato">Ho iniziato di recente</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="formula">Formula Gazzella</Label>
+              <Input
+                id="formula"
+                value={formData.takingFormulaGazzella}
+                onChange={(e) => handleInputChange('takingFormulaGazzella', e.target.value)}
+                placeholder="Descrivi se e come assumi la Formula Gazzella"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Es: "No, non la prendo", "Sì, da 3 mesi", "Ho appena iniziato ieri", "La prendo irregolarmente", ecc.
+              </p>
             </div>
           </CardContent>
         </Card>
