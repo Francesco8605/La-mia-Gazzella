@@ -25,6 +25,7 @@ export interface IStorage {
   createMealPlan(mealPlan: InsertMealPlan): Promise<MealPlan>;
   updateMealPlan(id: string, mealPlan: Partial<InsertMealPlan>): Promise<MealPlan | undefined>;
   deleteMealPlan(id: string): Promise<boolean>;
+  deleteMealPlansByUser(userId: string): Promise<number>;
   
   // Recipes
   getRecipe(id: string): Promise<Recipe | undefined>;
@@ -311,6 +312,18 @@ export class MemStorage implements IStorage {
 
   async deleteMealPlan(id: string): Promise<boolean> {
     return this.mealPlans.delete(id);
+  }
+
+  async deleteMealPlansByUser(userId: string): Promise<number> {
+    const userPlans = Array.from(this.mealPlans.entries()).filter(
+      ([id, plan]) => plan.userId === userId
+    );
+    
+    userPlans.forEach(([id]) => {
+      this.mealPlans.delete(id);
+    });
+    
+    return userPlans.length;
   }
 
   // Recipes
@@ -749,6 +762,11 @@ export class DatabaseStorage implements IStorage {
   async deleteMealPlan(id: string): Promise<boolean> {
     const result = await db.delete(mealPlans).where(eq(mealPlans.id, id));
     return (result.rowCount || 0) > 0;
+  }
+
+  async deleteMealPlansByUser(userId: string): Promise<number> {
+    const result = await db.delete(mealPlans).where(eq(mealPlans.userId, userId));
+    return result.rowCount || 0;
   }
 
   // Recipes

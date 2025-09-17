@@ -1025,6 +1025,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("📈 Progressive Steps:", progressiveSteps.length);
       console.log("📊 Data Instructions: READY");
       
+      // Delete previous meal plans for this user before creating new one
+      console.log("🗑️ Deleting previous meal plans for user:", userId);
+      const deletedCount = await storage.deleteMealPlansByUser(userId);
+      console.log(`✅ Deleted ${deletedCount} previous meal plans`);
+      
       // Save to storage with client profile and diet explanation
       const mealPlan = await storage.createMealPlan({
         userId: userId,
@@ -1213,6 +1218,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetCalories: nutritionalNeeds.calories,
         durationDays,
       });
+      
+      // Delete previous meal plans for this user before creating new one
+      console.log("🗑️ Deleting previous meal plans for user:", currentUserId);
+      const deletedCount = await storage.deleteMealPlansByUser(currentUserId);
+      console.log(`✅ Deleted ${deletedCount} previous meal plans`);
       
       // Save to storage
       const mealPlan = await storage.createMealPlan({
