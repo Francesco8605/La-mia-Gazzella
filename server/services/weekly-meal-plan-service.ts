@@ -16,21 +16,29 @@ export interface WeeklyPlanResult {
  */
 export async function getUserWeeklyPlan(userId: string): Promise<WeeklyPlanResult> {
   try {
+    console.log(`🔍 getUserWeeklyPlan: START per utente ${userId}`);
+    
     // 1. Legge il counter attuale dell'utente
+    console.log(`🔍 Lettura counter attuale per utente ${userId}...`);
     const currentWeekCounter = await storage.getUserWeekCounter(userId);
+    console.log(`📊 Counter attuale utente ${userId}: ${currentWeekCounter}`);
     
     // 2. Determina quale settimana utilizzare
     const weekNumber = getNextWeekNumber(currentWeekCounter);
+    console.log(`🎯 Settimana calcolata: ${weekNumber} (da counter ${currentWeekCounter})`);
     
     // 3. Ottiene il piano della settimana
     const weeklyPlan = getWeeklyPlan(weekNumber);
+    console.log(`📋 Piano settimanale trovato per settimana ${weekNumber}:`, weeklyPlan ? 'SI' : 'NO');
     
     if (!weeklyPlan) {
       throw new Error(`Piano settimanale non trovato per la settimana ${weekNumber}`);
     }
     
     // 4. Aggiorna il counter per la prossima volta
+    console.log(`💾 Aggiornamento counter utente ${userId} da ${currentWeekCounter} a ${weekNumber}...`);
     await storage.updateUserWeekCounter(userId, weekNumber);
+    console.log(`✅ Counter aggiornato con successo`);
     
     console.log(`📅 Utente ${userId}: Utilizzando settimana ${weekNumber} (precedente: ${currentWeekCounter})`);
     

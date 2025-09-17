@@ -259,6 +259,16 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
   days: MealPlanDay[];
 }> {
   try {
+    console.log(`🚀 INIZIO generateMealPlan per utente ${request.userId}`);
+    
+    // CONTROLLO: Verifica se userId è presente
+    if (!request.userId) {
+      console.error(`❌ ERRORE: userId non fornito in generateMealPlan`);
+      throw new Error("userId è richiesto per il sistema di piani settimanali");
+    }
+    
+    console.log(`🔍 UserId presente: ${request.userId}`);
+    
     // NUOVO: Ottieni il piano settimanale progressivo per l'utente (1-4 settimane in sequenza)
     console.log(`🗓️ Ottenimento piano settimanale per utente ${request.userId}...`);
     const weeklyPlanResult = await getUserWeeklyPlan(request.userId);
