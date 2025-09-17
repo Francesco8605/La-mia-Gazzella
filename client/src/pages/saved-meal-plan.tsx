@@ -550,15 +550,12 @@ export default function SavedMealPlan() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-2xl text-gray-900 dark:text-white">
-                    {dayNames[day.day.toLowerCase() as keyof typeof dayNames]} - Giorno {index + 1}
+                    {dayNames[day.day.toLowerCase() as keyof typeof dayNames]}
                   </CardTitle>
                   <Badge variant="secondary" className="text-sm px-3 py-1">
                     {day.totalCalories} kcal
                   </Badge>
                 </div>
-                <p className="text-gray-600 dark:text-gray-300">
-                  {format(parseISO(day.date), 'dd MMMM yyyy', { locale: it })}
-                </p>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-6">
