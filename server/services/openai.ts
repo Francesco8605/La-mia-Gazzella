@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { type InsertUserProfile, type MealPlanDay, type Meal } from "@shared/schema";
+import { getUserWeeklyPlan, formatWeeklyPlanForAI } from "./weekly-meal-plan-service.js";
 
 // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -7,6 +8,7 @@ const openai = new OpenAI({
 });
 
 export interface MealPlanRequest {
+  userId: string; // Aggiunto per gestire i piani settimanali progressivi
   userProfile: InsertUserProfile;
   nutritionalNeeds: {
     calories: number;
@@ -257,8 +259,11 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
   days: MealPlanDay[];
 }> {
   try {
-    // Il protocollo Gazzella è applicabile a tutte le donne
-    // Rimuoviamo la restrizione di età per rendere l'app più accessibile
+    // NUOVO: Ottieni il piano settimanale progressivo per l'utente (1-4 settimane in sequenza)
+    console.log(`🗓️ Ottenimento piano settimanale per utente ${request.userId}...`);
+    const weeklyPlanResult = await getUserWeeklyPlan(request.userId);
+    
+    console.log(`✅ Piano settimanale ottenuto: Settimana ${weeklyPlanResult.weekNumber} ${weeklyPlanResult.isFirstTime ? '(Prima volta!)' : ''}`);
 
     // SAFETY: Always ensure allergies and excludedFoods are arrays
     const safeProfile = {
@@ -290,10 +295,15 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
       calculatedIdealWeight
     );
 
-    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni seguendo ESATTAMENTE la tabella del Manuale della Gazzella 2025 allegata, personalizzando solo le porzioni per questa cliente.
+    // Formatta il piano settimanale per l'AI
+    const weeklyPlanFormatted = formatWeeklyPlanForAI(weeklyPlanResult.weeklyPlan);
 
-TABELLA UFFICIALE DA RISPETTARE:
-${JSON.stringify(GAZZELLA_WEEKLY_STRUCTURE, null, 2)}
+    const prompt = `Sei "Nutrizionista Gazzella". Crea un piano alimentare di 7 giorni seguendo ESATTAMENTE il piano settimanale del Manuale della Gazzella allegato, personalizzando le grammature precise per questa cliente.
+
+🗓️ PIANO SETTIMANALE DA SEGUIRE - SETTIMANA ${weeklyPlanResult.weekNumber}/4:
+${weeklyPlanFormatted}
+
+⚠️ IMPORTANTE: Questo è il piano BASE che devi rispettare. Non cambiare gli alimenti o la struttura dei pasti, ma calcola le GRAMMATURE PRECISE per questa cliente specifica.
 
 PROFILO CLIENTE PER CALCOLO GRAMMATURE PERSONALIZZATE:
 - Età: ${request.userProfile.age} anni

@@ -54,6 +54,10 @@ export interface IStorage {
   getSubscriptionPlans(): Promise<SubscriptionPlan[]>;
   createSubscriptionPlan(plan: InsertSubscriptionPlan): Promise<SubscriptionPlan>;
 
+  // Weekly Meal Plan Counter Methods
+  getUserWeekCounter(userId: string): Promise<number>;
+  updateUserWeekCounter(userId: string, weekCounter: number): Promise<User | undefined>;
+
   // Conversations for Laura's long-term memory
   getConversation(id: string): Promise<Conversation | undefined>;
   getConversationsByUser(userId: string, limit?: number): Promise<Conversation[]>;
@@ -143,6 +147,7 @@ export class MemStorage implements IStorage {
       subscriptionEndDate: insertUser.subscriptionEndDate ?? null,
       trialEndDate: insertUser.trialEndDate ?? null,
       hasUsedTrial: insertUser.hasUsedTrial ?? "no",
+      weekCounter: insertUser.weekCounter ?? 0, // Default a 0 se non specificato
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -542,6 +547,34 @@ export class MemStorage implements IStorage {
   }
   async getImportantMemories(userId: string, minImportance?: number): Promise<UserMemory[]> {
     return [];
+  }
+
+  // Admin methods - placeholders for MemStorage
+  async getAdminUser(id: string): Promise<AdminUser | undefined> { return undefined; }
+  async getAdminUserByEmail(email: string): Promise<AdminUser | undefined> { return undefined; }
+  async createAdminUser(admin: InsertAdminUser): Promise<AdminUser> { return {} as AdminUser; }
+  async updateAdminLastLogin(id: string): Promise<AdminUser | undefined> { return undefined; }
+  async getAllAdminUsers(): Promise<AdminUser[]> { return []; }
+
+  // Activity log methods - placeholders for MemStorage
+  async createActivityLog(log: InsertActivityLog): Promise<ActivityLog> { return {} as ActivityLog; }
+  async getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]> { return []; }
+  async getAllActivityLogs(limit?: number, offset?: number): Promise<ActivityLog[]> { return []; }
+  async getActivityLogsByAction(action: string, limit?: number): Promise<ActivityLog[]> { return []; }
+
+  // Weekly Meal Plan Counter Methods
+  async getUserWeekCounter(userId: string): Promise<number> {
+    const user = this.users.get(userId);
+    return user?.weekCounter ?? 0;
+  }
+
+  async updateUserWeekCounter(userId: string, weekCounter: number): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, weekCounter };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
   }
 }
 
@@ -1037,6 +1070,21 @@ export class DatabaseStorage implements IStorage {
       .where(eq(activityLogs.action, action))
       .orderBy(desc(activityLogs.createdAt))
       .limit(limit);
+  }
+
+  // Weekly Meal Plan Counter Methods
+  async getUserWeekCounter(userId: string): Promise<number> {
+    const [user] = await db.select({ weekCounter: users.weekCounter }).from(users).where(eq(users.id, userId));
+    return user?.weekCounter ?? 0;
+  }
+
+  async updateUserWeekCounter(userId: string, weekCounter: number): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ weekCounter })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
   }
 }
 

@@ -916,8 +916,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Calculate nutritional needs
       const nutritionalNeeds = await calculateNutritionalNeeds(validatedProfile);
       
-      // Generate meal plan using OpenAI
+      // Generate meal plan using OpenAI with weekly plan progression
       const aiMealPlan = await generateMealPlan({
+        userId: userId, // Aggiunto per gestire la sequenza dei piani settimanali
         userProfile: validatedProfile,
         nutritionalNeeds: nutritionalNeeds,
         targetCalories: nutritionalNeeds.calories,
@@ -1107,22 +1108,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const { userProfile, durationDays } = schema.parse(req.body);
       
+      // Get authenticated user ID FIRST for weekly plan progression
+      const currentUserId = (req as any).user?.claims?.sub;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Utente non autenticato" });
+      }
+      
       // Calculate nutritional needs
       const nutritionalNeeds = await calculateNutritionalNeeds(userProfile);
       
-      // Generate meal plan using OpenAI
+      // Generate meal plan using OpenAI with weekly plan progression
       const aiMealPlan = await generateMealPlan({
+        userId: currentUserId, // Aggiunto per gestire la sequenza dei piani settimanali
         userProfile,
         nutritionalNeeds: nutritionalNeeds,
         targetCalories: nutritionalNeeds.calories,
         durationDays,
       });
-      
-      // Get authenticated user ID
-      const currentUserId = (req as any).user?.claims?.sub;
-      if (!currentUserId) {
-        return res.status(401).json({ message: "Utente non autenticato" });
-      }
       
       // Save to storage
       const mealPlan = await storage.createMealPlan({

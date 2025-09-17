@@ -17,6 +17,8 @@ export const users = pgTable("users", {
   subscriptionEndDate: timestamp("subscription_end_date"),
   trialEndDate: timestamp("trial_end_date"),
   hasUsedTrial: text("has_used_trial").default("no"), // "yes" | "no" - tracks if user ever used a trial
+  // Piano alimentare settimana - traccia quale settimana (1-4) è stata usata per ultimo
+  weekCounter: integer("week_counter").notNull().default(0), // 0=mai usato, 1-4=settimane, poi ricomincia da 1
   createdAt: timestamp("created_at").defaultNow(),
 });
 
