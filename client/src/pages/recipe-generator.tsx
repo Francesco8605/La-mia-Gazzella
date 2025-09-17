@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChefHat, Clock, Users, Utensils, Sparkles, AlertCircle } from "lucide-react";
+import { ChefHat, Users, Utensils, Sparkles, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import MealPlanTimer from "@/components/meal-plan-timer";
 
 // Schema con campi di testo libero per personalizzazione AI
 const recipeFormSchema = z.object({
@@ -35,14 +34,6 @@ const quickProfileSchema = z.object({
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 type QuickProfileData = z.infer<typeof quickProfileSchema>;
 
-interface TimerResponse {
-  canGenerateNow: boolean;
-  hoursRemaining: number;
-  millisecondsRemaining: number;
-  nextAllowedGeneration: string;
-  lastGeneration: string | null;
-  message: string;
-}
 
 interface GeneratedRecipe {
   title: string;
@@ -65,7 +56,6 @@ export default function RecipeGenerator() {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [showQuickProfileDialog, setShowQuickProfileDialog] = useState(false);
   const [pendingRecipeData, setPendingRecipeData] = useState<RecipeFormData | null>(null);
-  const [timerRefreshKey, setTimerRefreshKey] = useState(0);
   const { toast } = useToast();
 
   // Controlla se esistono piani personalizzati salvati
@@ -80,11 +70,6 @@ export default function RecipeGenerator() {
     retry: false,
   });
 
-  // Controlla il timer di generazione dei piani pasto
-  const { data: timerData, refetch: refetchTimer } = useQuery<TimerResponse>({
-    queryKey: ["/api/meal-plans/next-generation-time", timerRefreshKey],
-    retry: false,
-  });
 
   const form = useForm<RecipeFormData>({
     resolver: zodResolver(recipeFormSchema),
@@ -197,15 +182,6 @@ export default function RecipeGenerator() {
       });
     },
     onError: (error: any) => {
-      // Se l'errore è il limite di generazione (429), forza il refresh del timer invece di mostrare l'errore
-      if (error?.status === 429 || (error instanceof Error && error.message.includes("GENERATION_LIMIT_EXCEEDED"))) {
-        // Forza refresh del timer data per mostrare il timer
-        setTimerRefreshKey(prev => prev + 1);
-        refetchTimer();
-        return; // Non mostra il toast di errore
-      }
-
-      // Per tutti gli altri errori, mostra il toast normale
       toast({
         title: "Errore",
         description: error instanceof Error ? error.message : "Errore nella generazione della ricetta",
@@ -224,11 +200,6 @@ export default function RecipeGenerator() {
     }
   };
 
-  const handleTimerExpired = () => {
-    // Quando il timer scade, forza refresh del timer data e riabilita il bottone
-    setTimerRefreshKey(prev => prev + 1);
-    refetchTimer();
-  };
 
   if (mealPlansLoading || profileLoading) {
     return (
@@ -418,16 +389,10 @@ export default function RecipeGenerator() {
                     />
                   </div>
 
-                  {/* Timer Component quando non si può generare */}
-                  {timerData && !timerData.canGenerateNow && (
-                    <div className="mb-6">
-                      <MealPlanTimer onTimerExpired={handleTimerExpired} />
-                    </div>
-                  )}
 
                   <Button 
                     type="submit" 
-                    disabled={generateRecipeMutation.isPending || (timerData && !timerData.canGenerateNow)}
+                    disabled={generateRecipeMutation.isPending}
                     className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     data-testid="generate-recipe-button"
                   >
@@ -435,11 +400,6 @@ export default function RecipeGenerator() {
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         Generazione in corso...
-                      </>
-                    ) : timerData && !timerData.canGenerateNow ? (
-                      <>
-                        <Clock className="mr-2 h-5 w-5" />
-                        Attendi Prima del Prossimo Piano
                       </>
                     ) : (
                       <>
@@ -469,7 +429,7 @@ export default function RecipeGenerator() {
                 {/* Recipe Info */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
+                    <ChefHat className="h-4 w-4" />
                     <span>{generatedRecipe.prepTime + generatedRecipe.cookTime} min</span>
                   </div>
                   <div className="flex items-center gap-2">
