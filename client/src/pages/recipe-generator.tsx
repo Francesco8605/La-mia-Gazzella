@@ -12,6 +12,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import MealPlanTimer from "@/components/meal-plan-timer";
 
 // Schema con campi di testo libero per personalizzazione AI
 const recipeFormSchema = z.object({
@@ -34,6 +35,15 @@ const quickProfileSchema = z.object({
 type RecipeFormData = z.infer<typeof recipeFormSchema>;
 type QuickProfileData = z.infer<typeof quickProfileSchema>;
 
+interface TimerResponse {
+  canGenerateNow: boolean;
+  hoursRemaining: number;
+  millisecondsRemaining: number;
+  nextAllowedGeneration: string;
+  lastGeneration: string | null;
+  message: string;
+}
+
 interface GeneratedRecipe {
   title: string;
   description: string;
@@ -55,6 +65,7 @@ export default function RecipeGenerator() {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [showQuickProfileDialog, setShowQuickProfileDialog] = useState(false);
   const [pendingRecipeData, setPendingRecipeData] = useState<RecipeFormData | null>(null);
+  const [timerRefreshKey, setTimerRefreshKey] = useState(0);
   const { toast } = useToast();
 
   // Controlla se esistono piani personalizzati salvati
@@ -66,6 +77,12 @@ export default function RecipeGenerator() {
   // Controlla se esiste un profilo utente
   const { data: userProfile, isLoading: profileLoading } = useQuery({
     queryKey: ["/api/user-profiles/current"],
+    retry: false,
+  });
+
+  // Controlla il timer di generazione dei piani pasto
+  const { data: timerData, refetch: refetchTimer } = useQuery<TimerResponse>({
+    queryKey: ["/api/meal-plans/next-generation-time", timerRefreshKey],
     retry: false,
   });
 
@@ -196,6 +213,12 @@ export default function RecipeGenerator() {
     if (pendingRecipeData) {
       generateRecipeMutation.mutate(pendingRecipeData);
     }
+  };
+
+  const handleTimerExpired = () => {
+    // Quando il timer scade, forza refresh del timer data e riabilita il bottone
+    setTimerRefreshKey(prev => prev + 1);
+    refetchTimer();
   };
 
   if (mealPlansLoading || profileLoading) {
@@ -386,16 +409,28 @@ export default function RecipeGenerator() {
                     />
                   </div>
 
+                  {/* Timer Component quando non si può generare */}
+                  {timerData && !timerData.canGenerateNow && (
+                    <div className="mb-6">
+                      <MealPlanTimer onTimerExpired={handleTimerExpired} />
+                    </div>
+                  )}
+
                   <Button 
                     type="submit" 
-                    disabled={generateRecipeMutation.isPending}
-                    className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                    disabled={generateRecipeMutation.isPending || (timerData && !timerData.canGenerateNow)}
+                    className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                     data-testid="generate-recipe-button"
                   >
                     {generateRecipeMutation.isPending ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                         Generazione in corso...
+                      </>
+                    ) : timerData && !timerData.canGenerateNow ? (
+                      <>
+                        <Clock className="mr-2 h-5 w-5" />
+                        Attendi Prima del Prossimo Piano
                       </>
                     ) : (
                       <>
