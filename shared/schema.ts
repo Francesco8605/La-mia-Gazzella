@@ -19,6 +19,8 @@ export const users = pgTable("users", {
   hasUsedTrial: text("has_used_trial").default("no"), // "yes" | "no" - tracks if user ever used a trial
   // Piano alimentare settimana - traccia quale settimana (1-4) è stata usata per ultimo
   weekCounter: integer("week_counter").notNull().default(0), // 0=mai usato, 1-4=settimane, poi ricomincia da 1
+  // Limitazione generazione piani - solo uno ogni 168 ore (7 giorni)
+  lastMealPlanGeneratedAt: timestamp("last_meal_plan_generated_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
