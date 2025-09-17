@@ -188,13 +188,13 @@ export default function MealPlanTimer({ onTimerExpired }: MealPlanTimerProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center space-x-2 text-orange-800 dark:text-orange-200">
           <Clock className="h-5 w-5" />
-          <span>Prossimo Piano Disponibile</span>
+          <span>Generazione Piano Alimentare</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-0">
         <div className="space-y-4">
           <p className="text-sm text-orange-700 dark:text-orange-300" data-testid="text-waiting-message">
-            {timerData.message}
+            È possibile generare il nuovo piano tra:
           </p>
           
           <div className="flex items-center justify-center space-x-2" data-testid="countdown-display">

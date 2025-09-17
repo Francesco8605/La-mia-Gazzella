@@ -196,7 +196,16 @@ export default function RecipeGenerator() {
         description: "La tua ricetta personalizzata è stata salvata nella pagina Ricette.",
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // Se l'errore è il limite di generazione (429), forza il refresh del timer invece di mostrare l'errore
+      if (error?.status === 429 || (error instanceof Error && error.message.includes("GENERATION_LIMIT_EXCEEDED"))) {
+        // Forza refresh del timer data per mostrare il timer
+        setTimerRefreshKey(prev => prev + 1);
+        refetchTimer();
+        return; // Non mostra il toast di errore
+      }
+
+      // Per tutti gli altri errori, mostra il toast normale
       toast({
         title: "Errore",
         description: error instanceof Error ? error.message : "Errore nella generazione della ricetta",
