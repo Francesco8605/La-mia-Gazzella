@@ -7,6 +7,7 @@ import { Sparkles, Clock, Target, Heart, Utensils } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { MealPlanLoading } from "@/components/meal-plan-loading";
 import MealPlanTimer from "@/components/meal-plan-timer";
+import { useAuth } from "@/hooks/useAuth";
 
 interface TimerResponse {
   canGenerateNow: boolean;
@@ -18,6 +19,7 @@ interface TimerResponse {
 }
 
 export default function MealPlanGenerator() {
+  const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,6 +42,7 @@ export default function MealPlanGenerator() {
   // Controlla il timer di generazione dei piani pasto
   const { data: timerData, refetch: refetchTimer } = useQuery<TimerResponse>({
     queryKey: ["/api/meal-plans/next-generation-time", timerRefreshKey],
+    enabled: isAuthenticated,
     retry: false,
   });
 
