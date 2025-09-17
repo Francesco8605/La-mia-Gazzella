@@ -42,6 +42,7 @@ export default function MealPlanGenerator() {
   // Controlla il timer di generazione dei piani pasto
   const { data: timerData, refetch: refetchTimer } = useQuery<TimerResponse>({
     queryKey: ["/api/meal-plans/next-generation-time", timerRefreshKey],
+    queryFn: () => fetch("/api/meal-plans/next-generation-time", { credentials: "include" }).then(res => res.json()),
     enabled: isAuthenticated,
     retry: false,
   });
