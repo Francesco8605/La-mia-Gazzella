@@ -888,6 +888,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
+      // Check 168-hour (7 days) generation limitation
+      const lastMealPlanGenerated = await storage.getUserLastMealPlanGenerated(userId);
+      if (lastMealPlanGenerated) {
+        const now = new Date();
+        const timeSinceLastGeneration = now.getTime() - lastMealPlanGenerated.getTime();
+        const hoursPassedSinceLastGeneration = timeSinceLastGeneration / (1000 * 60 * 60);
+        const LIMIT_HOURS = 168; // 7 days * 24 hours
+        
+        if (hoursPassedSinceLastGeneration < LIMIT_HOURS) {
+          const hoursRemaining = LIMIT_HOURS - hoursPassedSinceLastGeneration;
+          const nextGenerationTime = new Date(lastMealPlanGenerated.getTime() + (LIMIT_HOURS * 60 * 60 * 1000));
+          
+          return res.status(429).json({
+            message: "Puoi generare un nuovo piano alimentare solo una volta ogni 7 giorni.",
+            error: "GENERATION_LIMIT_EXCEEDED",
+            hoursRemaining: Math.ceil(hoursRemaining),
+            nextAllowedGeneration: nextGenerationTime.toISOString(),
+            lastGeneration: lastMealPlanGenerated.toISOString()
+          });
+        }
+      }
+
       // Convert database profile to API format
       const validatedProfile = {
         userId: profile.userId,
@@ -1038,6 +1060,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         days: aiMealPlan.days,
       });
+      
+      // Update the last meal plan generation timestamp for 168-hour limitation
+      try {
+        await storage.updateUserLastMealPlanGenerated(userId, new Date());
+      } catch (e) {
+        console.warn("Could not update lastMealPlanGeneratedAt:", e);
+        // Continue with response even if timestamp update fails
+      }
       
       res.status(201).json(mealPlan);
     } catch (error) {

@@ -58,6 +58,10 @@ export interface IStorage {
   getUserWeekCounter(userId: string): Promise<number>;
   updateUserWeekCounter(userId: string, weekCounter: number): Promise<User | undefined>;
 
+  // Meal Plan Generation Limitation Methods (168 hours)
+  getUserLastMealPlanGenerated(userId: string): Promise<Date | null>;
+  updateUserLastMealPlanGenerated(userId: string, date: Date): Promise<User | undefined>;
+
   // Conversations for Laura's long-term memory
   getConversation(id: string): Promise<Conversation | undefined>;
   getConversationsByUser(userId: string, limit?: number): Promise<Conversation[]>;
@@ -148,6 +152,7 @@ export class MemStorage implements IStorage {
       trialEndDate: insertUser.trialEndDate ?? null,
       hasUsedTrial: insertUser.hasUsedTrial ?? "no",
       weekCounter: insertUser.weekCounter ?? 0, // Default a 0 se non specificato
+      lastMealPlanGeneratedAt: insertUser.lastMealPlanGeneratedAt ?? null,
       createdAt: new Date()
     };
     this.users.set(id, user);
@@ -573,6 +578,21 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
     
     const updatedUser = { ...user, weekCounter };
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
+  // Meal Plan Generation Limitation Methods (168 hours)
+  async getUserLastMealPlanGenerated(userId: string): Promise<Date | null> {
+    const user = this.users.get(userId);
+    return user?.lastMealPlanGeneratedAt ?? null;
+  }
+
+  async updateUserLastMealPlanGenerated(userId: string, date: Date): Promise<User | undefined> {
+    const user = this.users.get(userId);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, lastMealPlanGeneratedAt: date };
     this.users.set(userId, updatedUser);
     return updatedUser;
   }
@@ -1082,6 +1102,21 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set({ weekCounter })
+      .where(eq(users.id, userId))
+      .returning();
+    return user || undefined;
+  }
+
+  // Meal Plan Generation Limitation Methods (168 hours)
+  async getUserLastMealPlanGenerated(userId: string): Promise<Date | null> {
+    const [user] = await db.select({ lastMealPlanGeneratedAt: users.lastMealPlanGeneratedAt }).from(users).where(eq(users.id, userId));
+    return user?.lastMealPlanGeneratedAt ?? null;
+  }
+
+  async updateUserLastMealPlanGenerated(userId: string, date: Date): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ lastMealPlanGeneratedAt: date })
       .where(eq(users.id, userId))
       .returning();
     return user || undefined;
