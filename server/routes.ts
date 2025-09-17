@@ -1079,6 +1079,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get next meal plan generation time for countdown timer
+  app.get("/api/meal-plans/next-generation-time", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const lastMealPlanGenerated = await storage.getUserLastMealPlanGenerated(userId);
+      
+      if (!lastMealPlanGenerated) {
+        // User never generated a meal plan, can generate immediately
+        return res.json({
+          canGenerateNow: true,
+          hoursRemaining: 0,
+          millisecondsRemaining: 0,
+          nextAllowedGeneration: new Date().toISOString(),
+          lastGeneration: null,
+          message: "Puoi generare il tuo primo piano alimentare"
+        });
+      }
+      
+      const now = new Date();
+      const timeSinceLastGeneration = now.getTime() - lastMealPlanGenerated.getTime();
+      const hoursPassedSinceLastGeneration = timeSinceLastGeneration / (1000 * 60 * 60);
+      const LIMIT_HOURS = 168; // 7 days * 24 hours
+      
+      if (hoursPassedSinceLastGeneration >= LIMIT_HOURS) {
+        // 168+ hours have passed, can generate now
+        return res.json({
+          canGenerateNow: true,
+          hoursRemaining: 0,
+          millisecondsRemaining: 0,
+          nextAllowedGeneration: new Date().toISOString(),
+          lastGeneration: lastMealPlanGenerated.toISOString(),
+          message: "Puoi generare un nuovo piano alimentare"
+        });
+      }
+      
+      // Still within the 168-hour limit
+      const hoursRemaining = LIMIT_HOURS - hoursPassedSinceLastGeneration;
+      const millisecondsRemaining = hoursRemaining * 60 * 60 * 1000;
+      const nextGenerationTime = new Date(lastMealPlanGenerated.getTime() + (LIMIT_HOURS * 60 * 60 * 1000));
+      
+      res.json({
+        canGenerateNow: false,
+        hoursRemaining: Math.ceil(hoursRemaining),
+        millisecondsRemaining: Math.ceil(millisecondsRemaining),
+        nextAllowedGeneration: nextGenerationTime.toISOString(),
+        lastGeneration: lastMealPlanGenerated.toISOString(),
+        message: `Potrai generare un nuovo piano tra ${Math.ceil(hoursRemaining)} ore`
+      });
+      
+    } catch (error) {
+      console.error("Error checking next generation time:", error);
+      res.status(500).json({ 
+        message: "Errore nel controllo del tempo di generazione",
+        error: error instanceof Error ? error.message : "Errore sconosciuto"
+      });
+    }
+  });
+
   // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route  
   app.get("/api/meal-plans/user", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
