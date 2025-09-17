@@ -6,11 +6,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Clock, Target, Heart, Utensils } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { MealPlanLoading } from "@/components/meal-plan-loading";
+import MealPlanTimer from "@/components/meal-plan-timer";
+
+interface TimerResponse {
+  canGenerateNow: boolean;
+  hoursRemaining: number;
+  millisecondsRemaining: number;
+  nextAllowedGeneration: string;
+  lastGeneration: string | null;
+  message: string;
+}
 
 export default function MealPlanGenerator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [timerRefreshKey, setTimerRefreshKey] = useState(0);
 
   // Recupera il profilo utente
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
@@ -24,6 +35,12 @@ export default function MealPlanGenerator() {
       }
       return response.json();
     },
+  });
+
+  // Controlla il timer di generazione dei piani pasto
+  const { data: timerData, refetch: refetchTimer } = useQuery<TimerResponse>({
+    queryKey: ["/api/meal-plans/next-generation-time", timerRefreshKey],
+    retry: false,
   });
 
   const generateMealPlanMutation = useMutation({
@@ -44,7 +61,17 @@ export default function MealPlanGenerator() {
         window.location.href = `/piani-personalizzati`;
       }, 2000);
     },
-    onError: (error) => {
+    onError: (error: any) => {
+      // Se l'errore è il limite di generazione (429), forza il refresh del timer invece di mostrare l'errore
+      if (error?.status === 429 || (error instanceof Error && error.message.includes("GENERATION_LIMIT_EXCEEDED"))) {
+        // Forza refresh del timer data per mostrare il timer
+        setTimerRefreshKey(prev => prev + 1);
+        refetchTimer();
+        setIsGenerating(false);
+        return; // Non mostra il toast di errore
+      }
+
+      // Per tutti gli altri errori, mostra il toast normale
       toast({
         title: "Errore nella Generazione",
         description: error.message || "Si è verificato un errore durante la creazione del piano alimentare.",
@@ -57,6 +84,12 @@ export default function MealPlanGenerator() {
   const handleGenerateMealPlan = () => {
     setIsGenerating(true);
     generateMealPlanMutation.mutate();
+  };
+
+  const handleTimerExpired = () => {
+    // Quando il timer scade, forza refresh del timer data e riabilita il bottone
+    setTimerRefreshKey(prev => prev + 1);
+    refetchTimer();
   };
 
   if (isLoadingProfile) {
@@ -158,18 +191,30 @@ export default function MealPlanGenerator() {
               </div>
             </div>
 
+            {/* Timer Component quando non si può generare */}
+            {timerData && !timerData.canGenerateNow && (
+              <div className="mb-6">
+                <MealPlanTimer onTimerExpired={handleTimerExpired} />
+              </div>
+            )}
+
             <div className="text-center">
               <Button
                 onClick={handleGenerateMealPlan}
-                disabled={isGenerating || generateMealPlanMutation.isPending}
+                disabled={isGenerating || generateMealPlanMutation.isPending || (timerData && !timerData.canGenerateNow)}
                 size="lg"
-                className="w-full md:w-auto px-12 py-6 text-xl font-semibold bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full md:w-auto px-12 py-6 text-xl font-semibold bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 data-testid="button-generate-meal-plan"
               >
                 {isGenerating || generateMealPlanMutation.isPending ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
                     Generazione in corso...
+                  </>
+                ) : timerData && !timerData.canGenerateNow ? (
+                  <>
+                    <Clock className="h-5 w-5 mr-2" />
+                    Attendi Prima del Prossimo Piano
                   </>
                 ) : (
                   <>
