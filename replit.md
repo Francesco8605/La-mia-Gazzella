@@ -7,6 +7,17 @@
 Preferred communication style: Simple, everyday language.
 App name: "La Mia Gazzella" - nome ufficiale dell'applicazione web per la pianificazione nutrizionale.
 
+# Recent Changes
+
+## September 18, 2025 - Formula Gazzella Premium Feature Implementation
+- **Feature Complete**: Formula Gazzella subscription integration for premium users
+- **Access Control**: Implemented server-side validation ensuring only paid premium subscribers (not trial users) can access Formula Gazzella
+- **Shopify Integration**: Added automatic order creation for product ID 9890948055381 on subscription and renewal webhook events  
+- **Navigation**: Added dynamic Formula Gazzella link visible only to premium non-trial subscribers
+- **Security**: Enhanced authentication validation and removed sensitive logging
+- **API Updates**: Fixed Shopify GraphQL API compatibility for 2024 (totalPrice → totalPriceSet)
+- **Known Limitation**: Manual order creation requires `write_draft_orders` Shopify app permission (external configuration)
+
 # System Architecture
 
 ## Frontend Architecture
