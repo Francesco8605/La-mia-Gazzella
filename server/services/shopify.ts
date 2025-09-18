@@ -492,9 +492,15 @@ class ShopifyService {
               id
               name
               status
-              totalPrice {
-                amount
-                currencyCode
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+                presentmentMoney {
+                  amount
+                  currencyCode
+                }
               }
               customer {
                 email
@@ -542,7 +548,7 @@ class ShopifyService {
         id: draftOrder.id,
         name: draftOrder.name,
         status: draftOrder.status,
-        totalPrice: draftOrder.totalPrice?.amount,
+        totalPrice: draftOrder.totalPriceSet?.shopMoney?.amount,
         customer: draftOrder.customer?.email
       });
       

@@ -405,10 +405,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify user has premium subscription (not trial)
-      const isInTrial = user.trialEndDate && new Date(user.trialEndDate) > new Date();
+      console.log('🔍 Formula Gazzella order validation for user:', user.email);
+      console.log('👤 User data:', {
+        subscriptionStatus: user.subscriptionStatus,
+        trialEndDate: user.trialEndDate,
+        subscriptionEndDate: user.subscriptionEndDate,
+        stripeSubscriptionId: user.stripeSubscriptionId
+      });
+      
+      const currentTime = new Date();
+      const trialEndDate = user.trialEndDate ? new Date(user.trialEndDate) : null;
+      
+      // User is only in trial if subscription status is 'trialing' AND trial hasn't ended
+      const isInTrial = user.subscriptionStatus === 'trialing' && trialEndDate && trialEndDate > currentTime;
       const hasActiveSubscription = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing';
       
+      console.log('📊 Validation calculations:', {
+        currentTime: currentTime.toISOString(),
+        trialEndDate: trialEndDate?.toISOString() || null,
+        isInTrial,
+        hasActiveSubscription,
+        subscriptionStatus: user.subscriptionStatus
+      });
+      
       if (!hasActiveSubscription) {
+        console.log('❌ Access denied - No active subscription');
         return res.status(403).json({ 
           error: 'Accesso negato',
           message: 'Formula Gazzella è disponibile solo per gli abbonati premium'
@@ -416,11 +437,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (isInTrial) {
+        console.log('❌ Access denied - User in trial period');
         return res.status(403).json({ 
           error: 'Accesso negato',
           message: 'Formula Gazzella non è disponibile durante il periodo di prova gratuita. Converti il tuo account in abbonamento premium per accedere.'
         });
       }
+      
+      console.log('✅ Access granted - Premium user validation passed');
       
       console.log('🛒 Creating Formula Gazzella order for premium user:', user.email, 'Product:', productId);
       
@@ -442,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name: order.name,
             status: order.displayFinancialStatus || order.status,
             fulfillmentStatus: order.displayFulfillmentStatus,
-            totalPrice: order.totalPrice?.amount
+            totalPrice: order.totalPriceSet?.shopMoney?.amount
           },
           message: 'Ordine Formula Gazzella creato con successo!'
         });
