@@ -1,50 +1,18 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, ShoppingCart, Star, Check, Zap, Heart, Crown } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { Sparkles, Star, Check, Zap, Heart, Crown } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
 
 export default function FormulaGazzella() {
   const { subscription, isLoading: subscriptionLoading, hasActiveSubscription, isInTrial } = useSubscription();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
   // Controlla se l'utente ha accesso (abbonato non trial)
   const hasAccess = hasActiveSubscription && !isInTrial;
 
-  const createShopifyOrderMutation = useMutation({
-    mutationFn: async () => {
-      return await apiRequest("/api/shopify/create-order", {
-        productId: "9890948055381"
-      }, "POST");
-    },
-    onSuccess: (response) => {
-      toast({
-        title: "Ordine Creato! 🎉",
-        description: "Il tuo ordine per Formula Gazzella è stato elaborato con successo. Riceverai una conferma via email.",
-        duration: 5000,
-      });
-      setIsProcessingOrder(false);
-      
-      // Invalida eventuali query correlate
-      queryClient.invalidateQueries({ queryKey: ["/api/user/orders"] });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Errore Ordine",
-        description: error.message || "Si è verificato un errore durante la creazione dell'ordine.",
-        variant: "destructive",
-      });
-      setIsProcessingOrder(false);
-    },
-  });
-
-  const handleCreateOrder = () => {
+  const handleManageSubscription = () => {
     if (!hasAccess) {
       toast({
         title: "Accesso Richiesto",
@@ -54,8 +22,11 @@ export default function FormulaGazzella() {
       return;
     }
     
-    setIsProcessingOrder(true);
-    createShopifyOrderMutation.mutate();
+    toast({
+      title: "Formula Gazzella Automatica! 🎉",
+      description: "La tua Formula Gazzella viene automaticamente ordinata e spedita ogni mese con il rinnovo del tuo abbonamento Premium. Non è necessario fare nulla!",
+      duration: 8000,
+    });
   };
 
   if (subscriptionLoading) {
@@ -185,7 +156,7 @@ export default function FormulaGazzella() {
               Abbonamento Formula Gazzella
             </CardTitle>
             <CardDescription className="text-lg text-slate-600 mt-4">
-              Ricevi automaticamente la tua Formula Gazzella ogni mese insieme al tuo abbonamento Premium
+              La tua Formula Gazzella viene automaticamente ordinata e spedita ogni mese con il rinnovo del tuo abbonamento Premium
             </CardDescription>
           </CardHeader>
           
@@ -218,33 +189,27 @@ export default function FormulaGazzella() {
               </div>
             </div>
 
-            {/* Bottone di ordinazione */}
+            {/* Bottone informativo */}
             <div className="pt-6">
               <Button
-                onClick={handleCreateOrder}
-                disabled={!hasAccess || isProcessingOrder || createShopifyOrderMutation.isPending}
+                onClick={handleManageSubscription}
                 size="lg"
                 className={`w-full md:w-auto px-12 py-6 text-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
                   hasAccess 
-                    ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700" 
+                    ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" 
                     : "bg-gray-400 cursor-not-allowed"
                 } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-                data-testid="button-order-formula"
+                data-testid="button-formula-info"
               >
-                {isProcessingOrder || createShopifyOrderMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                    Elaborazione Ordine...
-                  </>
-                ) : !hasAccess ? (
+                {!hasAccess ? (
                   <>
                     <Crown className="h-5 w-5 mr-2" />
                     Riservato agli Abbonati Premium
                   </>
                 ) : (
                   <>
-                    <ShoppingCart className="h-5 w-5 mr-2" />
-                    Ordina Formula Gazzella
+                    <Check className="h-5 w-5 mr-2" />
+                    Formula Automatica Attiva
                   </>
                 )}
               </Button>

@@ -1,7 +1,7 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs, adminUsers } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs, adminUsers, processedStripeEvents } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
@@ -2265,6 +2265,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).send(`Webhook Error: ${err}`);
     }
 
+    // Atomic idempotency gate - ensure we don't process the same event twice
+    try {
+      const result = await db.insert(processedStripeEvents).values({
+        stripeEventId: event.id,
+        eventType: event.type,
+      }).onConflictDoNothing({ target: processedStripeEvents.stripeEventId });
+      
+      // If no rows were inserted, this event was already processed
+      if (result.rowCount === 0) {
+        console.log('🔄 Event already processed, skipping:', event.id);
+        return res.json({ received: true, duplicate: true });
+      }
+      
+      console.log('✅ Event marked as processing:', event.id);
+    } catch (idempotencyError: any) {
+      console.error('⚠️ Error with atomic idempotency gate:', idempotencyError.message);
+      // Continue processing - we don't want to block webhooks for DB issues
+      // In production, you might want to fail here instead
+    }
+
     // Handle the event
     switch (event.type) {
       case 'checkout.session.completed':
@@ -2638,31 +2658,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('⚠️ Shopify paid tagging failed (payment processing continues):', customerEmail);
                   }
 
-                  // Create order in Shopify for invoice payment
-                  try {
-                    console.log('📦 Creating Shopify order for invoice payment...');
-                    const invoiceAmount = ((invoice as any).amount_paid / 100).toFixed(2); // Convert from cents
-                    const orderSuccess = await shopifyService.createOrder(customerEmail, invoiceAmount, 'Abbonamento La Mia Gazzella - Rinnovo');
-                    if (orderSuccess) {
-                      console.log('✅ Shopify order created successfully');
-                    } else {
-                      console.log('⚠️ Shopify order creation failed (payment continues)');
+                  // Check if this is a renewal (not initial charge)
+                  const billingReason = (invoice as any).billing_reason;
+                  console.log('💳 Billing reason:', billingReason);
+                  
+                  if (billingReason === 'subscription_cycle') {
+                    // This is a subscription renewal - create Formula Gazzella order
+                    try {
+                      console.log('🧬 Creating Formula Gazzella order for subscription renewal...');
+                      const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
+                      if (formulaOrder) {
+                        console.log('✅ Formula Gazzella renewal order created successfully:', formulaOrder.name);
+                      } else {
+                        console.log('⚠️ Formula Gazzella renewal order creation failed (payment continues)');
+                      }
+                    } catch (formulaError: any) {
+                      console.error('⚠️ Formula Gazzella renewal order creation error (payment continues):', formulaError.message);
                     }
-                  } catch (orderError: any) {
-                    console.error('⚠️ Shopify order creation error (payment continues):', orderError.message);
-                  }
-
-                  // Create Formula Gazzella product order for subscription renewal
-                  try {
-                    console.log('🧬 Creating Formula Gazzella order for subscription renewal...');
-                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
-                    if (formulaOrder) {
-                      console.log('✅ Formula Gazzella renewal order created successfully:', formulaOrder.name);
-                    } else {
-                      console.log('⚠️ Formula Gazzella renewal order creation failed (payment continues)');
-                    }
-                  } catch (formulaError: any) {
-                    console.error('⚠️ Formula Gazzella renewal order creation error (payment continues):', formulaError.message);
+                  } else {
+                    console.log('ℹ️ Skipping Formula Gazzella order - not a subscription renewal (billing_reason: ' + billingReason + ')');
                   }
                   
                   // Send WhatsApp payment notification for successful invoice payment
@@ -2711,6 +2725,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       default:
         console.log(`Unhandled event type ${event.type}`);
     }
+
 
     res.json({ received: true });
   });

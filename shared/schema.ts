@@ -217,6 +217,14 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Processed Stripe Events for idempotency
+export const processedStripeEvents = pgTable("processed_stripe_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  stripeEventId: varchar("stripe_event_id").notNull().unique(),
+  eventType: text("event_type").notNull(),
+  processedAt: timestamp("processed_at").defaultNow(),
+});
+
 // Type definitions
 export type MealPlanDay = {
   day: string;
