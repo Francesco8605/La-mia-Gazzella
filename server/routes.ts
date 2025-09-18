@@ -405,8 +405,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!user) {
         return res.status(404).json({ message: "Utente non trovato" });
       }
+
+      // Verify user has premium subscription (not trial)
+      const isInTrial = user.trialEndDate && new Date(user.trialEndDate) > new Date();
+      const hasActiveSubscription = user.subscriptionStatus === 'active' || user.subscriptionStatus === 'trialing';
       
-      console.log('🛒 Creating Formula Gazzella order for user:', user.email, 'Product:', productId);
+      if (!hasActiveSubscription) {
+        return res.status(403).json({ 
+          error: 'Accesso negato',
+          message: 'Formula Gazzella è disponibile solo per gli abbonati premium'
+        });
+      }
+      
+      if (isInTrial) {
+        return res.status(403).json({ 
+          error: 'Accesso negato',
+          message: 'Formula Gazzella non è disponibile durante il periodo di prova gratuita. Converti il tuo account in abbonamento premium per accedere.'
+        });
+      }
+      
+      console.log('🛒 Creating Formula Gazzella order for premium user:', user.email, 'Product:', productId);
       
       const shopifyService = getShopifyService();
       
