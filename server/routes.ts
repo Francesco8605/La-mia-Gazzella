@@ -497,6 +497,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Debug endpoint to list Shopify products
+  app.get("/api/debug/shopify-products", async (req, res) => {
+    try {
+      const shopifyService = getShopifyService();
+      const products = await shopifyService.listProducts(20);
+      
+      console.log('🛍️ Shopify products found:', products.length);
+      
+      res.json({
+        success: true,
+        count: products.length,
+        products: products.map(product => ({
+          id: product.id,
+          title: product.title,
+          handle: product.handle,
+          status: product.status,
+          variants: product.variants?.nodes?.map((variant: any) => ({
+            id: variant.id,
+            title: variant.title,
+            availableForSale: variant.availableForSale,
+            inventoryQuantity: variant.inventoryQuantity
+          })) || []
+        }))
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Error listing Shopify products:', error);
+      res.status(500).json({ 
+        error: 'Failed to list products', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Test endpoint for welcome email
   app.post("/api/debug/test-welcome-email", async (req, res) => {
     try {

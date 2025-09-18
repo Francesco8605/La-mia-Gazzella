@@ -56,6 +56,40 @@ class ShopifyService {
   }
 
   /**
+   * Lista i prodotti disponibili nel negozio
+   */
+  async listProducts(first = 10): Promise<any[]> {
+    const query = `
+      query ListProducts($first: Int!) {
+        products(first: $first) {
+          nodes {
+            id
+            title
+            handle
+            status
+            variants(first: 5) {
+              nodes {
+                id
+                title
+                availableForSale
+                inventoryQuantity
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const response = await this.client.request(query, { first });
+      return response.products?.nodes || [];
+    } catch (error) {
+      console.error('❌ Errore nel recupero prodotti Shopify:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Trova un cliente esistente per email
    */
   async findCustomerByEmail(email: string): Promise<ShopifyCustomer | null> {
