@@ -217,37 +217,6 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Processed Stripe Events for idempotency
-export const processedStripeEvents = pgTable("processed_stripe_events", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  stripeEventId: varchar("stripe_event_id").notNull().unique(),
-  eventType: text("event_type").notNull(),
-  processedAt: timestamp("processed_at").defaultNow(),
-});
-
-// Formula Gazzella Subscriptions - Separate subscription for the supplement
-export const formulaGazzellaSubscriptions = pgTable("formula_gazzella_subscriptions", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull(),
-  // Stripe subscription fields for Formula Gazzella
-  stripeCustomerId: varchar("stripe_customer_id").notNull(),
-  stripeSubscriptionId: varchar("stripe_subscription_id").notNull().unique(),
-  subscriptionStatus: varchar("subscription_status").notNull(), // "active", "canceled", "past_due", "incomplete"
-  currentPeriodStart: timestamp("current_period_start").notNull(),
-  currentPeriodEnd: timestamp("current_period_end").notNull(),
-  cancelAtPeriodEnd: text("cancel_at_period_end").default("no"), // "yes" | "no"
-  canceledAt: timestamp("canceled_at"),
-  // Shopify tracking for orders
-  lastShopifyOrderId: varchar("last_shopify_order_id"),
-  lastShopifyOrderAt: timestamp("last_shopify_order_at"),
-  totalOrdersCreated: integer("total_orders_created").default(0),
-  // Pricing information
-  monthlyPrice: numeric("monthly_price", { precision: 8, scale: 2 }).default("29.99"),
-  currency: varchar("currency").default("eur"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
 // Type definitions
 export type MealPlanDay = {
   day: string;
@@ -338,12 +307,6 @@ export const insertRecipeSchema = createInsertSchema(recipes).omit({
 
 export const insertSubscriptionPlanSchema = createInsertSchema(subscriptionPlans);
 
-export const insertFormulaGazzellaSubscriptionSchema = createInsertSchema(formulaGazzellaSubscriptions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Chat schemas
 export const insertConversationSchema = createInsertSchema(conversations).omit({
   id: true,
@@ -375,8 +338,6 @@ export type InsertRecipe = z.infer<typeof insertRecipeSchema>;
 export type Recipe = typeof recipes.$inferSelect;
 export type SubscriptionPlan = typeof subscriptionPlans.$inferSelect;
 export type InsertSubscriptionPlan = typeof subscriptionPlans.$inferInsert;
-export type FormulaGazzellaSubscription = typeof formulaGazzellaSubscriptions.$inferSelect;
-export type InsertFormulaGazzellaSubscription = z.infer<typeof insertFormulaGazzellaSubscriptionSchema>;
 export type Session = typeof sessions.$inferSelect;
 
 // Chat conversation types

@@ -1,5 +1,4 @@
 import { GraphQLClient } from 'graphql-request';
-import { PRICING } from '../../shared/constants';
 
 interface ShopifyCustomer {
   id: string;
@@ -22,14 +21,14 @@ class ShopifyService {
   private accessToken: string;
 
   constructor() {
-    this.storeUrl = process.env.SHOPIFY_STORE_URL || '';
-    this.accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
+    this.storeUrl = process.env.SHOPIFY_STORE_DOMAIN || '';
+    this.accessToken = process.env.SHOPIFY_API_SECRET || '';
 
     console.log('🔍 Shopify environment check:', {
-      SHOPIFY_STORE_URL: !!process.env.SHOPIFY_STORE_URL,
-      SHOPIFY_ACCESS_TOKEN: !!process.env.SHOPIFY_ACCESS_TOKEN,
-      storeUrlValue: process.env.SHOPIFY_STORE_URL || 'MISSING',
-      configured: !!process.env.SHOPIFY_STORE_URL && !!process.env.SHOPIFY_ACCESS_TOKEN
+      SHOPIFY_STORE_DOMAIN: !!process.env.SHOPIFY_STORE_DOMAIN,
+      SHOPIFY_API_SECRET: !!process.env.SHOPIFY_API_SECRET,
+      storeUrlValue: process.env.SHOPIFY_STORE_DOMAIN || 'MISSING',
+      tokenPrefix: process.env.SHOPIFY_API_SECRET?.substring(0, 8) || 'MISSING'
     });
 
     if (!this.storeUrl || !this.accessToken) {
@@ -37,7 +36,7 @@ class ShopifyService {
         hasStoreUrl: !!this.storeUrl,
         hasAccessToken: !!this.accessToken,
         storeUrl: this.storeUrl || 'MISSING',
-        configured: false
+        tokenPrefix: this.accessToken?.substring(0, 8) || 'MISSING'
       });
       // Non lanciare errore per permettere al servizio di continuare
       // throw new Error('Missing Shopify credentials');
@@ -54,40 +53,6 @@ class ShopifyService {
     });
 
     console.log('🛍️ Shopify service initialized for store:', this.storeUrl);
-  }
-
-  /**
-   * Lista i prodotti disponibili nel negozio
-   */
-  async listProducts(first = 10): Promise<any[]> {
-    const query = `
-      query ListProducts($first: Int!) {
-        products(first: $first) {
-          nodes {
-            id
-            title
-            handle
-            status
-            variants(first: 5) {
-              nodes {
-                id
-                title
-                availableForSale
-                inventoryQuantity
-              }
-            }
-          }
-        }
-      }
-    `;
-
-    try {
-      const response = await this.client.request(query, { first });
-      return (response as any).products?.nodes || [];
-    } catch (error) {
-      console.error('❌ Errore nel recupero prodotti Shopify:', error);
-      throw error;
-    }
   }
 
   /**
@@ -500,191 +465,6 @@ class ShopifyService {
   }
 
   /**
-   * Crea un ordine reale in Shopify per il prodotto Formula Gazzella
-   * @param customerEmail Email del cliente
-   * @param productId ID della variant Shopify
-   * @param quantity Quantità (default 1)
-   * @param discountAmount Sconto in EUR da applicare (opzionale, per utenti premium)
-   */
-  async createProductOrder(customerEmail: string, productId: string, quantity: number = 1, discountAmount?: number): Promise<any> {
-    try {
-      console.log('🛒 Creating Shopify order for product:', productId, 'Customer:', customerEmail, 'Discount:', discountAmount ? `€${discountAmount}` : 'None');
-      
-      // Prima trova o crea il cliente
-      let customer = await this.findCustomerByEmail(customerEmail);
-      
-      if (!customer) {
-        console.log('🔍 Customer not found, creating new customer...');
-        customer = await this.createCustomer({
-          email: customerEmail,
-          firstName: '',
-          lastName: '',
-          tags: ['formula-gazzella-customer']
-        });
-      }
-      
-      // Crea l'ordine con il prodotto specificato
-      const mutation = `
-        mutation CreateDraftOrder($input: DraftOrderInput!) {
-          draftOrderCreate(input: $input) {
-            draftOrder {
-              id
-              name
-              status
-              totalPriceSet {
-                shopMoney {
-                  amount
-                  currencyCode
-                }
-                presentmentMoney {
-                  amount
-                  currencyCode
-                }
-              }
-              customer {
-                email
-              }
-              lineItems(first: 10) {
-                nodes {
-                  title
-                  quantity
-                  product {
-                    id
-                    title
-                  }
-                }
-              }
-            }
-            userErrors {
-              field
-              message
-            }
-          }
-        }
-      `;
-      
-      // Costruisci l'input dell'ordine con sconto opzionale
-      const orderInput: any = {
-        customerId: customer.id,
-        lineItems: [{
-          variantId: `gid://shopify/ProductVariant/${productId}`,
-          quantity: quantity
-        }],
-        note: discountAmount 
-          ? `Ordine automatico Formula Gazzella - Abbonamento Premium (Sconto €${discountAmount}) - ${new Date().toLocaleDateString('it-IT')}`
-          : `Ordine automatico Formula Gazzella - Abbonamento Premium - ${new Date().toLocaleDateString('it-IT')}`,
-        tags: ['formula-gazzella', 'abbonamento-premium', 'ordine-automatico']
-      };
-
-      // Applica sconto se specificato (es. 29€ per utenti premium)
-      if (discountAmount && discountAmount > 0) {
-        orderInput.appliedDiscount = {
-          value: discountAmount,
-          title: `Sconto Abbonamento Premium - €${discountAmount}`,
-          valueType: "FIXED_AMOUNT"
-        };
-        console.log('💰 Applying premium discount:', `€${discountAmount}`);
-      }
-
-      // Assicura che la spedizione sia inclusa (9.99€)
-      orderInput.shippingLine = {
-        title: "Spedizione Standard",
-        price: "9.99"
-      };
-      
-      console.log('📦 Creating draft order with input:', JSON.stringify(orderInput, null, 2));
-      
-      const data: any = await this.client.request(mutation, { input: orderInput });
-      
-      if (data.draftOrderCreate.userErrors?.length > 0) {
-        console.error('❌ Shopify order creation errors:', data.draftOrderCreate.userErrors);
-        throw new Error(`Ordine non creato: ${data.draftOrderCreate.userErrors[0].message}`);
-      }
-      
-      const draftOrder = data.draftOrderCreate.draftOrder;
-      console.log('✅ Shopify draft order created:', {
-        id: draftOrder.id,
-        name: draftOrder.name,
-        status: draftOrder.status,
-        totalPrice: draftOrder.totalPriceSet?.shopMoney?.amount,
-        customer: draftOrder.customer?.email
-      });
-      
-      // CRITICAL SECURITY: Always validate Formula Gazzella pricing - NO DISCOUNTS ALLOWED
-      const isFormulaGazzellaProduct = productId === PRICING.FORMULA_GAZZELLA.PRODUCT_ID;
-      if (isFormulaGazzellaProduct) {
-        const expectedTotal = parseFloat(PRICING.FORMULA_GAZZELLA.TOTAL); // 29.99€ total (20€ product + 9.99€ shipping)
-        const actualTotal = parseFloat(draftOrder.totalPriceSet?.shopMoney?.amount || '0');
-        
-        console.log('🧬 FORMULA GAZZELLA PRICING VALIDATION (UNIFORM PRICING):');
-        console.log('   - Product ID:', productId);
-        console.log('   - Expected Total: €' + expectedTotal + ' (NO DISCOUNTS)');
-        console.log('   - Actual Total: €' + actualTotal);
-        console.log('   - Currency:', draftOrder.totalPriceSet?.shopMoney?.currencyCode);
-        
-        // STRICT VALIDATION: Formula Gazzella must be exactly 29.99€ with NO discounts
-        if (discountAmount && discountAmount > 0) {
-          console.error('🚨 SECURITY VIOLATION: Formula Gazzella orders cannot have discounts!');
-          console.error('   - Attempted discount: €' + discountAmount);
-          console.error('   - Customer:', customerEmail);
-          console.error('   - Order ID:', draftOrder.id);
-          throw new Error('Formula Gazzella subscriptions do not support discounts - uniform pricing enforced');
-        }
-        
-        if (Math.abs(actualTotal - expectedTotal) > 0.01) {
-          console.error('🚨 PRICING VALIDATION FAILED: Formula Gazzella total incorrect!');
-          console.error('   - Expected: €' + PRICING.FORMULA_GAZZELLA.TOTAL + ' (uniform pricing)');
-          console.error('   - Actual: €' + actualTotal);
-          console.error('   - Difference: €' + Math.abs(actualTotal - expectedTotal).toFixed(2));
-          console.error('   - Customer:', customerEmail);
-          console.error('   - Product ID:', productId);
-          throw new Error(`Invalid Formula Gazzella pricing: expected €${PRICING.FORMULA_GAZZELLA.TOTAL}, got €${actualTotal}`);
-        }
-        
-        console.log('✅ Formula Gazzella pricing validation passed: €29.99 uniform pricing confirmed');
-      } else if (discountAmount && discountAmount > 0) {
-        // Legacy validation for other products with discounts
-        console.log('💰 LEGACY DISCOUNT VALIDATION:');
-        console.log('   - Product ID:', productId, '(not Formula Gazzella)');
-        console.log('   - Discount Applied: €' + discountAmount);
-      }
-      
-      // Generate Shopify cart URL with variantId (independent of draft order success)
-      const checkoutUrl = `https://${this.storeUrl}/cart/${productId}:1`;
-      
-      console.log('🛒 Checkout URL generated with variantId:', checkoutUrl);
-      
-      // Always return checkout URL even if we got this far
-      return {
-        ...draftOrder,
-        checkoutUrl: checkoutUrl,
-        success: true,
-        message: 'Draft order created successfully'
-      };
-      
-    } catch (error) {
-      console.error('❌ Error creating Shopify product order:', error);
-      
-      // CRITICAL FIX: Even if draft order fails, return checkout URL for direct cart purchase
-      const checkoutUrl = `https://${this.storeUrl}/cart/${productId}:1`;
-      
-      console.log('🔄 Fallback: Returning direct cart checkout URL despite draft order failure');
-      console.log('🛒 Fallback Checkout URL:', checkoutUrl);
-      
-      // Return functional response instead of throwing error
-      return {
-        id: 'direct-cart-purchase',
-        checkoutUrl: checkoutUrl,
-        totalPrice: '29.99',
-        note: 'Formula Gazzella - Direct Cart Purchase (Draft Order Failed)',
-        success: true,
-        fallback: true,
-        originalError: error.message
-      };
-    }
-  }
-  
-  /**
    * Traccia pagamenti tramite tag Shopify invece di ordini complessi
    */
   async createOrder(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
@@ -774,10 +554,6 @@ export const getShopifyService = (): ShopifyService => {
         tagCustomerCardInserted: async () => {
           console.log('🔧 Shopify service not configured - skipping card insertion tagging');
           return false;
-        },
-        createProductOrder: async () => {
-          console.log('🔧 Shopify service not configured - skipping product order creation');
-          throw new Error('Shopify service not configured');
         },
         createOrder: async () => {
           console.log('🔧 Shopify service not configured - skipping payment tracking');

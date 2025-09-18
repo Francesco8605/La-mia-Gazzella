@@ -1,16 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { Leaf, Menu, X, LogOut, Crown, AlertTriangle } from "lucide-react";
 import { useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { Button } from "@/components/ui/button";
 import { InstallPWAButton } from "./install-pwa-button";
 
 export default function Navigation() {
   const [location] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated } = useAuth();
+  const { hasActiveSubscription, isInTrial, subscriptionStatus } = useSubscription();
 
-  // Navigation items accessibili a tutti gli utenti autenticati
   const navItems = [
     { href: "/", label: "Dashboard" },
     { href: "/genera-piano", label: "Genera Piano" },
@@ -19,7 +18,7 @@ export default function Navigation() {
     { href: "/recipes", label: "Ricette" },
     { href: "/assistente-nutrizionale", label: "Consulente" },
     { href: "/aggiorna-profilo", label: "Il Mio Profilo" },
-    { href: "/formula-gazzella", label: "Formula Gazzella", isSpecial: true },
+    { href: "/piani-abbonamento", label: "Abbonamenti" },
     { href: "/cambia-password", label: "Cambia Password" },
   ];
 
@@ -39,20 +38,37 @@ export default function Navigation() {
               href={item.href}
               className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium ${
                 location === item.href ? "text-primary" : ""
-              } ${(item as any).isSpecial ? "text-amber-700 hover:text-amber-600 font-semibold" : ""}`}
-              data-testid={`nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+              }`}
+              data-testid={`nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
             >
-              {(item as any).isSpecial && <Crown className="h-4 w-4 inline mr-1" />}
               {item.label}
             </Link>
           ))}
           
-          {/* User Status Indicator */}
+          {/* Subscription Status Indicator */}
           <div className="flex items-center">
-            <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">
-              <Crown className="h-3 w-3" />
-              <span>Utente Attivo</span>
-            </div>
+            {hasActiveSubscription ? (
+              <div className="flex items-center space-x-1 bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-medium">
+                {isInTrial ? (
+                  <>
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Trial</span>
+                  </>
+                ) : (
+                  <>
+                    <Crown className="h-3 w-3" />
+                    <span>Premium</span>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link href="/piani-abbonamento">
+                <div className="flex items-center space-x-1 bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium hover:bg-orange-200 cursor-pointer transition-colors">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Riattiva</span>
+                </div>
+              </Link>
+            )}
           </div>
           
           {/* Install PWA Button */}
@@ -102,12 +118,30 @@ export default function Navigation() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-lg shadow-lg border border-white/20 rounded-2xl px-6 py-4 animate-scale-in" data-testid="mobile-menu">
           <div className="flex flex-col space-y-3">
-            {/* User Status in Mobile */}
+            {/* Subscription Status in Mobile */}
             <div className="py-2 border-b border-slate-200">
-              <div className="flex items-center space-x-2 text-emerald-700">
-                <Crown className="h-4 w-4" />
-                <span className="text-sm font-medium">Account Attivo</span>
-              </div>
+              {hasActiveSubscription ? (
+                <div className="flex items-center space-x-2 text-emerald-700">
+                  {isInTrial ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">Prova Gratuita Attiva</span>
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4" />
+                      <span className="text-sm font-medium">Abbonamento Premium</span>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <Link href="/piani-abbonamento" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="flex items-center space-x-2 text-orange-700 hover:text-orange-800 transition-colors">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="text-sm font-medium">Riattiva Abbonamento</span>
+                  </div>
+                </Link>
+              )}
             </div>
             
             {navItems.map((item) => (
@@ -116,11 +150,10 @@ export default function Navigation() {
                 href={item.href}
                 className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 ${
                   location === item.href ? "text-primary" : ""
-                } ${(item as any).isSpecial ? "text-amber-700 hover:text-amber-600 font-semibold" : ""}`}
+                }`}
                 onClick={() => setIsMobileMenuOpen(false)}
-                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
               >
-                {(item as any).isSpecial && <Crown className="h-4 w-4 inline mr-1" />}
                 {item.label}
               </Link>
             ))}
