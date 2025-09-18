@@ -5,8 +5,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
-import { useSubscription } from "@/hooks/useSubscription";
-import { SubscriptionGuard } from "@/components/subscription-guard";
 import Navigation from "@/components/navigation";
 import { InstallPWABanner } from "@/components/install-pwa-banner";
 import { ProfileGuard } from "@/components/profile-guard";
@@ -25,7 +23,6 @@ import ForgotPassword from "@/pages/forgot-password";
 import ChangePassword from "@/pages/change-password";
 import NotFound from "@/pages/not-found";
 import AIChat from "@/pages/ai-chat";
-import CancelSubscription from "@/pages/cancel-subscription";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import AdminDashboard from "@/pages/admin-dashboard";
@@ -75,161 +72,58 @@ function Router() {
           return null;
         }} />
 
-        {/* Protected Routes - Require Active Subscription */}
+        {/* Protected Routes - Require Authentication */}
         <Route path="/recipe-generator">
           {() => (
-            <SubscriptionGuard>
-              <ProfileGuard>
-                <RecipeGenerator />
-              </ProfileGuard>
-            </SubscriptionGuard>
+            <ProfileGuard>
+              <RecipeGenerator />
+            </ProfileGuard>
           )}
         </Route>
-        <Route path="/recipes">
-          {() => (
-            <SubscriptionGuard>
-              <Recipes />
-            </SubscriptionGuard>
-          )}
-        </Route>
-        <Route path="/ricette">
-          {() => (
-            <SubscriptionGuard>
-              <Recipes />
-            </SubscriptionGuard>
-          )}
-        </Route>
+        <Route path="/recipes" component={Recipes} />
+        <Route path="/ricette" component={Recipes} />
         <Route path="/genera-piano">
           {() => (
-            <SubscriptionGuard>
-              <ProfileGuard>
-                <MealPlanGenerator />
-              </ProfileGuard>
-            </SubscriptionGuard>
-          )}
-        </Route>
-        <Route path="/meal-plan-generator">
-          {() => (
-            <SubscriptionGuard>
+            <ProfileGuard>
               <MealPlanGenerator />
-            </SubscriptionGuard>
+            </ProfileGuard>
           )}
         </Route>
-        <Route path="/piani-personalizzati">
-          {() => (
-            <SubscriptionGuard>
-              <MyMealPlans />
-            </SubscriptionGuard>
-          )}
-        </Route>
-        <Route path="/piano-salvato/:id">
-          {() => (
-            <SubscriptionGuard>
-              <SavedMealPlan />
-            </SubscriptionGuard>
-          )}
-        </Route>
+        <Route path="/meal-plan-generator" component={MealPlanGenerator} />
+        <Route path="/piani-personalizzati" component={MyMealPlans} />
+        <Route path="/piano-salvato/:id" component={SavedMealPlan} />
         <Route path="/aggiorna-profilo">
           {() => {
             const AggiornaProfiloPage = React.lazy(() => import("./pages/aggiorna-profilo"));
             return (
-              <SubscriptionGuard>
-                <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
-                </div>}>
-                  <AggiornaProfiloPage />
-                </React.Suspense>
-              </SubscriptionGuard>
+              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+              </div>}>
+                <AggiornaProfiloPage />
+              </React.Suspense>
             );
           }}
         </Route>
-        <Route path="/meal-plan/:id">
-          {() => (
-            <SubscriptionGuard>
-              <MealPlan />
-            </SubscriptionGuard>
-          )}
-        </Route>
-        <Route path="/recipe/:id">
-          {() => (
-            <SubscriptionGuard>
-              <RecipeDetail />
-            </SubscriptionGuard>
-          )}
-        </Route>
-        <Route path="/ai-chat">
-          {() => (
-            <SubscriptionGuard>
-              <AIChat />
-            </SubscriptionGuard>
-          )}
-        </Route>
+        <Route path="/meal-plan/:id" component={MealPlan} />
+        <Route path="/recipe/:id" component={RecipeDetail} />
+        <Route path="/ai-chat" component={AIChat} />
         <Route path="/assistente-nutrizionale">
           {() => (
-            <SubscriptionGuard>
-              <ProfileGuard>
-                <AIChat />
-              </ProfileGuard>
-            </SubscriptionGuard>
+            <ProfileGuard>
+              <AIChat />
+            </ProfileGuard>
           )}
         </Route>
         
-        {/* Formula Gazzella - Exclusive for Premium Subscribers */}
-        <Route path="/formula-gazzella">
-          {() => (
-            <SubscriptionGuard>
-              <FormulaGazzella />
-            </SubscriptionGuard>
-          )}
-        </Route>
+        {/* Formula Gazzella - Single Purchase */}
+        <Route path="/formula-gazzella" component={FormulaGazzella} />
         
-        {/* Subscription Pages */}
-        <Route path="/piani-abbonamento">
-          {() => {
-            const SubscriptionPlansPage = React.lazy(() => import("./pages/subscription-plans"));
-            return (
-              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-              </div>}>
-                <SubscriptionPlansPage />
-              </React.Suspense>
-            );
-          }}
-        </Route>
         
-        <Route path="/abbonamenti" component={UpdateProfile} />
-        <Route path="/gestisci-abbonamento" component={UpdateProfile} />
         
-        <Route path="/cancella-abbonamento" component={CancelSubscription} />
-        <Route path="/cancel-subscription" component={CancelSubscription} />
         
-        <Route path="/subscription-success">
-          {() => {
-            const SubscriptionSuccessPage = React.lazy(() => import("./pages/subscription-success"));
-            return (
-              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-              </div>}>
-                <SubscriptionSuccessPage />
-              </React.Suspense>
-            );
-          }}
-        </Route>
         
         <Route path="/admin" component={AdminDashboard} />
         
-        <Route path="/subscription-canceled">
-          {() => {
-            const SubscriptionCanceledPage = React.lazy(() => import("./pages/subscription-canceled"));
-            return (
-              <React.Suspense fallback={<div className="flex justify-center items-center min-h-screen">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-              </div>}>
-                <SubscriptionCanceledPage />
-              </React.Suspense>
-            );
-          }}
-        </Route>
         
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
