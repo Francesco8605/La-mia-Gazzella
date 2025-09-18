@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Star, Check, Zap, Heart, Crown } from "lucide-react";
+import { Sparkles, Star, Check, Zap, Heart, Crown, ShoppingCart } from "lucide-react";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function FormulaGazzella() {
   const { subscription, isLoading: subscriptionLoading, hasActiveSubscription, isInTrial } = useSubscription();
@@ -11,6 +13,47 @@ export default function FormulaGazzella() {
 
   // Controlla se l'utente ha accesso (abbonato non trial)
   const hasAccess = hasActiveSubscription && !isInTrial;
+
+  // Mutation per creare un ordine Formula Gazzella
+  const createOrderMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest("/api/shopify/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: "9890948055381" }) // ID Formula Gazzella
+      });
+    },
+    onSuccess: (data) => {
+      console.log("🎉 Ordine creato con successo:", data);
+      toast({
+        title: "Ordine Confermato! 🎉",
+        description: `Formula Gazzella ordinata con successo al prezzo premium di €29.99. Riceverai una conferma via email.`,
+        duration: 10000,
+      });
+    },
+    onError: (error: any) => {
+      console.error("❌ Errore creazione ordine:", error);
+      toast({
+        title: "Errore Ordine",
+        description: error.message || "Si è verificato un errore durante la creazione dell'ordine. Riprova tra qualche minuto.",
+        variant: "destructive",
+        duration: 8000,
+      });
+    }
+  });
+
+  const handleOrderNow = () => {
+    if (!hasAccess) {
+      toast({
+        title: "Accesso Richiesto",
+        description: "Questa offerta è riservata esclusivamente agli abbonati Premium non in periodo di prova.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    createOrderMutation.mutate();
+  };
 
   const handleManageSubscription = () => {
     if (!hasAccess) {
@@ -24,7 +67,7 @@ export default function FormulaGazzella() {
     
     toast({
       title: "Formula Gazzella Automatica! 🎉",
-      description: "La tua Formula Gazzella viene automaticamente ordinata e spedita ogni mese con il rinnovo del tuo abbonamento Premium. Non è necessario fare nulla!",
+      description: "La tua Formula Gazzella viene automaticamente ordinata e spedita ogni mese con il rinnovo del tuo abbonamento Premium. Puoi anche ordinarla manualmente quando vuoi!",
       duration: 8000,
     });
   };
@@ -162,12 +205,19 @@ export default function FormulaGazzella() {
           
           <CardContent className="text-center space-y-6">
             {/* Pricing */}
-            <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-6 rounded-lg">
-              <div className="text-3xl font-bold text-amber-800 mb-2">Incluso nel tuo abbonamento</div>
-              <p className="text-amber-700">
-                <Zap className="h-5 w-5 inline mr-2" />
-                Consegna automatica ogni mese
-              </p>
+            <div className="bg-gradient-to-r from-amber-100 to-orange-100 p-6 rounded-lg mb-6">
+              <div className="text-2xl font-bold text-amber-800 mb-4">Prezzo Esclusivo Premium</div>
+              <div className="flex items-center justify-center space-x-4 mb-4">
+                <div className="text-center">
+                  <div className="text-sm text-slate-600 line-through">€58.99</div>
+                  <div className="text-3xl font-bold text-amber-800">€29.99</div>
+                  <div className="text-sm text-amber-700">Sconto €29</div>
+                </div>
+              </div>
+              <div className="flex items-center justify-center space-x-2 text-amber-700">
+                <Zap className="h-5 w-5" />
+                <span>Include spedizione gratuita + consegna automatica mensile</span>
+              </div>
             </div>
 
             {/* Garanzie */}
@@ -189,30 +239,55 @@ export default function FormulaGazzella() {
               </div>
             </div>
 
-            {/* Bottone informativo */}
-            <div className="pt-6">
-              <Button
-                onClick={handleManageSubscription}
-                size="lg"
-                className={`w-full md:w-auto px-12 py-6 text-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
-                  hasAccess 
-                    ? "bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700" 
-                    : "bg-gray-400 cursor-not-allowed"
-                } disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none`}
-                data-testid="button-formula-info"
-              >
-                {!hasAccess ? (
-                  <>
-                    <Crown className="h-5 w-5 mr-2" />
-                    Riservato agli Abbonati Premium
-                  </>
-                ) : (
-                  <>
-                    <Check className="h-5 w-5 mr-2" />
-                    Formula Automatica Attiva
-                  </>
-                )}
-              </Button>
+            {/* Bottoni per ordine */}
+            <div className="pt-6 space-y-4">
+              {hasAccess ? (
+                <>
+                  {/* Bottone Ordina Ora */}
+                  <Button
+                    onClick={handleOrderNow}
+                    disabled={createOrderMutation.isPending}
+                    size="lg"
+                    className="w-full md:w-auto px-8 py-6 text-xl font-semibold transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    data-testid="button-order-now"
+                  >
+                    {createOrderMutation.isPending ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                        Creando Ordine...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart className="h-5 w-5 mr-2" />
+                        Ordina Ora - €29.99
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* Bottone informativo automazione */}
+                  <Button
+                    onClick={handleManageSubscription}
+                    variant="outline"
+                    size="lg"
+                    className="w-full md:w-auto px-8 py-4 text-base font-medium transition-all duration-300 hover:bg-emerald-50 border-emerald-300 text-emerald-700 hover:border-emerald-400"
+                    data-testid="button-formula-auto-info"
+                  >
+                    <Check className="h-4 w-4 mr-2" />
+                    Info Consegna Automatica
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={handleOrderNow}
+                  size="lg" 
+                  disabled={true}
+                  className="w-full md:w-auto px-12 py-6 text-xl font-semibold bg-gray-400 cursor-not-allowed"
+                  data-testid="button-access-required"
+                >
+                  <Crown className="h-5 w-5 mr-2" />
+                  Riservato agli Abbonati Premium
+                </Button>
+              )}
             </div>
 
             <div className="text-center text-sm text-slate-500 mt-6">
