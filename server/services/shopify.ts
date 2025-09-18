@@ -1,4 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
+import { PRICING } from '../../shared/constants';
 
 interface ShopifyCustomer {
   id: string;
@@ -609,24 +610,43 @@ class ShopifyService {
         customer: draftOrder.customer?.email
       });
       
-      // VALIDAZIONE CRITICA: Verifica prezzo finale per utenti premium
-      if (discountAmount && discountAmount > 0) {
-        const expectedTotal = 29.99; // 20€ prodotto + 9.99€ spedizione
+      // CRITICAL SECURITY: Always validate Formula Gazzella pricing - NO DISCOUNTS ALLOWED
+      const isFormulaGazzellaProduct = productId === PRICING.FORMULA_GAZZELLA.PRODUCT_ID;
+      if (isFormulaGazzellaProduct) {
+        const expectedTotal = parseFloat(PRICING.FORMULA_GAZZELLA.TOTAL); // 29.99€ total (20€ product + 9.99€ shipping)
         const actualTotal = parseFloat(draftOrder.totalPriceSet?.shopMoney?.amount || '0');
         
-        console.log('💰 PREMIUM PRICING VALIDATION:');
-        console.log('   - Expected Total: €' + expectedTotal);
+        console.log('🧬 FORMULA GAZZELLA PRICING VALIDATION (UNIFORM PRICING):');
+        console.log('   - Product ID:', productId);
+        console.log('   - Expected Total: €' + expectedTotal + ' (NO DISCOUNTS)');
         console.log('   - Actual Total: €' + actualTotal);
-        console.log('   - Discount Applied: €' + discountAmount);
+        console.log('   - Currency:', draftOrder.totalPriceSet?.shopMoney?.currencyCode);
+        
+        // STRICT VALIDATION: Formula Gazzella must be exactly 29.99€ with NO discounts
+        if (discountAmount && discountAmount > 0) {
+          console.error('🚨 SECURITY VIOLATION: Formula Gazzella orders cannot have discounts!');
+          console.error('   - Attempted discount: €' + discountAmount);
+          console.error('   - Customer:', customerEmail);
+          console.error('   - Order ID:', draftOrder.id);
+          throw new Error('Formula Gazzella subscriptions do not support discounts - uniform pricing enforced');
+        }
         
         if (Math.abs(actualTotal - expectedTotal) > 0.01) {
-          console.error('🚨 PRICING ERROR: Final total does not match expected premium price!');
-          console.error('   - Expected: €29.99 (20€ + 9.99€ shipping)');
+          console.error('🚨 PRICING VALIDATION FAILED: Formula Gazzella total incorrect!');
+          console.error('   - Expected: €' + PRICING.FORMULA_GAZZELLA.TOTAL + ' (uniform pricing)');
           console.error('   - Actual: €' + actualTotal);
-          console.error('   - This may indicate discount or shipping line was not applied correctly');
-        } else {
-          console.log('✅ Premium pricing verified: €29.99 total confirmed');
+          console.error('   - Difference: €' + Math.abs(actualTotal - expectedTotal).toFixed(2));
+          console.error('   - Customer:', customerEmail);
+          console.error('   - Product ID:', productId);
+          throw new Error(`Invalid Formula Gazzella pricing: expected €${PRICING.FORMULA_GAZZELLA.TOTAL}, got €${actualTotal}`);
         }
+        
+        console.log('✅ Formula Gazzella pricing validation passed: €29.99 uniform pricing confirmed');
+      } else if (discountAmount && discountAmount > 0) {
+        // Legacy validation for other products with discounts
+        console.log('💰 LEGACY DISCOUNT VALIDATION:');
+        console.log('   - Product ID:', productId, '(not Formula Gazzella)');
+        console.log('   - Discount Applied: €' + discountAmount);
       }
       
       // Completa l'ordine (lo converte da draft a ordine attivo)

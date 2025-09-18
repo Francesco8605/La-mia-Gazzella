@@ -1,7 +1,8 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs, adminUsers, processedStripeEvents } from "@shared/schema";
+import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insertRecipeSchema, insertWeightEntrySchema, users, userProfiles, mealPlans, recipes, activityLogs, adminUsers, processedStripeEvents, formulaGazzellaSubscriptions } from "@shared/schema";
+import { PRICING } from "@shared/constants";
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
@@ -98,10 +99,46 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
   }
 }
 
+// Admin authentication middleware - SECURE TOKEN VALIDATION
+const isAdminAuthenticated = async (req: any, res: any, next: any) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: "Admin token richiesto" });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    // CRITICAL SECURITY: Exact match with server-side admin token
+    const expectedAdminToken = process.env.ADMIN_API_TOKEN;
+    if (!expectedAdminToken) {
+      console.error('🚨 ADMIN_API_TOKEN not configured - admin endpoints disabled');
+      return res.status(503).json({ message: "Admin endpoints non configurati" });
+    }
+
+    if (token !== expectedAdminToken) {
+      console.warn('🚨 Invalid admin token attempt:', {
+        receivedTokenPrefix: token.substring(0, 8),
+        ip: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+      return res.status(401).json({ message: "Token admin non valido" });
+    }
+
+    // Token is valid - proceed with admin access
+    console.log('✅ Admin authenticated successfully');
+    req.admin = { role: 'admin', authenticated: true };
+    next();
+  } catch (error) {
+    console.error("🚨 Error in admin authentication:", error);
+    res.status(401).json({ message: "Errore autenticazione admin" });
+  }
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Debug endpoint for production troubleshooting
-  app.get("/api/debug/status", async (req, res) => {
+  app.get("/api/debug/status", isAdminAuthenticated, async (req, res) => {
     try {
       const status: any = {
         environment: process.env.NODE_ENV || 'development',
@@ -154,7 +191,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Shopify Test Endpoint (solo per verificare configurazione)
-  app.get("/api/debug/shopify", async (req, res) => {
+  app.get("/api/debug/shopify", isAdminAuthenticated, async (req, res) => {
     try {
       console.log('🛍️ Testing Shopify integration...');
       
@@ -195,7 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Debug endpoint for WhatsApp integration
-  app.get("/api/debug/whatsapp", async (req, res) => {
+  app.get("/api/debug/whatsapp", isAdminAuthenticated, async (req, res) => {
     try {
       console.log('📱 Testing WhatsApp integration...');
       
@@ -227,7 +264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for Shopify paid tagging
-  app.post("/api/debug/test-shopify-paid-tag", async (req, res) => {
+  app.post("/api/debug/test-shopify-paid-tag", isAdminAuthenticated, async (req, res) => {
     try {
       const { email } = req.body;
       
@@ -255,7 +292,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for WhatsApp payment notifications
-  app.post("/api/debug/test-whatsapp-payment", async (req, res) => {
+  app.post("/api/debug/test-whatsapp-payment", isAdminAuthenticated, async (req, res) => {
     try {
       const { email, amount } = req.body;
       
@@ -265,12 +302,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('🧪 Testing WhatsApp payment notification for:', email);
       
-      await whatsappService.sendPaymentNotification(email, amount || '29.00');
+      await whatsappService.sendPaymentNotification(email, amount || PRICING.REGULAR_SUBSCRIPTION);
       
       res.json({
         success: true,
         email,
-        amount: amount || '29.00',
+        amount: amount || PRICING.REGULAR_SUBSCRIPTION,
         message: 'WhatsApp payment notification sent successfully'
       });
     } catch (error: any) {
@@ -283,7 +320,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for cancellation notifications
-  app.post("/api/debug/test-cancellation", async (req, res) => {
+  app.post("/api/debug/test-cancellation", isAdminAuthenticated, async (req, res) => {
     try {
       const { email, reason } = req.body;
       
@@ -317,7 +354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for Shopify order creation
-  app.post("/api/debug/test-shopify-order", async (req, res) => {
+  app.post("/api/debug/test-shopify-order", isAdminAuthenticated, async (req, res) => {
     try {
       const { email, amount, description } = req.body;
       
@@ -330,14 +367,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const shopifyService = getShopifyService();
       const orderSuccess = await shopifyService.createOrder(
         email, 
-        amount || '29.00', 
+        amount || PRICING.REGULAR_SUBSCRIPTION, 
         description || 'Test Order - Abbonamento La Mia Gazzella'
       );
       
       res.json({
         success: orderSuccess,
         email,
-        amount: amount || '29.00',
+        amount: amount || PRICING.REGULAR_SUBSCRIPTION,
         description: description || 'Test Order - Abbonamento La Mia Gazzella',
         message: orderSuccess ? 'Shopify order created successfully' : 'Failed to create Shopify order'
       });
@@ -351,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for card insertion notification
-  app.post("/api/debug/test-card-inserted", async (req, res) => {
+  app.post("/api/debug/test-card-inserted", isAdminAuthenticated, async (req, res) => {
     try {
       const { email } = req.body;
       
@@ -446,17 +483,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('✅ Access granted - Premium user validation passed');
       
-      console.log('🛒 Creating Formula Gazzella order for premium user with discount:', user.email, 'Product:', productId);
+      console.log('🛒 Creating Formula Gazzella order for user:', user.email, 'Product:', productId);
       
       const shopifyService = getShopifyService();
-      const PREMIUM_DISCOUNT = 29; // Sconto di 29€ per abbonati premium non trial
       
       try {
+        // Everyone pays the same price: 29.99€ (20€ product + 9.99€ shipping)
         const order = await shopifyService.createProductOrder(
           user.email, 
-          productId,
-          1, // quantity
-          PREMIUM_DISCOUNT // Sconto premium
+          PRICING.FORMULA_GAZZELLA.PRODUCT_ID,
+          1 // quantity - no discount, fixed price for everyone
         );
         
         console.log('✅ Shopify order created successfully:', order);
@@ -500,7 +536,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Debug endpoint to list Shopify products
-  app.get("/api/debug/shopify-products", async (req, res) => {
+  app.get("/api/debug/shopify-products", isAdminAuthenticated, async (req, res) => {
     try {
       const shopifyService = getShopifyService();
       const products = await shopifyService.listProducts(20);
@@ -534,7 +570,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Test endpoint for welcome email
-  app.post("/api/debug/test-welcome-email", async (req, res) => {
+  app.post("/api/debug/test-welcome-email", isAdminAuthenticated, async (req, res) => {
     try {
       const { email, username } = req.body;
       
@@ -2316,6 +2352,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log('⏰ Trial start:', stripeSubscription.trial_start ? new Date(stripeSubscription.trial_start * 1000).toISOString() : 'No trial');
             console.log('⏰ Trial end:', stripeSubscription.trial_end ? new Date(stripeSubscription.trial_end * 1000).toISOString() : 'No trial');
             
+            // CRITICAL SECURITY: Validate payment amount for Formula Gazzella subscriptions
+            const isFormulaGazzellaSession = session.metadata?.subscriptionType === 'formula_gazzella';
+            if (isFormulaGazzellaSession) {
+              console.log('💰 FORMULA GAZZELLA PAYMENT VALIDATION:');
+              console.log('   - Session amount_total:', session.amount_total, 'cents');
+              console.log('   - Session currency:', session.currency);
+              console.log('   - Expected amount:', PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT, 'cents (29.99€)');
+              
+              // Strict validation: amount must be exactly 2999 cents (29.99€) and currency EUR
+              if (session.amount_total !== PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT || session.currency !== 'eur') {
+                console.error('🚨 PAYMENT VALIDATION FAILED for Formula Gazzella:');
+                console.error('   - Expected: 2999 cents (29.99€) in EUR');
+                console.error('   - Received:', session.amount_total, 'cents in', session.currency);
+                console.error('   - Customer:', (stripeCustomer as any).email);
+                console.error('   - Subscription ID:', session.subscription);
+                return res.status(400).json({ 
+                  error: 'Invalid payment amount for Formula Gazzella subscription',
+                  expected_amount_cents: PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT,
+                  expected_currency: 'eur',
+                  received_amount_cents: session.amount_total,
+                  received_currency: session.currency
+                });
+              }
+              
+              console.log('✅ Formula Gazzella payment validation passed: €29.99 confirmed');
+            } else {
+              // Regular subscription validation (29.00€ = 2900 cents)
+              console.log('💰 REGULAR SUBSCRIPTION PAYMENT VALIDATION:');
+              console.log('   - Session amount_total:', session.amount_total, 'cents');
+              console.log('   - Expected amount: 2900 cents (29.00€)');
+              
+              if (session.amount_total !== 2900 || session.currency !== 'eur') {
+                console.error('🚨 PAYMENT VALIDATION FAILED for regular subscription:');
+                console.error('   - Expected: 2900 cents (29.00€) in EUR');
+                console.error('   - Received:', session.amount_total, 'cents in', session.currency);
+                return res.status(400).json({ 
+                  error: 'Invalid payment amount for regular subscription',
+                  expected_amount_cents: 2900,
+                  expected_currency: 'eur'
+                });
+              }
+              
+              console.log('✅ Regular subscription payment validation passed: €29.00 confirmed');
+            }
+            
             let targetUserId = userId;
             
             // If no userId in metadata, try to find user by email or create one
@@ -2427,7 +2508,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Create order in Shopify
                   try {
                     console.log('📦 Creating Shopify order for payment...');
-                    const orderSuccess = await shopifyService.createOrder(customerEmail, '29.00', 'Abbonamento La Mia Gazzella - Checkout');
+                    const orderSuccess = await shopifyService.createOrder(customerEmail, PRICING.REGULAR_SUBSCRIPTION, 'Abbonamento La Mia Gazzella - Checkout');
                     if (orderSuccess) {
                       console.log('✅ Shopify order created successfully');
                     } else {
@@ -2440,7 +2521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Create Formula Gazzella product order for premium subscribers
                   try {
                     console.log('🧬 Creating Formula Gazzella order for new premium subscriber...');
-                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
+                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, PRICING.FORMULA_GAZZELLA.PRODUCT_ID, 1);
                     if (formulaOrder) {
                       console.log('✅ Formula Gazzella order created successfully:', formulaOrder.name);
                     } else {
@@ -2453,7 +2534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Send WhatsApp payment notification
                   try {
                     console.log('📱 Sending WhatsApp payment notification...');
-                    await whatsappService.sendPaymentNotification(customerEmail, '29.00');
+                    await whatsappService.sendPaymentNotification(customerEmail, PRICING.REGULAR_SUBSCRIPTION);
                     console.log('✅ WhatsApp payment notification sent successfully');
                   } catch (whatsappError: any) {
                     console.error('⚠️ WhatsApp payment notification error (checkout continues):', whatsappError.message);
@@ -2480,8 +2561,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('📊 Subscription ID:', subscription.id);
         console.log('📊 New subscription status:', subscription.status);
         console.log('⏰ Current period end:', (subscription as any).current_period_end ? new Date((subscription as any).current_period_end * 1000).toISOString() : 'No period end');
+        console.log('🧬 Subscription metadata:', subscription.metadata);
         
         try {
+          // Check if this is a Formula Gazzella subscription
+          const isFormulaGazzellaSubscription = subscription.metadata?.subscriptionType === 'formula_gazzella';
+          console.log('🧬 Is Formula Gazzella subscription:', isFormulaGazzellaSubscription);
+          
+          if (isFormulaGazzellaSubscription) {
+            // Handle Formula Gazzella subscription update
+            console.log('🧬 Processing Formula Gazzella subscription update...');
+            
+            // Find Formula Gazzella subscription by Stripe subscription ID
+            const formulaSubscriptions = await db.select()
+              .from(formulaGazzellaSubscriptions)
+              .where(eq(formulaGazzellaSubscriptions.stripeSubscriptionId, subscription.id))
+              .limit(1);
+            
+            if (formulaSubscriptions.length > 0) {
+              const formulaSubscription = formulaSubscriptions[0];
+              
+              // Update Formula Gazzella subscription status
+              const updateData: any = {
+                subscriptionStatus: subscription.status,
+                currentPeriodStart: new Date(subscription.current_period_start * 1000),
+                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
+                updatedAt: new Date()
+              };
+              
+              // Handle cancellations
+              if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
+                updateData.cancelAtPeriodEnd = 'yes';
+                updateData.canceledAt = new Date();
+                console.log('❌ Formula Gazzella subscription canceled/unpaid');
+              } else if (subscription.status === 'active') {
+                updateData.cancelAtPeriodEnd = 'no';
+                updateData.canceledAt = null;
+                console.log('✅ Formula Gazzella subscription is active');
+              }
+              
+              await db.update(formulaGazzellaSubscriptions)
+                .set(updateData)
+                .where(eq(formulaGazzellaSubscriptions.id, formulaSubscription.id));
+              
+              console.log('✅ Formula Gazzella subscription updated:', subscription.id);
+            } else {
+              console.error('❌ Formula Gazzella subscription not found in database:', subscription.id);
+            }
+            
+            break; // Exit the case, don't process as regular subscription
+          }
+          
+          // Handle regular app subscription (not Formula Gazzella)
+          console.log('👤 Processing regular app subscription update...');
+          
           // Find user by stripe subscription ID
           let targetUser = null;
           
@@ -2564,7 +2697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Create order in Shopify for subscription activation
                   try {
                     console.log('📦 Creating Shopify order for subscription activation...');
-                    const orderSuccess = await shopifyService.createOrder(customerEmail, '29.00', 'Abbonamento La Mia Gazzella - Attivazione');
+                    const orderSuccess = await shopifyService.createOrder(customerEmail, PRICING.REGULAR_SUBSCRIPTION, 'Abbonamento La Mia Gazzella - Attivazione');
                     if (orderSuccess) {
                       console.log('✅ Shopify order created successfully');
                     } else {
@@ -2577,7 +2710,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   // Send WhatsApp payment notification for subscription activation
                   try {
                     console.log('📱 Sending WhatsApp payment notification (subscription activated)...');
-                    await whatsappService.sendPaymentNotification(customerEmail, '29.00');
+                    await whatsappService.sendPaymentNotification(customerEmail, PRICING.REGULAR_SUBSCRIPTION);
                     console.log('✅ WhatsApp payment notification sent successfully');
                   } catch (whatsappError: any) {
                     console.error('⚠️ WhatsApp payment notification error (subscription update continues):', whatsappError.message);
@@ -2635,6 +2768,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         try {
           if (invoice.subscription) {
+            // First check if this is a dedicated Formula Gazzella subscription
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+            const isFormulaGazzellaSubscription = subscription.metadata?.subscriptionType === 'formula_gazzella';
+            console.log('🧬 Invoice for Formula Gazzella subscription:', isFormulaGazzellaSubscription);
+            
+            if (isFormulaGazzellaSubscription) {
+              // Handle Formula Gazzella subscription renewal payment
+              console.log('🧬 Processing Formula Gazzella subscription renewal payment...');
+              
+              // CRITICAL SECURITY: Validate renewal payment amount for Formula Gazzella
+              console.log('💰 FORMULA GAZZELLA RENEWAL PAYMENT VALIDATION:');
+              console.log('   - Invoice amount_paid:', invoice.amount_paid, 'cents');
+              console.log('   - Invoice currency:', invoice.currency);
+              console.log('   - Expected amount:', PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT, 'cents (29.99€)');
+              
+              // Strict validation: invoice amount must be exactly 2999 cents (29.99€) and currency EUR
+              if (invoice.amount_paid !== PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT || invoice.currency !== 'eur') {
+                console.error('🚨 RENEWAL PAYMENT VALIDATION FAILED for Formula Gazzella:');
+                console.error('   - Expected: 2999 cents (29.99€) in EUR');
+                console.error('   - Received:', invoice.amount_paid, 'cents in', invoice.currency);
+                console.error('   - Invoice ID:', invoice.id);
+                console.error('   - Subscription ID:', subscription.id);
+                console.error('   - Customer:', invoice.customer_email);
+                return res.status(400).json({ 
+                  error: 'Invalid renewal payment amount for Formula Gazzella subscription',
+                  expected_amount_cents: PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT,
+                  expected_currency: 'eur',
+                  received_amount_cents: invoice.amount_paid,
+                  received_currency: invoice.currency,
+                  invoice_id: invoice.id
+                });
+              }
+              
+              console.log('✅ Formula Gazzella renewal payment validation passed: €29.99 confirmed');
+              
+              // Find Formula Gazzella subscription in database
+              const formulaSubscriptions = await db.select()
+                .from(formulaGazzellaSubscriptions)
+                .where(eq(formulaGazzellaSubscriptions.stripeSubscriptionId, subscription.id))
+                .limit(1);
+              
+              if (formulaSubscriptions.length > 0) {
+                const formulaSubscription = formulaSubscriptions[0];
+                
+                // Update Formula Gazzella subscription with payment info
+                await db.update(formulaGazzellaSubscriptions)
+                  .set({
+                    lastShopifyOrderAt: new Date(),
+                    totalOrdersCreated: formulaSubscription.totalOrdersCreated + 1,
+                    updatedAt: new Date()
+                  })
+                  .where(eq(formulaGazzellaSubscriptions.id, formulaSubscription.id));
+                
+                // Create Shopify order for Formula Gazzella (full price 29.99€)
+                try {
+                  const stripeCustomer = await stripe.customers.retrieve(subscription.customer as string);
+                  const customerEmail = (stripeCustomer as any).email;
+                  if (customerEmail) {
+                    console.log('🧬 Creating Shopify order for Formula Gazzella renewal...');
+                    const shopifyService = getShopifyService();
+                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, PRICING.FORMULA_GAZZELLA.PRODUCT_ID, 1);
+                    
+                    if (formulaOrder) {
+                      console.log('✅ Formula Gazzella order created successfully:', formulaOrder.name);
+                      
+                      // Update database with Shopify order ID
+                      await db.update(formulaGazzellaSubscriptions)
+                        .set({
+                          lastShopifyOrderId: formulaOrder.id?.toString() || null
+                        })
+                        .where(eq(formulaGazzellaSubscriptions.id, formulaSubscription.id));
+                    } else {
+                      console.log('⚠️ Formula Gazzella order creation failed');
+                    }
+                    
+                    // Send WhatsApp notification for Formula Gazzella renewal
+                    try {
+                      console.log('📱 Sending WhatsApp notification for Formula Gazzella renewal...');
+                      await whatsappService.sendPaymentNotification(customerEmail, PRICING.FORMULA_GAZZELLA.TOTAL);
+                      console.log('✅ WhatsApp notification sent for Formula Gazzella renewal');
+                    } catch (whatsappError: any) {
+                      console.error('⚠️ WhatsApp notification error for Formula Gazzella:', whatsappError.message);
+                    }
+                  }
+                } catch (orderError: any) {
+                  console.error('⚠️ Formula Gazzella order creation error:', orderError.message);
+                }
+              }
+              
+              break; // Exit case, don't process as regular subscription
+            }
             // Find user by subscription ID
             let targetUser = null;
             if (storage.getAllUsers) {
@@ -2665,13 +2889,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log('💳 Billing reason:', billingReason);
                   
                   if (billingReason === 'subscription_cycle') {
-                    // This is a subscription renewal - create Formula Gazzella order with premium discount
+                    // This is a subscription renewal - create Formula Gazzella order at fixed price
                     try {
-                      console.log('🧬 Creating Formula Gazzella order for subscription renewal with premium discount...');
-                      const PREMIUM_DISCOUNT = 29; // Sconto di 29€ per abbonati premium
-                      const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1, PREMIUM_DISCOUNT);
+                      console.log('🧬 Creating Formula Gazzella order for subscription renewal at fixed price 29.99€...');
+                      // Everyone pays the same price: 29.99€ (20€ product + 9.99€ shipping)
+                      const formulaOrder = await shopifyService.createProductOrder(customerEmail, PRICING.FORMULA_GAZZELLA.PRODUCT_ID, 1);
                       if (formulaOrder) {
-                        console.log('✅ Formula Gazzella renewal order created successfully with €29 discount:', formulaOrder.name);
+                        console.log('✅ Formula Gazzella renewal order created successfully at fixed price €29.99:', formulaOrder.name);
                       } else {
                         console.log('⚠️ Formula Gazzella renewal order creation failed (payment continues)');
                       }
@@ -2735,7 +2959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Debug endpoint to check user subscription status
-  app.get("/api/debug/user-subscription", isAuthenticated, async (req, res) => {
+  app.get("/api/debug/user-subscription", isAdminAuthenticated, async (req, res) => {
     try {
       const userId = (req as any).user.claims.sub;
       const user = await storage.getUser(userId);
@@ -2965,38 +3189,238 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =================
+  // FORMULA GAZZELLA SUBSCRIPTION ROUTES
+  // =================
 
+  // Get Formula Gazzella subscription status
+  app.get("/api/formula-gazzella/subscription-status", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      
+      // Check for existing Formula Gazzella subscription
+      const existingSubscription = await db.select()
+        .from(formulaGazzellaSubscriptions)
+        .where(eq(formulaGazzellaSubscriptions.userId, userId))
+        .limit(1);
+      
+      if (existingSubscription.length === 0) {
+        return res.json({
+          hasSubscription: false,
+          subscriptionStatus: null,
+          currentPeriodEnd: null,
+          cancelAtPeriodEnd: false
+        });
+      }
+      
+      const subscription = existingSubscription[0];
+      const now = new Date();
+      const isActive = subscription.subscriptionStatus === 'active' && 
+                     new Date(subscription.currentPeriodEnd) > now;
+      
+      res.json({
+        hasSubscription: true,
+        subscriptionStatus: subscription.subscriptionStatus,
+        currentPeriodStart: subscription.currentPeriodStart,
+        currentPeriodEnd: subscription.currentPeriodEnd,
+        cancelAtPeriodEnd: subscription.cancelAtPeriodEnd === 'yes',
+        monthlyPrice: subscription.monthlyPrice,
+        currency: subscription.currency,
+        totalOrdersCreated: subscription.totalOrdersCreated,
+        isActive
+      });
+    } catch (error) {
+      console.error("Error checking Formula Gazzella subscription:", error);
+      res.status(500).json({ message: "Errore nel controllo dell'abbonamento Formula Gazzella" });
+    }
+  });
+
+  // Create Formula Gazzella subscription
+  app.post("/api/formula-gazzella/create-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      // Check if user already has Formula Gazzella subscription
+      const existingSubscription = await db.select()
+        .from(formulaGazzellaSubscriptions)
+        .where(eq(formulaGazzellaSubscriptions.userId, userId))
+        .limit(1);
+      
+      if (existingSubscription.length > 0 && existingSubscription[0].subscriptionStatus === 'active') {
+        return res.status(400).json({ message: "Hai già un abbonamento Formula Gazzella attivo" });
+      }
+      
+      // Ensure user has Stripe customer ID
+      let stripeCustomerId = user.stripeCustomerId;
+      if (!stripeCustomerId) {
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          name: user.username,
+          metadata: {
+            userId: userId,
+            source: 'formula-gazzella-subscription'
+          }
+        });
+        stripeCustomerId = customer.id;
+        
+        // Update user with Stripe customer ID
+        await storage.updateUserStripeInfo(userId, {
+          stripeCustomerId: customer.id
+        });
+      }
+      
+      // Create a dedicated product and price for Formula Gazzella if not exists
+      let formulaGazzellaPrice;
+      try {
+        // Try to find existing Formula Gazzella product
+        const products = await stripe.products.list({ limit: 100 });
+        let formulaProduct = products.data.find(p => p.name === 'Formula Gazzella - Integratore Mensile');
+        
+        if (!formulaProduct) {
+          formulaProduct = await stripe.products.create({
+            name: 'Formula Gazzella - Integratore Mensile',
+            description: 'Consegna mensile del nostro integratore Formula Gazzella (20€ prodotto + 9.99€ spedizione)'
+          });
+        }
+        
+        // Find or create the price
+        const prices = await stripe.prices.list({ product: formulaProduct.id, limit: 100 });
+        formulaGazzellaPrice = prices.data.find(p => p.unit_amount === 2999 && p.currency === 'eur' && p.recurring?.interval === 'month');
+        
+        if (!formulaGazzellaPrice) {
+          formulaGazzellaPrice = await stripe.prices.create({
+            unit_amount: PRICING.FORMULA_GAZZELLA.STRIPE_UNIT_AMOUNT,
+            currency: 'eur',
+            recurring: { interval: 'month' },
+            product: formulaProduct.id
+          });
+        }
+      } catch (error) {
+        console.error('Error creating Formula Gazzella product/price:', error);
+        return res.status(500).json({ message: 'Errore nella configurazione del prodotto' });
+      }
+      
+      // Create Stripe subscription for Formula Gazzella
+      const stripeSubscription = await stripe.subscriptions.create({
+        customer: stripeCustomerId,
+        items: [{ price: formulaGazzellaPrice.id, quantity: 1 }],
+        metadata: {
+          userId: userId,
+          subscriptionType: 'formula_gazzella'
+        },
+        expand: ['latest_invoice.payment_intent']
+      });
+      
+      // Save to our database with proper error handling
+      try {
+        await db.insert(formulaGazzellaSubscriptions).values({
+          userId: userId,
+          stripeCustomerId: stripeCustomerId,
+          stripeSubscriptionId: stripeSubscription.id,
+          subscriptionStatus: stripeSubscription.status,
+          currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
+          currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+          cancelAtPeriodEnd: 'no',
+          monthlyPrice: PRICING.FORMULA_GAZZELLA.TOTAL,
+          currency: 'eur'
+        });
+      } catch (dbError) {
+        console.error('Database error saving Formula Gazzella subscription:', dbError);
+        // Try to cancel the Stripe subscription if DB save fails
+        try {
+          await stripe.subscriptions.cancel(stripeSubscription.id);
+        } catch (cancelError) {
+          console.error('Failed to cancel Stripe subscription after DB error:', cancelError);
+        }
+        return res.status(500).json({ message: 'Errore nel salvataggio dell\'abbonamento' });
+      }
+      
+      console.log(`✅ Formula Gazzella subscription created for user ${user.email}: ${stripeSubscription.id}`);
+      
+      // Get payment intent details for frontend
+      const paymentIntent = (stripeSubscription.latest_invoice as any)?.payment_intent;
+      
+      res.json({
+        subscriptionId: stripeSubscription.id,
+        status: stripeSubscription.status,
+        clientSecret: paymentIntent?.client_secret,
+        currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+        message: "Abbonamento Formula Gazzella creato con successo"
+      });
+      
+    } catch (error: any) {
+      console.error("Error creating Formula Gazzella subscription:", error);
+      res.status(500).json({ 
+        message: "Errore nella creazione dell'abbonamento Formula Gazzella: " + error.message 
+      });
+    }
+  });
+
+  // Cancel Formula Gazzella subscription
+  app.post("/api/formula-gazzella/cancel-subscription", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      
+      // Find existing Formula Gazzella subscription
+      const existingSubscription = await db.select()
+        .from(formulaGazzellaSubscriptions)
+        .where(eq(formulaGazzellaSubscriptions.userId, userId))
+        .limit(1);
+      
+      if (existingSubscription.length === 0) {
+        return res.status(404).json({ message: "Nessun abbonamento Formula Gazzella trovato" });
+      }
+      
+      const subscription = existingSubscription[0];
+      if (subscription.subscriptionStatus !== 'active') {
+        return res.status(400).json({ message: "L'abbonamento Formula Gazzella non è attivo" });
+      }
+      
+      // Cancel the Stripe subscription
+      const canceledSubscription = await stripe.subscriptions.update(subscription.stripeSubscriptionId, {
+        cancel_at_period_end: true
+      });
+      
+      // Update our database with proper error handling
+      try {
+        await db.update(formulaGazzellaSubscriptions)
+          .set({
+            subscriptionStatus: 'active', // Still active until period ends
+            cancelAtPeriodEnd: 'yes',
+            canceledAt: new Date(),
+            updatedAt: new Date(),
+            currentPeriodEnd: new Date(canceledSubscription.current_period_end * 1000)
+          })
+          .where(eq(formulaGazzellaSubscriptions.id, subscription.id));
+      } catch (dbError) {
+        console.error('Database error updating Formula Gazzella subscription cancellation:', dbError);
+        // Log but don't fail - Stripe cancellation succeeded
+      }
+      
+      console.log(`✅ Formula Gazzella subscription canceled for user ID ${userId}: ${subscription.stripeSubscriptionId}`);
+      
+      res.json({
+        message: "Abbonamento Formula Gazzella cancellato. Rimarrà attivo fino alla fine del periodo corrente.",
+        endDate: new Date(canceledSubscription.current_period_end * 1000),
+        cancelAtPeriodEnd: true
+      });
+      
+    } catch (error: any) {
+      console.error("Error canceling Formula Gazzella subscription:", error);
+      res.status(500).json({ 
+        message: "Errore nella cancellazione dell'abbonamento Formula Gazzella: " + error.message 
+      });
+    }
+  });
 
   // =================
   // ADMIN DASHBOARD ROUTES
   // =================
-
-  // Admin authentication middleware
-  const isAdminAuthenticated = async (req: any, res: any, next: any) => {
-    try {
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      if (!token) {
-        return res.status(401).json({ message: "Token richiesto" });
-      }
-
-      // For now, use simple password check - replace with JWT in production
-      const adminEmail = req.headers['x-admin-email'];
-      if (!adminEmail) {
-        return res.status(401).json({ message: "Email admin richiesta" });
-      }
-
-      const admin = await storage.getAdminUserByEmail(adminEmail);
-      if (!admin || admin.isActive !== 'yes') {
-        return res.status(401).json({ message: "Admin non trovato o non attivo" });
-      }
-
-      req.admin = admin;
-      next();
-    } catch (error) {
-      console.error("Error in admin auth:", error);
-      res.status(401).json({ message: "Autenticazione fallita" });
-    }
-  };
 
   // Temporary: Setup admin (remove after setup)
   app.post("/api/admin/setup", async (req, res) => {
