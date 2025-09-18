@@ -16,7 +16,7 @@ import Stripe from "stripe";
 if (!process.env.STRIPE_SECRET_KEY) {
   throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
 }
-console.log("🔧 Stripe initialized with key:", process.env.STRIPE_SECRET_KEY?.substring(0, 12) + "...");
+console.log("🔧 Stripe initialized successfully");
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 function generateSessionId(): string {
@@ -33,12 +33,10 @@ function getSessionExpiryDate(): Date {
 async function isAuthenticated(req: any, res: any, next: any) {
   try {
     console.log("🔐 Authentication check for:", req.url);
-    console.log("🍪 All cookies:", req.cookies);
-    console.log("🔍 Session cookie:", req.cookies?.session);
     
     const sessionId = req.cookies?.session;
     if (!sessionId) {
-      console.log("❌ No session cookie found");
+      console.log("❌ No session found");
       return res.status(401).json({ message: "Non autenticato" });
     }
     
