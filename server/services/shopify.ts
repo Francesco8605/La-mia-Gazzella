@@ -500,10 +500,14 @@ class ShopifyService {
 
   /**
    * Crea un ordine reale in Shopify per il prodotto Formula Gazzella
+   * @param customerEmail Email del cliente
+   * @param productId ID della variant Shopify
+   * @param quantity Quantità (default 1)
+   * @param discountAmount Sconto in EUR da applicare (opzionale, per utenti premium)
    */
-  async createProductOrder(customerEmail: string, productId: string, quantity: number = 1): Promise<any> {
+  async createProductOrder(customerEmail: string, productId: string, quantity: number = 1, discountAmount?: number): Promise<any> {
     try {
-      console.log('🛒 Creating Shopify order for product:', productId, 'Customer:', customerEmail);
+      console.log('🛒 Creating Shopify order for product:', productId, 'Customer:', customerEmail, 'Discount:', discountAmount ? `€${discountAmount}` : 'None');
       
       // Prima trova o crea il cliente
       let customer = await this.findCustomerByEmail(customerEmail);
@@ -558,14 +562,33 @@ class ShopifyService {
         }
       `;
       
-      const orderInput = {
+      // Costruisci l'input dell'ordine con sconto opzionale
+      const orderInput: any = {
         customerId: customer.id,
         lineItems: [{
           variantId: `gid://shopify/ProductVariant/${productId}`,
           quantity: quantity
         }],
-        note: `Ordine automatico Formula Gazzella - Abbonamento Premium - ${new Date().toLocaleDateString('it-IT')}`,
+        note: discountAmount 
+          ? `Ordine automatico Formula Gazzella - Abbonamento Premium (Sconto €${discountAmount}) - ${new Date().toLocaleDateString('it-IT')}`
+          : `Ordine automatico Formula Gazzella - Abbonamento Premium - ${new Date().toLocaleDateString('it-IT')}`,
         tags: ['formula-gazzella', 'abbonamento-premium', 'ordine-automatico']
+      };
+
+      // Applica sconto se specificato (es. 29€ per utenti premium)
+      if (discountAmount && discountAmount > 0) {
+        orderInput.appliedDiscount = {
+          value: discountAmount,
+          title: `Sconto Abbonamento Premium - €${discountAmount}`,
+          valueType: "FIXED_AMOUNT"
+        };
+        console.log('💰 Applying premium discount:', `€${discountAmount}`);
+      }
+
+      // Assicura che la spedizione sia inclusa (9.99€)
+      orderInput.shippingLine = {
+        title: "Spedizione Standard",
+        price: "9.99"
       };
       
       console.log('📦 Creating draft order with input:', JSON.stringify(orderInput, null, 2));
@@ -585,6 +608,26 @@ class ShopifyService {
         totalPrice: draftOrder.totalPriceSet?.shopMoney?.amount,
         customer: draftOrder.customer?.email
       });
+      
+      // VALIDAZIONE CRITICA: Verifica prezzo finale per utenti premium
+      if (discountAmount && discountAmount > 0) {
+        const expectedTotal = 29.99; // 20€ prodotto + 9.99€ spedizione
+        const actualTotal = parseFloat(draftOrder.totalPriceSet?.shopMoney?.amount || '0');
+        
+        console.log('💰 PREMIUM PRICING VALIDATION:');
+        console.log('   - Expected Total: €' + expectedTotal);
+        console.log('   - Actual Total: €' + actualTotal);
+        console.log('   - Discount Applied: €' + discountAmount);
+        
+        if (Math.abs(actualTotal - expectedTotal) > 0.01) {
+          console.error('🚨 PRICING ERROR: Final total does not match expected premium price!');
+          console.error('   - Expected: €29.99 (20€ + 9.99€ shipping)');
+          console.error('   - Actual: €' + actualTotal);
+          console.error('   - This may indicate discount or shipping line was not applied correctly');
+        } else {
+          console.log('✅ Premium pricing verified: €29.99 total confirmed');
+        }
+      }
       
       // Completa l'ordine (lo converte da draft a ordine attivo)
       const completeMutation = `

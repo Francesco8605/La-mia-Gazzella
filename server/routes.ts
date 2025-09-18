@@ -446,15 +446,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log('✅ Access granted - Premium user validation passed');
       
-      console.log('🛒 Creating Formula Gazzella order for premium user:', user.email, 'Product:', productId);
+      console.log('🛒 Creating Formula Gazzella order for premium user with discount:', user.email, 'Product:', productId);
       
       const shopifyService = getShopifyService();
+      const PREMIUM_DISCOUNT = 29; // Sconto di 29€ per abbonati premium non trial
       
       try {
         const order = await shopifyService.createProductOrder(
           user.email, 
           productId,
-          1 // quantity
+          1, // quantity
+          PREMIUM_DISCOUNT // Sconto premium
         );
         
         console.log('✅ Shopify order created successfully:', order);
@@ -2663,12 +2665,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log('💳 Billing reason:', billingReason);
                   
                   if (billingReason === 'subscription_cycle') {
-                    // This is a subscription renewal - create Formula Gazzella order
+                    // This is a subscription renewal - create Formula Gazzella order with premium discount
                     try {
-                      console.log('🧬 Creating Formula Gazzella order for subscription renewal...');
-                      const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
+                      console.log('🧬 Creating Formula Gazzella order for subscription renewal with premium discount...');
+                      const PREMIUM_DISCOUNT = 29; // Sconto di 29€ per abbonati premium
+                      const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1, PREMIUM_DISCOUNT);
                       if (formulaOrder) {
-                        console.log('✅ Formula Gazzella renewal order created successfully:', formulaOrder.name);
+                        console.log('✅ Formula Gazzella renewal order created successfully with €29 discount:', formulaOrder.name);
                       } else {
                         console.log('⚠️ Formula Gazzella renewal order creation failed (payment continues)');
                       }
