@@ -134,8 +134,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const shopifyService = getShopifyService();
         status.shopify = {
-          configured: !!process.env.SHOPIFY_STORE_DOMAIN && !!process.env.SHOPIFY_API_SECRET,
-          storeUrl: process.env.SHOPIFY_STORE_DOMAIN || 'N/A',
+          configured: !!process.env.SHOPIFY_STORE_URL && !!process.env.SHOPIFY_ACCESS_TOKEN,
+          storeUrl: process.env.SHOPIFY_STORE_URL || 'N/A',
           connectionTest: 'testing...'
         };
         
@@ -164,10 +164,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log('🛍️ Testing Shopify integration...');
       
       const envCheck = {
-        SHOPIFY_STORE_DOMAIN: !!process.env.SHOPIFY_STORE_DOMAIN,
-        SHOPIFY_API_SECRET: !!process.env.SHOPIFY_API_SECRET,
-        storeUrl: process.env.SHOPIFY_STORE_DOMAIN || 'NOT_SET',
-        tokenPrefix: process.env.SHOPIFY_API_SECRET?.substring(0, 8) || 'NOT_SET'
+        SHOPIFY_STORE_URL: !!process.env.SHOPIFY_STORE_URL,
+        SHOPIFY_ACCESS_TOKEN: !!process.env.SHOPIFY_ACCESS_TOKEN,
+        storeUrl: process.env.SHOPIFY_STORE_URL || 'NOT_SET',
+        configured: !!process.env.SHOPIFY_STORE_URL && !!process.env.SHOPIFY_ACCESS_TOKEN
       };
       
       console.log('🔍 Environment variables:', envCheck);
@@ -185,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         shopify: {
-          configured: envCheck.SHOPIFY_STORE_DOMAIN && envCheck.SHOPIFY_API_SECRET,
+          configured: envCheck.configured,
           environment: envCheck,
           connectionTest,
           error
@@ -426,7 +426,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fulfillmentStatus: order.displayFulfillmentStatus,
             totalPrice: order.totalPriceSet?.shopMoney?.amount
           },
-          message: 'Ordine Formula Gazzella creato con successo!'
+          checkoutUrl: order.checkoutUrl, // NEW: Checkout URL for frontend redirect
+          message: order.message || 'Ordine Formula Gazzella creato con successo!'
         });
         
       } catch (shopifyError: any) {
@@ -3614,6 +3615,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Errore nel recupero statistiche" });
     }
   });
+
 
   console.log("✅ All routes registered successfully including admin dashboard");
 

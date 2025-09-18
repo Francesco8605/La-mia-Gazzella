@@ -23,9 +23,19 @@ export default function FormulaGazzella() {
       console.log("🎉 Ordine creato con successo:", data);
       toast({
         title: "Ordine Confermato! 🎉",
-        description: `Formula Gazzella ordinata con successo a €29.99 (€20 + €9.99 spedizione). Riceverai una conferma via email.`,
-        duration: 10000,
+        description: `Formula Gazzella ordinata con successo a €29.99. Verrai reindirizzato al checkout per completare il pagamento.`,
+        duration: 5000,
       });
+      
+      // Redirect to Shopify checkout URL for payment completion
+      if (data.checkoutUrl) {
+        console.log("🛒 Redirecting to checkout:", data.checkoutUrl);
+        setTimeout(() => {
+          window.location.href = data.checkoutUrl;
+        }, 2000); // Brief delay to show toast
+      } else {
+        console.warn("⚠️ No checkout URL received from server");
+      }
     },
     onError: (error: any) => {
       console.error("❌ Errore creazione ordine:", error);
