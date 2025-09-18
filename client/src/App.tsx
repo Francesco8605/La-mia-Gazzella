@@ -29,6 +29,7 @@ import CancelSubscription from "@/pages/cancel-subscription";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import AdminDashboard from "@/pages/admin-dashboard";
+import FormulaGazzella from "@/pages/formula-gazzella";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -169,6 +170,15 @@ function Router() {
               <ProfileGuard>
                 <AIChat />
               </ProfileGuard>
+            </SubscriptionGuard>
+          )}
+        </Route>
+        
+        {/* Formula Gazzella - Exclusive for Premium Subscribers */}
+        <Route path="/formula-gazzella">
+          {() => (
+            <SubscriptionGuard>
+              <FormulaGazzella />
             </SubscriptionGuard>
           )}
         </Route>

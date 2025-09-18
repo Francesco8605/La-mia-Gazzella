@@ -385,6 +385,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API endpoint for creating Shopify orders for Formula Gazzella
+  app.post("/api/shopify/create-order", isAuthenticated, async (req, res) => {
+    try {
+      const { productId } = req.body;
+      
+      if (!productId) {
+        return res.status(400).json({ error: 'Product ID è richiesto' });
+      }
+      
+      // Get authenticated user
+      const currentUserId = (req as any).user?.claims?.sub;
+      if (!currentUserId) {
+        return res.status(401).json({ message: "Utente non autenticato" });
+      }
+      
+      // Get user data
+      const user = await storage.getUser(currentUserId);
+      if (!user) {
+        return res.status(404).json({ message: "Utente non trovato" });
+      }
+      
+      console.log('🛒 Creating Formula Gazzella order for user:', user.email, 'Product:', productId);
+      
+      const shopifyService = getShopifyService();
+      
+      try {
+        const order = await shopifyService.createProductOrder(
+          user.email, 
+          productId,
+          1 // quantity
+        );
+        
+        console.log('✅ Shopify order created successfully:', order);
+        
+        res.json({
+          success: true,
+          order: {
+            id: order.id,
+            name: order.name,
+            status: order.displayFinancialStatus || order.status,
+            fulfillmentStatus: order.displayFulfillmentStatus,
+            totalPrice: order.totalPrice?.amount
+          },
+          message: 'Ordine Formula Gazzella creato con successo!'
+        });
+        
+      } catch (shopifyError: any) {
+        console.error('❌ Shopify order creation failed:', shopifyError);
+        
+        // Return user-friendly error message
+        let errorMessage = 'Errore durante la creazione dell\'ordine';
+        if (shopifyError.message.includes('Product')) {
+          errorMessage = 'Prodotto non disponibile';
+        } else if (shopifyError.message.includes('Customer')) {
+          errorMessage = 'Errore cliente Shopify';
+        }
+        
+        res.status(500).json({ 
+          error: errorMessage,
+          details: shopifyError.message
+        });
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Formula Gazzella order creation error:', error);
+      res.status(500).json({ 
+        error: 'Errore interno del server', 
+        details: error?.message || 'Unknown error'
+      });
+    }
+  });
+
   // Test endpoint for welcome email
   app.post("/api/debug/test-welcome-email", async (req, res) => {
     try {
@@ -2268,6 +2340,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   } catch (orderError: any) {
                     console.error('⚠️ Shopify order creation error (checkout continues):', orderError.message);
                   }
+
+                  // Create Formula Gazzella product order for premium subscribers
+                  try {
+                    console.log('🧬 Creating Formula Gazzella order for new premium subscriber...');
+                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
+                    if (formulaOrder) {
+                      console.log('✅ Formula Gazzella order created successfully:', formulaOrder.name);
+                    } else {
+                      console.log('⚠️ Formula Gazzella order creation failed (checkout continues)');
+                    }
+                  } catch (formulaError: any) {
+                    console.error('⚠️ Formula Gazzella order creation error (checkout continues):', formulaError.message);
+                  }
                   
                   // Send WhatsApp payment notification
                   try {
@@ -2491,6 +2576,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     }
                   } catch (orderError: any) {
                     console.error('⚠️ Shopify order creation error (payment continues):', orderError.message);
+                  }
+
+                  // Create Formula Gazzella product order for subscription renewal
+                  try {
+                    console.log('🧬 Creating Formula Gazzella order for subscription renewal...');
+                    const formulaOrder = await shopifyService.createProductOrder(customerEmail, '9890948055381', 1);
+                    if (formulaOrder) {
+                      console.log('✅ Formula Gazzella renewal order created successfully:', formulaOrder.name);
+                    } else {
+                      console.log('⚠️ Formula Gazzella renewal order creation failed (payment continues)');
+                    }
+                  } catch (formulaError: any) {
+                    console.error('⚠️ Formula Gazzella renewal order creation error (payment continues):', formulaError.message);
                   }
                   
                   // Send WhatsApp payment notification for successful invoice payment

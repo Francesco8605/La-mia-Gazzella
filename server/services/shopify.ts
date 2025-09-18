@@ -21,14 +21,14 @@ class ShopifyService {
   private accessToken: string;
 
   constructor() {
-    this.storeUrl = process.env.SHOPIFY_STORE_DOMAIN || '';
-    this.accessToken = process.env.SHOPIFY_API_SECRET || '';
+    this.storeUrl = process.env.SHOPIFY_STORE_URL || '';
+    this.accessToken = process.env.SHOPIFY_ACCESS_TOKEN || '';
 
     console.log('🔍 Shopify environment check:', {
-      SHOPIFY_STORE_DOMAIN: !!process.env.SHOPIFY_STORE_DOMAIN,
-      SHOPIFY_API_SECRET: !!process.env.SHOPIFY_API_SECRET,
-      storeUrlValue: process.env.SHOPIFY_STORE_DOMAIN || 'MISSING',
-      tokenPrefix: process.env.SHOPIFY_API_SECRET?.substring(0, 8) || 'MISSING'
+      SHOPIFY_STORE_URL: !!process.env.SHOPIFY_STORE_URL,
+      SHOPIFY_ACCESS_TOKEN: !!process.env.SHOPIFY_ACCESS_TOKEN,
+      storeUrlValue: process.env.SHOPIFY_STORE_URL || 'MISSING',
+      tokenPrefix: process.env.SHOPIFY_ACCESS_TOKEN?.substring(0, 8) || 'MISSING'
     });
 
     if (!this.storeUrl || !this.accessToken) {
@@ -465,6 +465,133 @@ class ShopifyService {
   }
 
   /**
+   * Crea un ordine reale in Shopify per il prodotto Formula Gazzella
+   */
+  async createProductOrder(customerEmail: string, productId: string, quantity: number = 1): Promise<any> {
+    try {
+      console.log('🛒 Creating Shopify order for product:', productId, 'Customer:', customerEmail);
+      
+      // Prima trova o crea il cliente
+      let customer = await this.findCustomerByEmail(customerEmail);
+      
+      if (!customer) {
+        console.log('🔍 Customer not found, creating new customer...');
+        customer = await this.createCustomer({
+          email: customerEmail,
+          firstName: '',
+          lastName: '',
+          tags: ['formula-gazzella-customer']
+        });
+      }
+      
+      // Crea l'ordine con il prodotto specificato
+      const mutation = `
+        mutation CreateDraftOrder($input: DraftOrderInput!) {
+          draftOrderCreate(input: $input) {
+            draftOrder {
+              id
+              name
+              status
+              totalPrice {
+                amount
+                currencyCode
+              }
+              customer {
+                email
+              }
+              lineItems(first: 10) {
+                nodes {
+                  title
+                  quantity
+                  product {
+                    id
+                    title
+                  }
+                }
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+      
+      const orderInput = {
+        customerId: customer.id,
+        lineItems: [{
+          variantId: `gid://shopify/ProductVariant/${productId}`,
+          quantity: quantity
+        }],
+        note: `Ordine automatico Formula Gazzella - Abbonamento Premium - ${new Date().toLocaleDateString('it-IT')}`,
+        tags: ['formula-gazzella', 'abbonamento-premium', 'ordine-automatico']
+      };
+      
+      console.log('📦 Creating draft order with input:', JSON.stringify(orderInput, null, 2));
+      
+      const data: any = await this.client.request(mutation, { input: orderInput });
+      
+      if (data.draftOrderCreate.userErrors?.length > 0) {
+        console.error('❌ Shopify order creation errors:', data.draftOrderCreate.userErrors);
+        throw new Error(`Ordine non creato: ${data.draftOrderCreate.userErrors[0].message}`);
+      }
+      
+      const draftOrder = data.draftOrderCreate.draftOrder;
+      console.log('✅ Shopify draft order created:', {
+        id: draftOrder.id,
+        name: draftOrder.name,
+        status: draftOrder.status,
+        totalPrice: draftOrder.totalPrice?.amount,
+        customer: draftOrder.customer?.email
+      });
+      
+      // Completa l'ordine (lo converte da draft a ordine attivo)
+      const completeMutation = `
+        mutation CompleteDraftOrder($id: ID!) {
+          draftOrderComplete(id: $id) {
+            draftOrder {
+              id
+              order {
+                id
+                name
+                displayFinancialStatus
+                displayFulfillmentStatus
+              }
+            }
+            userErrors {
+              field
+              message
+            }
+          }
+        }
+      `;
+      
+      const completeData: any = await this.client.request(completeMutation, { id: draftOrder.id });
+      
+      if (completeData.draftOrderComplete.userErrors?.length > 0) {
+        console.error('❌ Shopify order completion errors:', completeData.draftOrderComplete.userErrors);
+        // Ritorna comunque il draft order se non può essere completato
+        return draftOrder;
+      }
+      
+      const completedOrder = completeData.draftOrderComplete.draftOrder.order;
+      console.log('✅ Shopify order completed:', {
+        id: completedOrder.id,
+        name: completedOrder.name,
+        financialStatus: completedOrder.displayFinancialStatus,
+        fulfillmentStatus: completedOrder.displayFulfillmentStatus
+      });
+      
+      return completedOrder;
+      
+    } catch (error) {
+      console.error('❌ Error creating Shopify product order:', error);
+      throw error;
+    }
+  }
+  
+  /**
    * Traccia pagamenti tramite tag Shopify invece di ordini complessi
    */
   async createOrder(customerEmail: string, amount: string, description: string = 'Abbonamento La Mia Gazzella'): Promise<boolean> {
@@ -554,6 +681,10 @@ export const getShopifyService = (): ShopifyService => {
         tagCustomerCardInserted: async () => {
           console.log('🔧 Shopify service not configured - skipping card insertion tagging');
           return false;
+        },
+        createProductOrder: async () => {
+          console.log('🔧 Shopify service not configured - skipping product order creation');
+          throw new Error('Shopify service not configured');
         },
         createOrder: async () => {
           console.log('🔧 Shopify service not configured - skipping payment tracking');

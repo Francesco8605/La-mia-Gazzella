@@ -10,7 +10,8 @@ export default function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { hasActiveSubscription, isInTrial, subscriptionStatus } = useSubscription();
 
-  const navItems = [
+  // Navigation items accessibili a tutti gli utenti abbonati
+  const baseNavItems = [
     { href: "/", label: "Dashboard" },
     { href: "/genera-piano", label: "Genera Piano" },
     { href: "/piani-personalizzati", label: "I Miei Piani" },
@@ -21,6 +22,13 @@ export default function Navigation() {
     { href: "/piani-abbonamento", label: "Abbonamenti" },
     { href: "/cambia-password", label: "Cambia Password" },
   ];
+
+  // Item esclusivo per abbonati Premium (non trial)
+  const premiumNavItems = hasActiveSubscription && !isInTrial
+    ? [{ href: "/formula-gazzella", label: "Formula Gazzella", isPremium: true }]
+    : [];
+
+  const navItems = [...baseNavItems, ...premiumNavItems];
 
   return (
     <nav className="fixed top-2 md:top-4 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-lg shadow-lg border border-white/20 rounded-full px-4 md:px-6 py-2 md:py-3 animate-fade-in w-[95%] md:w-auto" data-testid="main-navigation">
@@ -38,9 +46,10 @@ export default function Navigation() {
               href={item.href}
               className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium ${
                 location === item.href ? "text-primary" : ""
-              }`}
-              data-testid={`nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
+              } ${(item as any).isPremium ? "text-amber-700 hover:text-amber-600 font-semibold" : ""}`}
+              data-testid={`nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
             >
+              {(item as any).isPremium && <Crown className="h-4 w-4 inline mr-1" />}
               {item.label}
             </Link>
           ))}
@@ -150,10 +159,11 @@ export default function Navigation() {
                 href={item.href}
                 className={`text-slate-700 hover:text-primary transition-colors duration-300 font-medium py-2 ${
                   location === item.href ? "text-primary" : ""
-                }`}
+                } ${(item as any).isPremium ? "text-amber-700 hover:text-amber-600 font-semibold" : ""}`}
                 onClick={() => setIsMobileMenuOpen(false)}
-                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(" ", "-")}`}
+                data-testid={`mobile-nav-link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
               >
+                {(item as any).isPremium && <Crown className="h-4 w-4 inline mr-1" />}
                 {item.label}
               </Link>
             ))}
