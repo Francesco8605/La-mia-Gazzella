@@ -195,6 +195,26 @@ export default function MealPlanGenerator() {
               </div>
             </div>
 
+            {/* Sezione motivazionale per rinnovare il piano settimanalmente */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-100 border-l-4 border-orange-400 p-6 rounded-r-lg">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <Sparkles className="h-8 w-8 text-orange-500 animate-pulse" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-orange-800 mb-2">
+                    🍽️ Varietà Settimanale per un Successo Duraturo
+                  </h4>
+                  <p className="text-orange-700 leading-relaxed mb-3">
+                    <strong>Ogni settimana potrai generare un piano completamente nuovo!</strong> La varietà alimentare è la chiave per mantenere alta la motivazione e raggiungere i tuoi obiettivi senza annoiarti mai.
+                  </p>
+                  <p className="text-orange-600 text-sm">
+                    ✨ <em>Non vediamo l'ora di sorprenderti con nuove combinazioni di sapori e ricette esclusive che renderanno il tuo percorso nutrizionale un'avventura gustosa!</em>
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Timer Component quando non si può generare */}
             {timerData && !timerData.canGenerateNow && (
               <div className="mb-6">
