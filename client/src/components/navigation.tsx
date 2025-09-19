@@ -14,6 +14,7 @@ export default function Navigation() {
     { href: "/", label: "Dashboard" },
     { href: "/genera-piano", label: "Genera Piano" },
     { href: "/piani-personalizzati", label: "I Miei Piani" },
+    { href: "/offerta-esclusiva", label: "💎 Offerta Esclusiva" },
     { href: "/recipe-generator", label: "Genera Ricette" },
     { href: "/recipes", label: "Ricette" },
     { href: "/assistente-nutrizionale", label: "Consulente" },
