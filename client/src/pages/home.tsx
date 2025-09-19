@@ -61,13 +61,13 @@ export default function Home() {
             <div 
               className="absolute inset-0 w-80 h-80 mx-auto rounded-3xl opacity-20 bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url(${womanBackgroundImage})`,
+                backgroundImage: `url(${String(womanBackgroundImage)})`,
                 filter: 'blur(2px)',
                 zIndex: 0
               }}
             />
             <img 
-              src={logoGazzella} 
+              src={String(logoGazzella)} 
               alt="Logo La Mia Gazzella - Assistente Nutrizionale Personalizzato per la pianificazione alimentare" 
               className="w-32 h-32 md:w-40 md:h-40 object-contain rounded-full shadow-2xl glass-morphism p-4 animate-float relative z-10"
               data-testid="hero-logo"
@@ -119,7 +119,7 @@ export default function Home() {
               </div>
               <div className="w-64 h-48">
                 <img 
-                  src={successMeasurementImage} 
+                  src={String(successMeasurementImage)} 
                   alt="Donna che misura la vita con successo" 
                   className="w-full h-full object-cover rounded-2xl shadow-lg"
                 />
@@ -127,50 +127,62 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Main Action Button - Featured */}
-          <div className="mb-12 md:mb-16 relative px-4">
-            {/* Decorative background glow */}
-            <div className="absolute inset-0 bg-gradient-to-r from-rose-300/20 via-pink-300/20 to-purple-300/20 blur-2xl md:blur-3xl rounded-full transform scale-110"></div>
+          {/* Main Action Button - Featured - Ottimizzato per Mobile */}
+          <div className="mb-16 md:mb-16 pb-6 md:pb-0 relative px-2 md:px-4">
+            {/* Decorative background glow - Più prominente su mobile */}
+            <div className="absolute inset-0 bg-gradient-to-r from-rose-300/30 via-pink-300/30 to-purple-300/30 blur-xl md:blur-3xl rounded-full transform scale-125 pointer-events-none"></div>
             
-            <Link href="/genera-piano" className="group block relative">
-              <Button
-                size="lg"
-                className="mx-auto w-full max-w-sm md:max-w-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-6 md:px-12 py-8 md:py-12 rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl hover:shadow-rose-500/40 transform group-hover:scale-105 transition-all duration-500 md:duration-700 backdrop-blur-sm border border-white/20 md:border-2 flex flex-col items-center gap-4 md:gap-6 relative overflow-hidden"
+            <Button
+              asChild
+              size="lg"
+              className="mx-auto w-full max-w-lg md:max-w-2xl bg-gradient-to-br from-rose-500 via-pink-500 to-purple-600 hover:from-rose-600 hover:via-pink-600 hover:to-purple-700 text-white font-bold px-8 md:px-12 py-10 md:py-12 rounded-3xl shadow-2xl hover:shadow-rose-500/50 transform hover:scale-105 transition-all duration-500 md:duration-700 backdrop-blur-sm border-2 border-white/30 flex flex-col items-center gap-6 md:gap-6 relative overflow-hidden min-h-[220px] md:min-h-[280px] active:scale-95 touch-manipulation group"
+            >
+              <Link 
+                href="/genera-piano" 
+                className="flex flex-col items-center gap-6 w-full h-full"
                 data-testid="genera-piano-button"
                 aria-label="Inizia la tua trasformazione ora"
               >
                 {/* Animated background shimmer */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                 
-                {/* Icon section with enhanced styling */}
+                {/* Icon section with enhanced styling - Più grande su mobile */}
                 <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/30 to-orange-300/30 rounded-2xl md:rounded-3xl blur-lg md:blur-xl"></div>
-                  <img src={healthyMealIcon} alt="Trasformazione nutrizionale" className="relative h-16 w-16 md:h-24 md:w-24 rounded-2xl md:rounded-3xl shadow-xl md:shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" />
-                  <div className="absolute -top-2 -right-2 md:-top-3 md:-right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-xs md:text-sm font-bold px-2 py-1 md:px-4 md:py-2 rounded-full animate-bounce shadow-lg">
+                  <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/40 to-orange-300/40 rounded-3xl blur-xl scale-110 pointer-events-none"></div>
+                  <img src={String(healthyMealIcon)} alt="Trasformazione nutrizionale" className="relative h-20 w-20 md:h-24 md:w-24 rounded-3xl shadow-2xl group-hover:rotate-6 group-hover:scale-110 transition-all duration-500" />
+                  <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 text-sm font-black px-3 py-2 rounded-full animate-bounce shadow-xl border-2 border-white/20">
                     ✨ NUOVA TE
                   </div>
                 </div>
                 
-                {/* Text content with improved hierarchy */}
-                <div className="text-center space-y-2 md:space-y-3">
-                  <div className="text-lg md:text-3xl font-black tracking-wide drop-shadow-lg leading-tight">
+                {/* Text content with improved hierarchy - Più leggibile su mobile */}
+                <div className="text-center space-y-3">
+                  <div className="text-xl md:text-3xl font-black tracking-wide drop-shadow-xl leading-tight">
                     🔥 INIZIA LA TUA TRASFORMAZIONE
                   </div>
-                  <div className="text-base md:text-2xl font-bold text-yellow-100 drop-shadow-md leading-tight">
+                  <div className="text-lg md:text-2xl font-bold text-yellow-100 drop-shadow-lg leading-tight">
                     Genera il Tuo Piano Personalizzato
                   </div>
-                  <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl px-4 py-2 md:px-6 md:py-3 mt-3 md:mt-4">
-                    <div className="text-white/90 text-sm md:text-lg font-semibold">Piano in 30 secondi</div>
-                    <div className="text-rose-100 text-xs md:text-base">Risultati visibili in 21 giorni</div>
+                  <div className="bg-white/15 backdrop-blur-md rounded-2xl px-6 py-3 mt-4 border border-white/20">
+                    <div className="text-white font-bold text-base md:text-lg">Piano in 30 secondi</div>
+                    <div className="text-rose-100 text-sm md:text-base font-medium">Risultati visibili in 21 giorni</div>
                   </div>
                 </div>
                 
-                {/* Sparkle animation - Hidden on small screens to avoid clutter */}
-                <div className="hidden md:block absolute top-4 right-4 text-yellow-300 animate-pulse text-2xl">✨</div>
-                <div className="hidden md:block absolute bottom-4 left-4 text-yellow-300 animate-pulse text-xl delay-300">💫</div>
-                <div className="hidden md:block absolute top-1/2 right-8 text-yellow-300 animate-pulse text-lg delay-700">⭐</div>
-              </Button>
-            </Link>
+                {/* Mobile sparkle animations - Visibili anche su mobile */}
+                <div className="absolute top-3 right-3 md:top-4 md:right-4 text-yellow-300 animate-pulse text-xl md:text-2xl pointer-events-none">✨</div>
+                <div className="absolute bottom-3 left-3 md:bottom-4 md:left-4 text-yellow-300 animate-pulse text-lg md:text-xl delay-300 pointer-events-none">💫</div>
+                <div className="absolute top-1/2 right-6 md:right-8 text-yellow-300 animate-pulse text-base md:text-lg delay-700 pointer-events-none">⭐</div>
+                
+                {/* Pulse ring animation - Nuovo effetto per mobile */}
+                <div className="absolute inset-0 rounded-3xl border-2 border-white/20 animate-pulse pointer-events-none"></div>
+              </Link>
+            </Button>
+            
+            {/* Mobile-specific urgency indicator */}
+            <div className="block md:hidden absolute -bottom-4 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg animate-bounce pointer-events-none">
+              👆 TOCCA ORA - TRASFORMA LA TUA VITA
+            </div>
           </div>
 
           {/* Formula Gazzella Offer Section */}
@@ -181,7 +193,7 @@ export default function Home() {
                 <div className="flex-shrink-0">
                   <div className="relative">
                     <img 
-                      src={formulaGazzellaImage} 
+                      src={String(formulaGazzellaImage)} 
                       alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
                       className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
                       data-testid="img-formula-gazzella-home"
@@ -265,7 +277,7 @@ export default function Home() {
               <div className="relative backdrop-blur-md bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-4 rounded-xl shadow-lg">
-                    <img src={mealPlansIcon} alt="I miei piani" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                    <img src={String(mealPlansIcon)} alt="I miei piani" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <span className="text-slate-700 font-bold text-sm">I Miei Piani</span>
                   <span className="text-slate-500 text-xs">Piani salvati per te</span>
@@ -277,7 +289,7 @@ export default function Home() {
               <div className="relative backdrop-blur-md bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-4 rounded-xl shadow-lg">
-                    <img src={nutritionConsultationIcon} alt="Consulente nutrizionale" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                    <img src={String(nutritionConsultationIcon)} alt="Consulente nutrizionale" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <span className="text-slate-700 font-bold text-sm">Consulente</span>
                   <span className="text-slate-500 text-xs">Supporto nutrizionale</span>
@@ -289,7 +301,7 @@ export default function Home() {
               <div className="relative backdrop-blur-md bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-6 border border-orange-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="bg-gradient-to-br from-orange-500 to-red-600 p-4 rounded-xl shadow-lg">
-                    <img src={userProfileIcon} alt="Il mio profilo" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                    <img src={String(userProfileIcon)} alt="Il mio profilo" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <span className="text-slate-700 font-bold text-sm">Il Mio Profilo</span>
                   <span className="text-slate-500 text-xs">Personalizza tutto</span>
@@ -301,7 +313,7 @@ export default function Home() {
               <div className="relative backdrop-blur-md bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200 shadow-xl hover:shadow-2xl transition-all duration-500 transform group-hover:scale-105 group-hover:-translate-y-2">
                 <div className="flex flex-col items-center gap-3 text-center">
                   <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-xl shadow-lg">
-                    <img src={recipesIcon} alt="Genera ricette" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
+                    <img src={String(recipesIcon)} alt="Genera ricette" className="h-10 w-10 rounded-lg group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <span className="text-slate-700 font-bold text-sm">Ricette Magiche</span>
                   <span className="text-slate-500 text-xs">Gustose e dimagranti</span>
