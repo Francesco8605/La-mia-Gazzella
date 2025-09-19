@@ -1,7 +1,8 @@
-import { Mail, Settings, Star } from "lucide-react";
+import { Mail, Settings, Star, Crown, Leaf, Lock, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
 import { useQuery } from "@tanstack/react-query";
 
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
@@ -15,9 +16,14 @@ import confidentWomanImage from "@assets/generated_images/Confident_woman_mirror
 import cookingHealthyImage from "@assets/generated_images/Woman_cooking_healthy_meal_4c2042a7.png";
 import yogaWomanImage from "@assets/generated_images/Woman_doing_yoga_outdoors_47c6ca99.png";
 import successMeasurementImage from "@assets/generated_images/Woman_measuring_waist_success_dccecbfe.png";
+import formulaGazzellaImage from "@assets/PRODOTTO_formulagazzella_-formatoQUADRATO_1758271113849.webp";
 
 export default function Home() {
   const { isAuthenticated, user } = useAuth();
+  const { hasActiveSubscription, isInTrial } = useSubscription();
+  
+  // Determina se l'utente può accedere all'offerta (solo premium, non trial)
+  const canAccessOffer = hasActiveSubscription && !isInTrial;
   
   // Fetch user profile for weight calculation
   const { data: userProfile } = useQuery({
@@ -167,52 +173,88 @@ export default function Home() {
             </Link>
           </div>
 
-          {/* Success Stories Section */}
+          {/* Formula Gazzella Offer Section */}
           <div className="mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-800 mb-12">
-              🌟 Le Storie di Successo delle Nostre Gazzelle
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              <div className="bg-white rounded-3xl p-8 shadow-lg border border-rose-100">
-                <img 
-                  src={confidentWomanImage} 
-                  alt="Donna sicura di sé" 
-                  className="w-full h-48 object-cover rounded-2xl mb-6"
-                />
-                <h3 className="text-xl font-bold text-slate-800 mb-3">
-                  💪 Ritrova la Fiducia
-                </h3>
-                <p className="text-slate-600">
-                  "Ho perso 8 kg in 3 mesi e mi sento di nuovo me stessa. La menopausa non mi fa più paura!"
-                </p>
-              </div>
-              
-              <div className="bg-white rounded-3xl p-8 shadow-lg border border-emerald-100">
-                <img 
-                  src={cookingHealthyImage} 
-                  alt="Donna che cucina sano" 
-                  className="w-full h-48 object-cover rounded-2xl mb-6"
-                />
-                <h3 className="text-xl font-bold text-slate-800 mb-3">
-                  🍽️ Cucina con Gioia
-                </h3>
-                <p className="text-slate-600">
-                  "Finalmente ricette gustose che mi aiutano a dimagrire. Non rinuncio più al piacere del cibo!"
-                </p>
-              </div>
-              
-              <div className="bg-white rounded-3xl p-8 shadow-lg border border-purple-100">
-                <img 
-                  src={yogaWomanImage} 
-                  alt="Donna che fa yoga" 
-                  className="w-full h-48 object-cover rounded-2xl mb-6"
-                />
-                <h3 className="text-xl font-bold text-slate-800 mb-3">
-                  🧘‍♀️ Energia Ritrovata
-                </h3>
-                <p className="text-slate-600">
-                  "Ho 52 anni e non mi sono mai sentita così energica. Il metabolismo è tornato attivo!"
-                </p>
+            <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-2xl border border-emerald-200 max-w-4xl mx-auto">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                {/* Product Image */}
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <img 
+                      src={formulaGazzellaImage} 
+                      alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
+                      className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
+                      data-testid="img-formula-gazzella-home"
+                    />
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                      -29€
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-center md:text-left">
+                  <div className="flex items-center justify-center md:justify-start mb-4">
+                    <Crown className="h-8 w-8 text-emerald-600 mr-3" />
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                      💎 Offerta Esclusiva Formula Gazzella
+                    </h2>
+                  </div>
+                  
+                  <p className="text-lg text-slate-700 mb-4 leading-relaxed">
+                    L'integratore naturale studiato per accelerare il metabolismo durante la menopausa. 
+                    {canAccessOffer 
+                      ? <span className="font-bold text-emerald-600"> Ricevi 29€ di sconto esclusivo!</span>
+                      : <span className="font-bold text-amber-600"> Disponibile per abbonati Premium</span>
+                    }
+                  </p>
+
+                  <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-slate-600">
+                      <div className="flex items-center">
+                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                        85% principi attivi
+                      </div>
+                      <div className="flex items-center">
+                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                        100% naturale
+                      </div>
+                      <div className="flex items-center">
+                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                        Specifico per menopausa
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <Link href="/offerta-esclusiva" className="group inline-block">
+                    <Button
+                      className={`px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 min-h-[48px] ${
+                        canAccessOffer 
+                          ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                          : "bg-gradient-to-r from-gray-400 to-gray-500 text-gray-200 cursor-not-allowed"
+                      }`}
+                      data-testid="button-formula-gazzella-home"
+                    >
+                      {canAccessOffer ? (
+                        <Crown className="h-5 w-5 mr-2" />
+                      ) : (
+                        <Lock className="h-5 w-5 mr-2" />
+                      )}
+                      <span className="mr-2">
+                        {canAccessOffer ? "Scopri l'Offerta Esclusiva" : "Solo per Premium"}
+                      </span>
+                      <ArrowRight className="h-5 w-5" />
+                    </Button>
+                  </Link>
+
+                  {/* Trial User Message */}
+                  {!canAccessOffer && (
+                    <p className="text-sm text-amber-600 mt-3 font-medium">
+                      Passa a Premium per accedere all'offerta esclusiva Formula Gazzella
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
