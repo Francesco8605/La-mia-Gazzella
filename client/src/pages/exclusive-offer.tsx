@@ -81,11 +81,12 @@ export default function ExclusiveOffer() {
           <Button
             onClick={handleCTAClick}
             size="lg"
-            className="w-full md:w-auto px-12 py-6 text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300 border-0"
+            className="w-full md:w-auto px-6 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-2xl shadow-2xl transition-all duration-300 border-0 min-h-[56px] touch-manipulation"
             data-testid="button-main-cta"
           >
-            <Crown className="h-6 w-6 mr-3" />
-            Attiva ora il tuo sconto esclusivo
+            <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+            <span className="block sm:hidden">Sconto Esclusivo -29€</span>
+            <span className="hidden sm:block">Attiva ora il tuo sconto esclusivo</span>
           </Button>
         </div>
       </section>
@@ -112,14 +113,16 @@ export default function ExclusiveOffer() {
               </p>
               
               <div className="text-center">
-                <button
+                <Button
                   onClick={handleCTAClick}
-                  className="text-emerald-600 hover:text-emerald-800 text-lg font-semibold inline-flex items-center group transition-colors duration-200"
+                  variant="ghost"
+                  className="text-emerald-600 hover:text-emerald-800 active:text-emerald-900 text-lg font-semibold inline-flex items-center group transition-colors duration-200 px-6 py-4 min-h-[48px] touch-manipulation rounded-xl hover:bg-emerald-50 active:bg-emerald-100"
                   data-testid="button-storytelling-cta"
                 >
-                  Scopri ora la tua offerta
+                  <span className="block sm:hidden">Scopri l'offerta</span>
+                  <span className="hidden sm:block">Scopri ora la tua offerta</span>
                   <ArrowRight className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-200" />
-                </button>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -181,11 +184,12 @@ export default function ExclusiveOffer() {
               <div className="text-center">
                 <Button
                   onClick={handleCTAClick}
-                  className="w-full md:w-auto px-8 py-4 text-lg font-semibold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-xl shadow-lg transform hover:scale-105 transition-all duration-300"
+                  className="w-full md:w-auto px-6 md:px-8 py-4 md:py-4 text-base md:text-lg font-semibold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-xl shadow-lg transition-all duration-300 min-h-[56px] touch-manipulation"
                   data-testid="button-formula-cta"
                 >
-                  <Leaf className="h-5 w-5 mr-2" />
-                  Ricevi Formula Gazzella con 29€ di sconto →
+                  <Leaf className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  <span className="block sm:hidden">Ottieni Formula Gazzella -29€</span>
+                  <span className="hidden sm:block">Ricevi Formula Gazzella con 29€ di sconto →</span>
                 </Button>
               </div>
             </CardContent>
@@ -235,11 +239,12 @@ export default function ExclusiveOffer() {
                 <Button
                   onClick={handleCTAClick}
                   size="lg"
-                  className="w-full md:w-auto px-12 py-6 text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-2xl shadow-2xl transform hover:scale-105 transition-all duration-300"
+                  className="w-full md:w-auto px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-2xl shadow-2xl transition-all duration-300 min-h-[56px] touch-manipulation"
                   data-testid="button-economic-cta"
                 >
-                  <Crown className="h-6 w-6 mr-3" />
-                  Completa il tuo percorso adesso
+                  <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+                  <span className="block sm:hidden">Completa il Percorso</span>
+                  <span className="hidden sm:block">Completa il tuo percorso adesso</span>
                 </Button>
               </div>
             </CardContent>
