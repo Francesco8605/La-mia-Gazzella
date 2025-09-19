@@ -29,6 +29,7 @@ import CancelSubscription from "@/pages/cancel-subscription";
 import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import AdminDashboard from "@/pages/admin-dashboard";
+import ExclusiveOffer from "@/pages/exclusive-offer";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -169,6 +170,15 @@ function Router() {
               <ProfileGuard>
                 <AIChat />
               </ProfileGuard>
+            </SubscriptionGuard>
+          )}
+        </Route>
+        
+        {/* Exclusive Offer for Subscribers */}
+        <Route path="/offerta-esclusiva">
+          {() => (
+            <SubscriptionGuard>
+              <ExclusiveOffer />
             </SubscriptionGuard>
           )}
         </Route>
