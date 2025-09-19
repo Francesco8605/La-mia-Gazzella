@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Crown, Heart, Leaf, ArrowRight, CheckCircle } from "lucide-react";
+import formulaGazzellaImage from "@assets/PRODOTTO_formulagazzella_-formatoQUADRATO_1758271113849.webp";
 
 const DISCOUNT_URL = "https://ilmanualedellagazzella.com/discount/LAMIAGAZELLAELITEE";
 
@@ -137,6 +138,20 @@ export default function ExclusiveOffer() {
 
           <Card className="bg-white shadow-2xl border-emerald-200">
             <CardContent className="p-8 md:p-12">
+              {/* Product Image */}
+              <div className="flex justify-center mb-8">
+                <div className="relative">
+                  <img 
+                    src={formulaGazzellaImage} 
+                    alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
+                    className="w-48 h-48 md:w-64 md:h-64 object-contain mx-auto rounded-2xl shadow-lg"
+                    data-testid="img-formula-gazzella-product"
+                  />
+                  <div className="absolute -top-2 -right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                    -29€
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 {[
                   { name: "Meliloto", benefit: "Riduce gonfiore e ritenzione idrica" },
