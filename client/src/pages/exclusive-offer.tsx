@@ -2,14 +2,22 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Crown, Heart, Leaf, ArrowRight, CheckCircle } from "lucide-react";
+import { Crown, Heart, Leaf, ArrowRight, CheckCircle, Lock } from "lucide-react";
 import formulaGazzellaImage from "@assets/PRODOTTO_formulagazzella_-formatoQUADRATO_1758271113849.webp";
+import { useSubscription } from "@/hooks/useSubscription";
 
 const DISCOUNT_URL = "https://ilmanualedellagazzella.com/discount/LAMIAGAZELLAELITEE";
 
 export default function ExclusiveOffer() {
+  const { hasActiveSubscription, isInTrial, isLoading } = useSubscription();
+  
+  // Determina se l'utente può accedere all'offerta (solo premium, non trial)
+  const canAccessOffer = hasActiveSubscription && !isInTrial;
+  
   const handleCTAClick = () => {
-    window.open(DISCOUNT_URL, "_blank", "noopener,noreferrer");
+    if (canAccessOffer) {
+      window.open(DISCOUNT_URL, "_blank", "noopener,noreferrer");
+    }
   };
 
   // Set SEO meta tags
@@ -76,17 +84,47 @@ export default function ExclusiveOffer() {
               <span className="font-semibold text-red-600 dark:text-red-400">È come se il tuo abbonamento mensile all'app fosse completamente ripagato.</span><br />
               Un privilegio riservato solo a chi vuole il percorso completo.
             </p>
+
+            {/* Messaggio per utenti trial */}
+            {!canAccessOffer && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 mt-6">
+                <div className="flex items-center mb-3">
+                  <Crown className="h-6 w-6 text-amber-600 mr-3" />
+                  <h3 className="text-lg font-semibold text-amber-800">Accesso Premium Richiesto</h3>
+                </div>
+                <p className="text-amber-700 mb-4">
+                  Questa offerta esclusiva è riservata agli abbonati Premium di La Mia Gazzella. 
+                  Passa al piano Premium per accedere a questa e a tutte le altre funzionalità avanzate.
+                </p>
+                <div className="text-sm text-amber-600">
+                  <strong>Cosa include Premium:</strong> Piani pasti illimitati, ricette personalizzate, consultazione nutrizionale e accesso a tutte le offerte esclusive.
+                </div>
+              </div>
+            )}
           </div>
 
           <Button
             onClick={handleCTAClick}
             size="lg"
-            className="w-full md:w-auto px-6 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-2xl shadow-2xl transition-all duration-300 border-0 min-h-[56px] touch-manipulation"
+            disabled={!canAccessOffer}
+            className={`w-full md:w-auto px-6 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold rounded-2xl shadow-2xl transition-all duration-300 border-0 min-h-[56px] touch-manipulation ${
+              canAccessOffer 
+                ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white"
+                : "bg-gradient-to-r from-gray-400 to-gray-500 text-gray-200 cursor-not-allowed"
+            }`}
             data-testid="button-main-cta"
           >
-            <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
-            <span className="block sm:hidden">Sconto Esclusivo -29€</span>
-            <span className="hidden sm:block">Attiva ora il tuo sconto esclusivo</span>
+            {canAccessOffer ? (
+              <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+            ) : (
+              <Lock className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+            )}
+            <span className="block sm:hidden">
+              {canAccessOffer ? "Sconto Esclusivo -29€" : "Solo per Premium"}
+            </span>
+            <span className="hidden sm:block">
+              {canAccessOffer ? "Attiva ora il tuo sconto esclusivo" : "Esclusivo per abbonati Premium"}
+            </span>
           </Button>
         </div>
       </section>
@@ -116,12 +154,25 @@ export default function ExclusiveOffer() {
                 <Button
                   onClick={handleCTAClick}
                   variant="ghost"
-                  className="text-emerald-600 hover:text-emerald-800 active:text-emerald-900 text-lg font-semibold inline-flex items-center group transition-colors duration-200 px-6 py-4 min-h-[48px] touch-manipulation rounded-xl hover:bg-emerald-50 active:bg-emerald-100"
+                  disabled={!canAccessOffer}
+                  className={`text-lg font-semibold inline-flex items-center group transition-colors duration-200 px-6 py-4 min-h-[48px] touch-manipulation rounded-xl ${
+                    canAccessOffer
+                      ? "text-emerald-600 hover:text-emerald-800 active:text-emerald-900 hover:bg-emerald-50 active:bg-emerald-100"
+                      : "text-gray-400 cursor-not-allowed bg-gray-100"
+                  }`}
                   data-testid="button-storytelling-cta"
                 >
-                  <span className="block sm:hidden">Scopri l'offerta</span>
-                  <span className="hidden sm:block">Scopri ora la tua offerta</span>
-                  <ArrowRight className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-200" />
+                  <span className="block sm:hidden">
+                    {canAccessOffer ? "Scopri l'offerta" : "Solo Premium"}
+                  </span>
+                  <span className="hidden sm:block">
+                    {canAccessOffer ? "Scopri ora la tua offerta" : "Riservato agli abbonati Premium"}
+                  </span>
+                  {canAccessOffer ? (
+                    <ArrowRight className="h-5 w-5 ml-2 transform group-hover:translate-x-1 transition-transform duration-200" />
+                  ) : (
+                    <Lock className="h-5 w-5 ml-2" />
+                  )}
                 </Button>
               </div>
             </CardContent>
@@ -184,12 +235,25 @@ export default function ExclusiveOffer() {
               <div className="text-center">
                 <Button
                   onClick={handleCTAClick}
-                  className="w-full md:w-auto px-6 md:px-8 py-4 md:py-4 text-base md:text-lg font-semibold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-xl shadow-lg transition-all duration-300 min-h-[56px] touch-manipulation"
+                  disabled={!canAccessOffer}
+                  className={`w-full md:w-auto px-6 md:px-8 py-4 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 min-h-[56px] touch-manipulation ${
+                    canAccessOffer
+                      ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white"
+                      : "bg-gradient-to-r from-gray-400 to-gray-500 text-gray-200 cursor-not-allowed"
+                  }`}
                   data-testid="button-formula-cta"
                 >
-                  <Leaf className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-                  <span className="block sm:hidden">Ottieni Formula Gazzella -29€</span>
-                  <span className="hidden sm:block">Ricevi Formula Gazzella con 29€ di sconto →</span>
+                  {canAccessOffer ? (
+                    <Leaf className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  ) : (
+                    <Lock className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+                  )}
+                  <span className="block sm:hidden">
+                    {canAccessOffer ? "Ottieni Formula Gazzella -29€" : "Solo Premium"}
+                  </span>
+                  <span className="hidden sm:block">
+                    {canAccessOffer ? "Ricevi Formula Gazzella con 29€ di sconto →" : "Riservato agli abbonati Premium"}
+                  </span>
                 </Button>
               </div>
             </CardContent>
@@ -239,12 +303,25 @@ export default function ExclusiveOffer() {
                 <Button
                   onClick={handleCTAClick}
                   size="lg"
-                  className="w-full md:w-auto px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white rounded-2xl shadow-2xl transition-all duration-300 min-h-[56px] touch-manipulation"
+                  disabled={!canAccessOffer}
+                  className={`w-full md:w-auto px-8 md:px-12 py-4 md:py-6 text-lg md:text-xl font-bold rounded-2xl shadow-2xl transition-all duration-300 min-h-[56px] touch-manipulation ${
+                    canAccessOffer
+                      ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 active:from-red-700 active:to-red-800 text-white"
+                      : "bg-gradient-to-r from-gray-400 to-gray-500 text-gray-200 cursor-not-allowed"
+                  }`}
                   data-testid="button-economic-cta"
                 >
-                  <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
-                  <span className="block sm:hidden">Completa il Percorso</span>
-                  <span className="hidden sm:block">Completa il tuo percorso adesso</span>
+                  {canAccessOffer ? (
+                    <Crown className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+                  ) : (
+                    <Lock className="h-5 w-5 md:h-6 md:w-6 mr-2 md:mr-3" />
+                  )}
+                  <span className="block sm:hidden">
+                    {canAccessOffer ? "Completa il Percorso" : "Solo Premium"}
+                  </span>
+                  <span className="hidden sm:block">
+                    {canAccessOffer ? "Completa il tuo percorso adesso" : "Esclusivo per abbonati Premium"}
+                  </span>
                 </Button>
               </div>
             </CardContent>
