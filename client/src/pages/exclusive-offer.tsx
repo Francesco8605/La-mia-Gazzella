@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +11,45 @@ export default function ExclusiveOffer() {
     window.open(DISCOUNT_URL, "_blank", "noopener,noreferrer");
   };
 
+  // Set SEO meta tags
+  useEffect(() => {
+    document.title = "Offerta Esclusiva Formula Gazzella - La Mia Gazzella";
+    
+    // Create or update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', 'Esclusiva per abbonati La Mia Gazzella: ricevi 29€ di sconto su Formula Gazzella. Il tuo abbonamento diventa praticamente gratuito!');
+
+    // Add Open Graph tags
+    const ogTags = [
+      { property: 'og:title', content: 'Offerta Esclusiva Formula Gazzella - Solo per Abbonati' },
+      { property: 'og:description', content: 'Sconto di 29€ su Formula Gazzella riservato agli abbonati La Mia Gazzella. Completa il tuo percorso nutrizionale!' },
+      { property: 'og:url', content: window.location.href },
+      { property: 'og:type', content: 'website' }
+    ];
+
+    ogTags.forEach(({ property, content }) => {
+      let ogTag = document.querySelector(`meta[property="${property}"]`);
+      if (!ogTag) {
+        ogTag = document.createElement('meta');
+        ogTag.setAttribute('property', property);
+        document.head.appendChild(ogTag);
+      }
+      ogTag.setAttribute('content', content);
+    });
+
+    return () => {
+      // Reset title on cleanup
+      document.title = "La Mia Gazzella";
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-green-50 dark:from-slate-900 dark:via-slate-800 dark:to-emerald-900">
       {/* Hero Section */}
       <section className="relative px-4 py-16 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
@@ -22,19 +60,19 @@ export default function ExclusiveOffer() {
             </div>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 to-green-700 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-emerald-600 to-green-700 dark:from-emerald-400 dark:to-green-500 bg-clip-text text-transparent" data-testid="text-hero-title">
             Completa il tuo percorso esclusivo
           </h1>
           
-          <p className="text-xl md:text-2xl text-slate-700 mb-8 font-medium">
+          <p className="text-xl md:text-2xl text-slate-700 dark:text-slate-300 mb-8 font-medium">
             Solo chi ha scelto di abbonarsi a La Mia Gazzella può ottenere questo vantaggio straordinario.
           </p>
           
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl mb-8 border border-emerald-100">
-            <p className="text-lg md:text-xl text-slate-800 leading-relaxed mb-6">
-              Ricevi <span className="font-bold text-emerald-600 text-2xl">29€ di sconto</span> su Formula Gazzella, 
+          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-2xl mb-8 border border-emerald-100 dark:border-emerald-800">
+            <p className="text-lg md:text-xl text-slate-800 dark:text-slate-200 leading-relaxed mb-6">
+              Ricevi <span className="font-bold text-emerald-600 dark:text-emerald-400 text-2xl">29€ di sconto</span> su Formula Gazzella, 
               l'integratore studiato per il metabolismo in menopausa.<br />
-              <span className="font-semibold text-red-600">È come se il tuo abbonamento mensile all'app fosse completamente ripagato.</span><br />
+              <span className="font-semibold text-red-600 dark:text-red-400">È come se il tuo abbonamento mensile all'app fosse completamente ripagato.</span><br />
               Un privilegio riservato solo a chi vuole il percorso completo.
             </p>
           </div>
