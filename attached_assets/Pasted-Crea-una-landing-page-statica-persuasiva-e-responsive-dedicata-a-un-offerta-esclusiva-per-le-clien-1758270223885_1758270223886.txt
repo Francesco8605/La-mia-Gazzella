@@ -1,0 +1,89 @@
+Crea una landing page statica, persuasiva e responsive, dedicata a un’offerta esclusiva per le clienti abbonate all’app La Mia Gazzella.
+Non deve esserci alcuna integrazione con Shopify o altre piattaforme: i pulsanti devono semplicemente rimandare a questo link:
+https://ilmanualedellagazzella.com/discount/LAMIAGAZELLAELITEE
+
+Obiettivo della pagina:
+Trasmettere esclusività e senso di appartenenza, facendo percepire che l’integratore Formula Gazzella completa l’esperienza dell’app e che lo sconto di 29€ equivale, di fatto, ad avere l’abbonamento all’app gratis ogni mese.
+
+Sezioni richieste:
+
+1. Hero (inizio pagina) – impatto immediato
+
+Sfondo elegante, colori principali: verde e bianco, con accenti di rosso per le CTA.
+
+Titolo forte e sensazionale:
+"Completa il tuo percorso esclusivo"
+
+Sottotitolo emozionale:
+"Solo chi ha scelto di abbonarsi a La Mia Gazzella può ottenere questo vantaggio straordinario."
+
+Testo breve:
+"Ricevi 29€ di sconto su Formula Gazzella, l’integratore studiato per il metabolismo in menopausa.
+È come se il tuo abbonamento mensile all’app fosse completamente ripagato.
+Un privilegio riservato solo a chi vuole il percorso completo."
+
+CTA principale (verde brillante, testo bianco, bordo arrotondato):
+Testo: "Attiva ora il tuo sconto esclusivo"
+Link: https://ilmanualedellagazzella.com/discount/LAMIAGAZELLAELITEE
+
+2. Sezione di storytelling – senso di appartenenza
+
+Testo motivante e caloroso, tono premium:
+"Entrare in La Mia Gazzella significa molto più che seguire una dieta.
+Significa essere parte di una community ristretta, con strumenti e risorse che nessun altro ha.
+Formula Gazzella è stata creata solo per le donne in menopausa che vogliono risultati concreti e duraturi.
+Questo sconto esclusivo è il nostro modo di ringraziarti per aver scelto di affidarti completamente a noi."
+
+CTA testuale sotto il paragrafo:
+"Scopri ora la tua offerta →" (link identico alla CTA principale).
+
+3. Sezione composizione Formula Gazzella
+
+Titolo: "Formula Gazzella – 100% naturale, pensata per la menopausa"
+
+Presentare gli ingredienti con breve beneficio, in lista elegante:
+
+Meliloto – Riduce gonfiore e ritenzione idrica
+
+Melissa – Favorisce relax e benessere generale
+
+Tiglio – Aiuta la depurazione naturale
+
+Biancospino – Supporta l’equilibrio emotivo e ormonale
+
+Luppolo – Rimedio naturale per i sintomi della menopausa
+
+Trifoglio Rosso – Stimola il metabolismo femminile
+
+Nota finale: "85% di principi attivi, senza iodio né alghe, totalmente naturale."
+
+CTA sotto la lista:
+"Ricevi Formula Gazzella con 29€ di sconto →" (stesso link).
+
+4. Sezione valore economico – concetto "App Gratis"
+
+Titolo forte: "È come avere l’app GRATIS ogni mese"
+
+Testo breve ed esplicativo:
+"L’abbonamento a La Mia Gazzella costa 29€ al mese.
+Con questo sconto esclusivo, risparmi esattamente 29€ sull’integratore, come se il tuo abbonamento fosse totalmente rimborsato.
+Solo chi segue il percorso completo può accedere a questa offerta speciale."
+
+CTA centrale ben visibile:
+"Completa il tuo percorso adesso" → stesso link.
+
+5. Footer con disclaimer
+
+Testo piccolo:
+"Offerta valida solo per utenti con abbonamento attivo a La Mia Gazzella.
+Formula Gazzella non sostituisce uno stile di vita sano ed equilibrato."
+
+Requisiti di design:
+
+Stile premium e pulito, mobile-first.
+
+CTA ben visibili, sempre con il link indicato.
+
+Colori: verde predominante, bianco per sfondi, rosso per accenti e CTA di urgenza.
+
+Font leggibile e moderno, con titoli chiari e testo semplice.
