@@ -6,7 +6,7 @@ import { Crown, Heart, Leaf, ArrowRight, CheckCircle, Lock } from "lucide-react"
 import formulaGazzellaImage from "@assets/PRODOTTO_formulagazzella_-formatoQUADRATO_1758271113849.webp";
 import { useSubscription } from "@/hooks/useSubscription";
 
-const DISCOUNT_URL = "https://ilmanualedellagazzella.com/discount/LAMIAGAZELLAELITEE";
+const DISCOUNT_URL = "https://ilmanualedellagazzella.com/discount/LAMIAGAZZELLAELITE";
 
 export default function ExclusiveOffer() {
   const { hasActiveSubscription, isInTrial, isLoading } = useSubscription();
