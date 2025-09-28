@@ -1,4 +1,4 @@
-import { Mail, Settings, Star, Crown, Leaf, Lock, ArrowRight } from "lucide-react";
+import { Mail, Settings, Star, Crown, Leaf, Lock, ArrowRight, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -381,7 +381,7 @@ export default function Home() {
             <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
               Potenziamo stili di vita più sani attraverso la pianificazione nutrizionale avanzata. Piani alimentari e ricette personalizzati che si adattano alle tue esigenze e preferenze uniche.
             </p>
-            <div className="flex justify-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button
                 onClick={() => window.location.href = 'mailto:ilmanualedellagazzella@gmail.com?subject=Richiesta Supporto - La Mia Gazzella'}
                 className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -401,6 +401,24 @@ export default function Home() {
                   Gestisci Abbonamento
                 </Button>
               </Link>
+              
+              <Button
+                onClick={async () => {
+                  try {
+                    await fetch("/api/auth/logout", { method: "POST", credentials: "include" });
+                    window.location.reload();
+                  } catch (error) {
+                    console.error("Logout error:", error);
+                    window.location.reload();
+                  }
+                }}
+                variant="outline"
+                className="bg-red-600/20 border-red-300/30 text-white hover:bg-red-600/30 hover:border-red-300/50 font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                data-testid="footer-logout-button"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Esci dall'App
+              </Button>
             </div>
           </div>
           
