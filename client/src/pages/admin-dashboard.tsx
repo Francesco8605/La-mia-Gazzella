@@ -892,6 +892,18 @@ export default function AdminDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        {/* Footer Logout Button */}
+        <div className="mt-8 flex justify-center">
+          <Button 
+            onClick={handleLogout} 
+            variant="outline" 
+            className="bg-red-50 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-300"
+            data-testid="admin-footer-logout-button"
+          >
+            🚪 Esci dalla Dashboard
+          </Button>
+        </div>
       </div>
     </div>
   );
