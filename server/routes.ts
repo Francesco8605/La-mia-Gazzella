@@ -3262,6 +3262,159 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // TEST EMAIL NOTIFICATIONS ENDPOINT
+  app.post("/api/admin/test-email-notifications", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      console.log('📧 Starting email notifications test...');
+      const testEmail = 'test.user@example.com';
+      const results = [];
+
+      // Test 1: User Registration Notification
+      try {
+        console.log('📧 Testing user registration notification...');
+        const registrationResult = await sendAdminNotification('user_registration', testEmail, {});
+        results.push({
+          type: 'user_registration',
+          success: registrationResult.success,
+          messageId: registrationResult.messageId,
+          error: registrationResult.error || null
+        });
+        console.log('✅ User registration notification test completed');
+      } catch (error: any) {
+        results.push({
+          type: 'user_registration',
+          success: false,
+          error: error.message
+        });
+        console.error('❌ User registration notification test failed:', error);
+      }
+
+      // Test 2: Trial Started Notification
+      try {
+        console.log('📧 Testing trial started notification...');
+        const trialResult = await sendAdminNotification('trial_started', testEmail, {
+          trialEndDate: new Date('2025-10-28T10:00:00.000Z'),
+          subscriptionPlan: 'monthly-29'
+        });
+        results.push({
+          type: 'trial_started',
+          success: trialResult.success,
+          messageId: trialResult.messageId,
+          error: trialResult.error || null
+        });
+        console.log('✅ Trial started notification test completed');
+      } catch (error: any) {
+        results.push({
+          type: 'trial_started',
+          success: false,
+          error: error.message
+        });
+        console.error('❌ Trial started notification test failed:', error);
+      }
+
+      // Test 3: Subscription Created Notification
+      try {
+        console.log('📧 Testing subscription created notification...');
+        const subscriptionResult = await sendAdminNotification('subscription_created', testEmail, {
+          subscriptionPlan: 'monthly-29',
+          subscriptionEndDate: new Date('2025-10-28T10:00:00.000Z'),
+          amount: 2900 // €29.00 in cents
+        });
+        results.push({
+          type: 'subscription_created',
+          success: subscriptionResult.success,
+          messageId: subscriptionResult.messageId,
+          error: subscriptionResult.error || null
+        });
+        console.log('✅ Subscription created notification test completed');
+      } catch (error: any) {
+        results.push({
+          type: 'subscription_created',
+          success: false,
+          error: error.message
+        });
+        console.error('❌ Subscription created notification test failed:', error);
+      }
+
+      // Test 4: Subscription Renewed Notification
+      try {
+        console.log('📧 Testing subscription renewed notification...');
+        const renewalResult = await sendAdminNotification('subscription_renewed', testEmail, {
+          amount: 2900, // €29.00 in cents
+          subscriptionPlan: 'monthly-29'
+        });
+        results.push({
+          type: 'subscription_renewed',
+          success: renewalResult.success,
+          messageId: renewalResult.messageId,
+          error: renewalResult.error || null
+        });
+        console.log('✅ Subscription renewed notification test completed');
+      } catch (error: any) {
+        results.push({
+          type: 'subscription_renewed',
+          success: false,
+          error: error.message
+        });
+        console.error('❌ Subscription renewed notification test failed:', error);
+      }
+
+      // Test 5: Subscription Canceled Notification
+      try {
+        console.log('📧 Testing subscription canceled notification...');
+        const cancellationResult = await sendAdminNotification('subscription_canceled', testEmail, {
+          subscriptionPlan: 'monthly-29'
+        });
+        results.push({
+          type: 'subscription_canceled',
+          success: cancellationResult.success,
+          messageId: cancellationResult.messageId,
+          error: cancellationResult.error || null
+        });
+        console.log('✅ Subscription canceled notification test completed');
+      } catch (error: any) {
+        results.push({
+          type: 'subscription_canceled',
+          success: false,
+          error: error.message
+        });
+        console.error('❌ Subscription canceled notification test failed:', error);
+      }
+
+      // Calculate summary
+      const totalTests = results.length;
+      const successfulTests = results.filter(r => r.success).length;
+      const failedTests = totalTests - successfulTests;
+
+      console.log('📊 Email notifications test summary:', {
+        total: totalTests,
+        successful: successfulTests,
+        failed: failedTests
+      });
+
+      res.json({
+        message: 'Email notifications test completed',
+        testEmail: testEmail,
+        adminEmail: 'ilmanualedellagazzella@gmail.com',
+        summary: {
+          total: totalTests,
+          successful: successfulTests,
+          failed: failedTests,
+          successRate: `${Math.round((successfulTests / totalTests) * 100)}%`
+        },
+        results: results,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('❌ Email notifications test failed:', error);
+      res.status(500).json({
+        message: 'Email notifications test failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
   console.log("✅ All routes registered successfully including admin dashboard");
 
   const httpServer = createServer(app);
