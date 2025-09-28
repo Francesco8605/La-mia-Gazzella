@@ -36,7 +36,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
         };
         console.log('✅ Logo attachment prepared');
       }
-    } catch (logoError) {
+    } catch (logoError: any) {
       console.error('❌ Error preparing logo:', logoError.message);
     }
     
@@ -233,5 +233,129 @@ export async function sendPasswordRecoveryEmail(email: string, username: string,
   } catch (error) {
     console.error('❌ Error sending email:', error);
     throw error;
+  }
+}
+
+// Send admin notification for important events
+export async function sendAdminNotification(eventType: string, userEmail: string, details: any = {}) {
+  try {
+    const transporter = createTransporter();
+    const adminEmail = "ilmanualedellagazzella@gmail.com";
+    
+    let subject = '';
+    let eventTitle = '';
+    let eventColor = '#2d5016';
+    let eventIcon = '📧';
+    
+    // Configure based on event type
+    switch (eventType) {
+      case 'user_registration':
+        subject = '🎉 Nuova Registrazione - La Mia Gazzella';
+        eventTitle = 'Nuova Utente Registrata';
+        eventColor = '#22c55e';
+        eventIcon = '🎉';
+        break;
+      case 'trial_started':
+        subject = '🆓 Trial Avviato - La Mia Gazzella';
+        eventTitle = 'Trial Period Iniziato';
+        eventColor = '#f59e0b';
+        eventIcon = '🆓';
+        break;
+      case 'subscription_created':
+        subject = '💰 Nuovo Abbonamento Pagato - La Mia Gazzella';
+        eventTitle = 'Abbonamento Premium Attivato';
+        eventColor = '#10b981';
+        eventIcon = '💰';
+        break;
+      case 'subscription_renewed':
+        subject = '🔄 Rinnovo Abbonamento - La Mia Gazzella';
+        eventTitle = 'Abbonamento Rinnovato';
+        eventColor = '#3b82f6';
+        eventIcon = '🔄';
+        break;
+      case 'subscription_canceled':
+        subject = '❌ Abbonamento Cancellato - La Mia Gazzella';
+        eventTitle = 'Abbonamento Cancellato';
+        eventColor = '#ef4444';
+        eventIcon = '❌';
+        break;
+      default:
+        subject = '🔔 Notifica Sistema - La Mia Gazzella';
+        eventTitle = 'Evento Sistema';
+        eventIcon = '🔔';
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: 'Arial', sans-serif; background-color: #f8f9fa; padding: 20px; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); overflow: hidden;">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 1.8em; font-weight: bold;">🦌 La Mia Gazzella</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">Dashboard Admin - Notifica Sistema</p>
+          </div>
+          
+          <!-- Event Info -->
+          <div style="padding: 30px;">
+            <div style="background: ${eventColor}; color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
+              <h2 style="margin: 0; font-size: 1.5em;">${eventIcon} ${eventTitle}</h2>
+            </div>
+            
+            <!-- User Details -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${eventColor};">
+              <h3 style="margin-top: 0; color: #2d5016;">👤 Dettagli Utente</h3>
+              <p style="margin: 10px 0; color: #333;"><strong>Email:</strong> ${userEmail}</p>
+              
+              ${details.subscriptionPlan ? `<p style="margin: 10px 0; color: #333;"><strong>Piano:</strong> ${details.subscriptionPlan}</p>` : ''}
+              ${details.amount ? `<p style="margin: 10px 0; color: #333;"><strong>Importo:</strong> €${(details.amount / 100).toFixed(2)}</p>` : ''}
+              ${details.subscriptionEndDate ? `<p style="margin: 10px 0; color: #333;"><strong>Scadenza:</strong> ${new Date(details.subscriptionEndDate).toLocaleDateString('it-IT')}</p>` : ''}
+              ${details.trialEndDate ? `<p style="margin: 10px 0; color: #333;"><strong>Fine Trial:</strong> ${new Date(details.trialEndDate).toLocaleDateString('it-IT')}</p>` : ''}
+            </div>
+            
+            <!-- Admin Actions -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://lamiagazzella.replit.app/admin" 
+                 style="background-color: #2d5016; color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: bold; margin-right: 10px;">
+                📊 Vai alla Dashboard
+              </a>
+            </div>
+            
+            <!-- Event Timestamp -->
+            <div style="text-align: center; color: #666; font-size: 14px; margin-top: 25px;">
+              <p style="margin: 0;">🕒 Evento registrato il ${new Date().toLocaleString('it-IT')}</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+            <p style="margin: 0;">Questa è una notifica automatica dal sistema La Mia Gazzella</p>
+            <p style="margin: 5px 0 0 0;">Admin Dashboard - Monitoring Sistema</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `"La Mia Gazzella - Sistema" <${process.env.GMAIL_USER}>`,
+      to: adminEmail,
+      subject: subject,
+      html: htmlContent
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Admin notification sent: ${eventType} for ${userEmail}`);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error: any) {
+    console.error('❌ Error sending admin notification:', error);
+    // Don't throw - we don't want admin notifications to break user flow
+    return { success: false, error: error.message };
   }
 }

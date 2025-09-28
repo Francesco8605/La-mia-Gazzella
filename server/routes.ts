@@ -5,7 +5,7 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail, sendWelcomeEmail } from "./services/email";
+import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification } from "./services/email";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
 import { z } from "zod";
@@ -549,6 +549,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (emailError: any) {
           console.error("⚠️ Welcome email error (registration continues):", emailError.message);
           // Non bloccante - la registrazione continua anche se l'email fallisce
+        }
+
+        // Send admin notification for new registration
+        try {
+          console.log("📧 Sending admin notification for new registration...");
+          await sendAdminNotification('user_registration', email, {});
+          console.log("✅ Admin notification sent successfully");
+        } catch (adminEmailError: any) {
+          console.error("⚠️ Admin notification error (registration continues):", adminEmailError.message);
+          // Non bloccante - la registrazione continua anche se la notifica admin fallisce
         }
 
         // Remove password from response
@@ -2235,6 +2245,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   } catch (whatsappError: any) {
                     console.error('⚠️ WhatsApp card insertion notification error (trial continues):', whatsappError.message);
                   }
+                  
+                  // Send admin notification for trial started
+                  try {
+                    console.log('📧 Sending admin notification for trial started...');
+                    await sendAdminNotification('trial_started', customerEmail, {
+                      trialEndDate: updateData.trialEndDate,
+                      subscriptionPlan: updateData.subscriptionPlan
+                    });
+                    console.log('✅ Admin trial notification sent successfully');
+                  } catch (adminEmailError: any) {
+                    console.error('⚠️ Admin trial notification error (trial continues):', adminEmailError.message);
+                  }
                 }
               } catch (trialError: any) {
                 console.error('⚠️ Trial activation error (checkout continues):', trialError.message);
@@ -2276,6 +2298,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ WhatsApp payment notification sent successfully');
                   } catch (whatsappError: any) {
                     console.error('⚠️ WhatsApp payment notification error (checkout continues):', whatsappError.message);
+                  }
+                  
+                  // Send admin notification for subscription created
+                  try {
+                    console.log('📧 Sending admin notification for subscription created...');
+                    await sendAdminNotification('subscription_created', customerEmail, {
+                      subscriptionPlan: updateData.subscriptionPlan,
+                      subscriptionEndDate: updateData.subscriptionEndDate,
+                      amount: 2900 // 29.00 EUR in cents
+                    });
+                    console.log('✅ Admin subscription notification sent successfully');
+                  } catch (adminEmailError: any) {
+                    console.error('⚠️ Admin subscription notification error (checkout continues):', adminEmailError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -2439,6 +2474,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const shopifyService = getShopifyService();
               await shopifyService.tagCustomerAsCanceled(targetUser.email);
               await whatsappService.sendCancellationNotification(targetUser.email, 'Abbonamento cancellato definitivamente');
+              
+              // Send admin notification for subscription deleted
+              try {
+                console.log('📧 Sending admin notification for subscription deleted...');
+                await sendAdminNotification('subscription_canceled', targetUser.email, {
+                  subscriptionPlan: targetUser.subscriptionPlan || 'monthly'
+                });
+                console.log('✅ Admin deletion notification sent successfully');
+              } catch (adminEmailError: any) {
+                console.error('⚠️ Admin deletion notification error (webhook continues):', adminEmailError.message);
+              }
             }
           } else {
             console.error('❌ User not found for deleted subscription:', deletedSubscription.id);
@@ -2501,6 +2547,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ WhatsApp payment notification sent successfully');
                   } catch (whatsappError: any) {
                     console.error('⚠️ WhatsApp payment notification error (payment processing continues):', whatsappError.message);
+                  }
+                  
+                  // Send admin notification for subscription renewed
+                  try {
+                    console.log('📧 Sending admin notification for subscription renewed...');
+                    const invoiceAmount = (invoice as any).amount_paid; // Amount in cents
+                    await sendAdminNotification('subscription_renewed', customerEmail, {
+                      amount: invoiceAmount,
+                      subscriptionPlan: 'monthly' // Default plan
+                    });
+                    console.log('✅ Admin renewal notification sent successfully');
+                  } catch (adminEmailError: any) {
+                    console.error('⚠️ Admin renewal notification error (payment continues):', adminEmailError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -2630,6 +2689,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await shopifyService.tagCustomerAsCanceled(user.email);
         await whatsappService.sendCancellationNotification(user.email, 'Cancellazione richiesta dall\'utente');
         
+        // Send admin notification for subscription canceled
+        try {
+          console.log('📧 Sending admin notification for subscription canceled...');
+          await sendAdminNotification('subscription_canceled', user.email, {
+            subscriptionPlan: user.subscriptionPlan || 'monthly'
+          });
+          console.log('✅ Admin cancellation notification sent successfully');
+        } catch (adminEmailError: any) {
+          console.error('⚠️ Admin cancellation notification error (cancellation continues):', adminEmailError.message);
+        }
+        
         res.json({ 
           message: "Abbonamento cancellato con successo",
           subscription: {
@@ -2653,6 +2723,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const shopifyService = getShopifyService();
         await shopifyService.tagCustomerAsCanceled(user.email);
         await whatsappService.sendCancellationNotification(user.email, 'Trial gratuito cancellato');
+        
+        // Send admin notification for trial canceled
+        try {
+          console.log('📧 Sending admin notification for trial canceled...');
+          await sendAdminNotification('subscription_canceled', user.email, {
+            subscriptionPlan: 'trial'
+          });
+          console.log('✅ Admin trial cancellation notification sent successfully');
+        } catch (adminEmailError: any) {
+          console.error('⚠️ Admin trial cancellation notification error (cancellation continues):', adminEmailError.message);
+        }
         
         res.json({ 
           message: "Abbonamento di prova cancellato con successo",
