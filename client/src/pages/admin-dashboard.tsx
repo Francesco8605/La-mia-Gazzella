@@ -336,6 +336,7 @@ export default function AdminDashboard() {
                       <TableHead>Stato</TableHead>
                       <TableHead>Piani</TableHead>
                       <TableHead>Ricette</TableHead>
+                      <TableHead>Data Rinnovo</TableHead>
                       <TableHead>Ultima Attività</TableHead>
                       <TableHead>Registrazione</TableHead>
                       <TableHead>Azioni</TableHead>
@@ -353,6 +354,15 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>{user.mealPlansCount || 0}</TableCell>
                         <TableCell>{user.recipesCount || 0}</TableCell>
+                        <TableCell>
+                          {user.subscriptionEndDate && (user.subscriptionStatus === 'active' || user.subscriptionStatus === 'canceled') ? (
+                            <Badge variant={user.subscriptionStatus === 'active' ? 'default' : 'destructive'}>
+                              {new Date(user.subscriptionEndDate).toLocaleDateString('it-IT')}
+                            </Badge>
+                          ) : (
+                            <span className="text-slate-400">N/A</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString('it-IT') : 'Mai'}
                         </TableCell>
