@@ -3120,6 +3120,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // EMERGENCY ENDPOINT: Fix Claudia's subscription end date (no auth for urgent fix)
+  app.patch("/api/emergency/fix-claudia-subscription", async (req: any, res) => {
+    try {
+      const claudiaUserId = "e0ff0d79-1d68-40ee-bbe2-394eb96f562b";
+      
+      // Update subscription end date from Sep 28 to Oct 28, 2025
+      const newEndDate = new Date("2025-10-28T10:01:06.973Z");
+      
+      const updatedUser = await storage.updateUserStripeInfo(claudiaUserId, {
+        subscriptionEndDate: newEndDate
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`🔧 EMERGENCY FIX: Updated Claudia's subscription end date to ${newEndDate.toISOString()}`);
+      
+      res.json({
+        message: "Subscription end date updated successfully",
+        userId: claudiaUserId,
+        newEndDate: newEndDate.toISOString(),
+        userEmail: updatedUser.email,
+        status: "EMERGENCY_FIX_APPLIED"
+      });
+    } catch (error) {
+      console.error("Error fixing Claudia subscription:", error);
+      res.status(500).json({ message: "Error updating subscription" });
+    }
+  });
+
+  // TEMPORARY ADMIN ENDPOINT: Fix Claudia's subscription end date
+  app.patch("/api/admin/fix-claudia-subscription", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const claudiaUserId = "e0ff0d79-1d68-40ee-bbe2-394eb96f562b";
+      
+      // Update subscription end date from Sep 28 to Oct 28, 2025
+      const newEndDate = new Date("2025-10-28T10:01:06.973Z");
+      
+      const updatedUser = await storage.updateUserStripeInfo(claudiaUserId, {
+        subscriptionEndDate: newEndDate
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`🔧 ADMIN FIX: Updated Claudia's subscription end date to ${newEndDate.toISOString()}`);
+      
+      res.json({
+        message: "Subscription end date updated successfully",
+        userId: claudiaUserId,
+        newEndDate: newEndDate.toISOString(),
+        userEmail: updatedUser.email
+      });
+    } catch (error) {
+      console.error("Error fixing Claudia subscription:", error);
+      res.status(500).json({ message: "Error updating subscription" });
+    }
+  });
+
   console.log("✅ All routes registered successfully including admin dashboard");
 
   const httpServer = createServer(app);
