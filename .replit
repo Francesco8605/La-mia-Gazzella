@@ -1,10 +1,10 @@
-modules = ["nodejs-20", "web", "postgresql-16", "python-3.11"]
+modules = ["nodejs-20", "web", "postgresql-16"]
 run = "npm run dev"
 hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["cairo", "ffmpeg-full", "freetype", "ghostscript", "gobject-introspection", "gtk3", "jq", "pkg-config", "qhull", "tcl", "tk"]
+packages = ["jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
@@ -14,10 +14,6 @@ run = ["npm", "run", "start"]
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 35375
-externalPort = 6000
 
 [[ports]]
 localPort = 36039
