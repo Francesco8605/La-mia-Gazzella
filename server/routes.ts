@@ -5,7 +5,8 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification } from "./services/email";
+import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sendDailyBusinessSummary } from "./services/email";
+import { getBusinessSummary, getYesterdayBusinessSummary } from "./services/business-metrics";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
 import { z } from "zod";
@@ -559,6 +560,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (adminEmailError: any) {
           console.error("⚠️ Admin notification error (registration continues):", adminEmailError.message);
           // Non bloccante - la registrazione continua anche se la notifica admin fallisce
+        }
+
+        // Log user registration activity for daily tracking
+        try {
+          await storage.createActivityLog({
+            userId: user.id,
+            action: 'user_registration',
+            details: { email: user.email, username: user.username },
+            ipAddress: req.ip || 'unknown',
+            userAgent: req.get('User-Agent') || 'unknown'
+          });
+          console.log("✅ Registration activity logged successfully");
+        } catch (logError: any) {
+          console.error("⚠️ Activity logging error (registration continues):", logError.message);
         }
 
         // Remove password from response
@@ -2257,6 +2272,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   } catch (adminEmailError: any) {
                     console.error('⚠️ Admin trial notification error (trial continues):', adminEmailError.message);
                   }
+
+                  // Log trial started activity for daily tracking
+                  try {
+                    await storage.createActivityLog({
+                      userId: targetUserId,
+                      action: 'trial_started',
+                      details: { 
+                        email: customerEmail,
+                        subscriptionPlan: updateData.subscriptionPlan,
+                        trialEndDate: updateData.trialEndDate
+                      },
+                      ipAddress: 'stripe-webhook',
+                      userAgent: 'stripe-webhook'
+                    });
+                    console.log('✅ Trial started activity logged successfully');
+                  } catch (logError: any) {
+                    console.error('⚠️ Activity logging error (trial continues):', logError.message);
+                  }
                 }
               } catch (trialError: any) {
                 console.error('⚠️ Trial activation error (checkout continues):', trialError.message);
@@ -2311,6 +2344,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ Admin subscription notification sent successfully');
                   } catch (adminEmailError: any) {
                     console.error('⚠️ Admin subscription notification error (checkout continues):', adminEmailError.message);
+                  }
+
+                  // Log subscription created activity for daily tracking
+                  try {
+                    await storage.createActivityLog({
+                      userId: targetUserId,
+                      action: 'subscription_created',
+                      details: { 
+                        email: customerEmail,
+                        subscriptionPlan: updateData.subscriptionPlan,
+                        subscriptionEndDate: updateData.subscriptionEndDate,
+                        amount: 2900
+                      },
+                      ipAddress: 'stripe-webhook',
+                      userAgent: 'stripe-webhook'
+                    });
+                    console.log('✅ Subscription created activity logged successfully');
+                  } catch (logError: any) {
+                    console.error('⚠️ Activity logging error (subscription continues):', logError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -2485,6 +2537,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               } catch (adminEmailError: any) {
                 console.error('⚠️ Admin deletion notification error (webhook continues):', adminEmailError.message);
               }
+
+              // Log subscription deleted activity for daily tracking
+              try {
+                await storage.createActivityLog({
+                  userId: targetUser.id,
+                  action: 'subscription_canceled',
+                  details: { 
+                    email: targetUser.email,
+                    subscriptionPlan: targetUser.subscriptionPlan || 'monthly',
+                    reason: 'stripe_deleted'
+                  },
+                  ipAddress: 'stripe-webhook',
+                  userAgent: 'stripe-webhook'
+                });
+                console.log('✅ Subscription deleted activity logged successfully');
+              } catch (logError: any) {
+                console.error('⚠️ Activity logging error (webhook continues):', logError.message);
+              }
             }
           } else {
             console.error('❌ User not found for deleted subscription:', deletedSubscription.id);
@@ -2560,6 +2630,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     console.log('✅ Admin renewal notification sent successfully');
                   } catch (adminEmailError: any) {
                     console.error('⚠️ Admin renewal notification error (payment continues):', adminEmailError.message);
+                  }
+
+                  // Log subscription renewed activity for daily tracking
+                  try {
+                    const invoiceAmount = (invoice as any).amount_paid;
+                    await storage.createActivityLog({
+                      userId: targetUser.id,
+                      action: 'subscription_renewed',
+                      details: { 
+                        email: customerEmail,
+                        amount: invoiceAmount,
+                        subscriptionPlan: 'monthly'
+                      },
+                      ipAddress: 'stripe-webhook',
+                      userAgent: 'stripe-webhook'
+                    });
+                    console.log('✅ Subscription renewed activity logged successfully');
+                  } catch (logError: any) {
+                    console.error('⚠️ Activity logging error (payment continues):', logError.message);
                   }
                 }
               } catch (shopifyError: any) {
@@ -2699,6 +2788,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (adminEmailError: any) {
           console.error('⚠️ Admin cancellation notification error (cancellation continues):', adminEmailError.message);
         }
+
+        // Log subscription canceled activity for daily tracking
+        try {
+          await storage.createActivityLog({
+            userId: userId,
+            action: 'subscription_canceled',
+            details: { 
+              email: user.email,
+              subscriptionPlan: user.subscriptionPlan || 'monthly',
+              reason: 'user_requested'
+            },
+            ipAddress: req.ip || 'unknown',
+            userAgent: req.get('User-Agent') || 'unknown'
+          });
+          console.log('✅ Subscription canceled activity logged successfully');
+        } catch (logError: any) {
+          console.error('⚠️ Activity logging error (cancellation continues):', logError.message);
+        }
         
         res.json({ 
           message: "Abbonamento cancellato con successo",
@@ -2733,6 +2840,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log('✅ Admin trial cancellation notification sent successfully');
         } catch (adminEmailError: any) {
           console.error('⚠️ Admin trial cancellation notification error (cancellation continues):', adminEmailError.message);
+        }
+
+        // Log trial canceled activity for daily tracking
+        try {
+          await storage.createActivityLog({
+            userId: userId,
+            action: 'subscription_canceled',
+            details: { 
+              email: user.email,
+              subscriptionPlan: 'trial',
+              reason: 'trial_user_requested'
+            },
+            ipAddress: req.ip || 'unknown',
+            userAgent: req.get('User-Agent') || 'unknown'
+          });
+          console.log('✅ Trial canceled activity logged successfully');
+        } catch (logError: any) {
+          console.error('⚠️ Activity logging error (trial cancellation continues):', logError.message);
         }
         
         res.json({ 
@@ -3409,6 +3534,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('❌ Email notifications test failed:', error);
       res.status(500).json({
         message: 'Email notifications test failed',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // DAILY BUSINESS SUMMARY ENDPOINTS
+
+  // Manual daily summary send endpoint (admin only)
+  app.post("/api/admin/send-daily-summary", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      console.log('📊 Sending manual daily business summary...');
+      
+      // Get yesterday's summary by default (morning reports are about yesterday's data)
+      const businessSummary = await getYesterdayBusinessSummary();
+      
+      // Send the email
+      const emailResult = await sendDailyBusinessSummary(businessSummary);
+      
+      res.json({
+        message: 'Daily business summary sent successfully',
+        emailResult: emailResult,
+        summary: businessSummary,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error('❌ Error sending daily business summary:', error);
+      res.status(500).json({
+        message: 'Failed to send daily business summary',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Get business metrics endpoint (admin only) - for dashboard or manual checking
+  app.get("/api/admin/business-metrics", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const { date } = req.query;
+      
+      let businessSummary;
+      if (date) {
+        // Get metrics for specific date
+        const targetDate = new Date(date);
+        businessSummary = await getBusinessSummary(targetDate);
+      } else {
+        // Get yesterday's metrics by default
+        businessSummary = await getYesterdayBusinessSummary();
+      }
+      
+      res.json(businessSummary);
+    } catch (error: any) {
+      console.error('❌ Error fetching business metrics:', error);
+      res.status(500).json({
+        message: 'Failed to fetch business metrics',
         error: error.message,
         timestamp: new Date().toISOString()
       });

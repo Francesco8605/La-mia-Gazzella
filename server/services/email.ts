@@ -359,3 +359,191 @@ export async function sendAdminNotification(eventType: string, userEmail: string
     return { success: false, error: error.message };
   }
 }
+
+// Send daily business summary email
+export async function sendDailyBusinessSummary(businessSummary: any) {
+  try {
+    const transporter = createTransporter();
+    const adminEmail = "ilmanualedellagazzella@gmail.com";
+    
+    const { daily, totals, generatedAt } = businessSummary;
+    const summaryDate = new Date(daily.date).toLocaleDateString('it-IT', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+
+    // Calculate percentage changes (if needed in future versions)
+    const totalEvents = daily.newRegistrations + daily.trialsStarted + daily.subscriptionsCreated + 
+                       daily.subscriptionsRenewed + daily.subscriptionsCanceled;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>📊 Riepilogo Giornaliero - La Mia Gazzella</title>
+      </head>
+      <body style="font-family: 'Arial', sans-serif; background-color: #f8f9fa; padding: 20px; line-height: 1.6; margin: 0;">
+        <div style="max-width: 700px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.1); overflow: hidden;">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 30px; text-align: center;">
+            <h1 style="margin: 0; font-size: 2em; font-weight: bold;">🦌 La Mia Gazzella</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1.1em;">Riepilogo Business Giornaliero</p>
+            <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 1em;">${summaryDate}</p>
+          </div>
+          
+          <!-- Daily Metrics Section -->
+          <div style="padding: 30px;">
+            <div style="background: #f0f9ff; padding: 25px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid #3b82f6;">
+              <h2 style="margin-top: 0; color: #1e40af; font-size: 1.5em; display: flex; align-items: center;">
+                📈 Attività di Oggi
+              </h2>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <!-- Registrations -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #22c55e;">
+                  <div style="font-size: 2.5em; font-weight: bold; color: #22c55e; margin-bottom: 5px;">
+                    ${daily.newRegistrations}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">🎉 Nuove Registrazioni</div>
+                </div>
+                
+                <!-- Trials -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #f59e0b;">
+                  <div style="font-size: 2.5em; font-weight: bold; color: #f59e0b; margin-bottom: 5px;">
+                    ${daily.trialsStarted}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">🆓 Trial Avviati</div>
+                </div>
+                
+                <!-- New Subscriptions -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #10b981;">
+                  <div style="font-size: 2.5em; font-weight: bold; color: #10b981; margin-bottom: 5px;">
+                    ${daily.subscriptionsCreated}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">💰 Abbonamenti Pagati</div>
+                </div>
+                
+                <!-- Renewals -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #3b82f6;">
+                  <div style="font-size: 2.5em; font-weight: bold; color: #3b82f6; margin-bottom: 5px;">
+                    ${daily.subscriptionsRenewed}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">🔄 Rinnovi</div>
+                </div>
+              </div>
+
+              <!-- Cancellations (Full Width) -->
+              <div style="margin-top: 20px;">
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center; border: 2px solid #ef4444;">
+                  <div style="font-size: 2.5em; font-weight: bold; color: #ef4444; margin-bottom: 5px;">
+                    ${daily.subscriptionsCanceled}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">❌ Cancellazioni</div>
+                </div>
+              </div>
+
+              <!-- Daily Summary -->
+              <div style="margin-top: 25px; padding: 15px; background: rgba(45, 80, 22, 0.1); border-radius: 8px; text-align: center;">
+                <strong style="color: #2d5016; font-size: 1.1em;">
+                  📊 Totale Eventi Oggi: ${totalEvents}
+                </strong>
+              </div>
+            </div>
+
+            <!-- Total Metrics Section -->
+            <div style="background: #fef3c7; padding: 25px; border-radius: 10px; border-left: 5px solid #f59e0b;">
+              <h2 style="margin-top: 0; color: #92400e; font-size: 1.5em; display: flex; align-items: center;">
+                🏆 Statistiche Totali Business
+              </h2>
+              
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <!-- Total Users -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2.2em; font-weight: bold; color: #2d5016; margin-bottom: 5px;">
+                    ${totals.totalUsers}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">👥 Utenti Totali</div>
+                </div>
+                
+                <!-- Active Subscriptions -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2.2em; font-weight: bold; color: #10b981; margin-bottom: 5px;">
+                    ${totals.activeSubscriptions}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">✅ Abbonamenti Attivi</div>
+                </div>
+                
+                <!-- Trial Users -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2.2em; font-weight: bold; color: #f59e0b; margin-bottom: 5px;">
+                    ${totals.trialUsers}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">🆓 Utenti in Trial</div>
+                </div>
+                
+                <!-- Churned Users -->
+                <div style="background: white; padding: 20px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 2.2em; font-weight: bold; color: #ef4444; margin-bottom: 5px;">
+                    ${totals.churnedUsers}
+                  </div>
+                  <div style="color: #666; font-weight: 500;">💔 Utenti Persi</div>
+                </div>
+              </div>
+
+              <!-- Business Performance Indicator -->
+              <div style="margin-top: 25px; padding: 15px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; text-align: center;">
+                <strong style="color: #059669; font-size: 1.1em;">
+                  📈 Tasso di Conversione: ${totals.totalUsers > 0 ? Math.round((totals.activeSubscriptions / totals.totalUsers) * 100) : 0}%
+                </strong>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://lamiagazzella.replit.app/admin" 
+                 style="background-color: #2d5016; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; margin-right: 15px;">
+                📊 Vai alla Dashboard
+              </a>
+              <a href="https://lamiagazzella.replit.app/admin" 
+                 style="background-color: #3b82f6; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+                👥 Gestisci Utenti
+              </a>
+            </div>
+            
+            <!-- Timestamp -->
+            <div style="text-align: center; color: #666; font-size: 14px; margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee;">
+              <p style="margin: 0;">📅 Generato il ${new Date(generatedAt).toLocaleString('it-IT', { timeZone: 'Europe/Rome' })}</p>
+              <p style="margin: 5px 0 0 0;">🕐 Fuso Orario: Europe/Rome</p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px;">
+            <p style="margin: 0;">Questo è il riepilogo automatico giornaliero del business La Mia Gazzella</p>
+            <p style="margin: 5px 0 0 0;">Sistema di Monitoraggio Business - Dati in tempo reale</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `"La Mia Gazzella - Business Report" <${process.env.GMAIL_USER}>`,
+      to: adminEmail,
+      subject: `📊 Riepilogo Giornaliero ${daily.date} - La Mia Gazzella (${totalEvents} eventi)`,
+      html: htmlContent
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Daily business summary sent successfully: ${result.messageId}`);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error: any) {
+    console.error('❌ Error sending daily business summary:', error);
+    throw error;
+  }
+}

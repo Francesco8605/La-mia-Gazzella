@@ -2,6 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import cookieParser from "cookie-parser";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { getYesterdayBusinessSummary } from "./services/business-metrics";
+import { sendDailyBusinessSummary } from "./services/email";
 
 const app = express();
 app.use(cookieParser());
@@ -91,5 +93,87 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    
+    // Initialize daily business summary scheduler
+    initializeDailyScheduler();
   });
 })();
+
+/**
+ * Calculate milliseconds until next 8:00 AM Europe/Rome
+ */
+function getMillisecondsUntilNext8AM(): number {
+  const now = new Date();
+  const romeTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Rome" }));
+  
+  // Create next 8:00 AM in Rome timezone
+  const next8AM = new Date(romeTime);
+  next8AM.setHours(8, 0, 0, 0);
+  
+  // If it's already past 8:00 AM today, schedule for tomorrow
+  if (romeTime.getHours() >= 8) {
+    next8AM.setDate(next8AM.getDate() + 1);
+  }
+  
+  // Convert back to UTC for proper calculation
+  const next8AMUTC = new Date(next8AM.getTime() - (next8AM.getTimezoneOffset() * 60000));
+  const nowUTC = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+  
+  const msUntilNext = next8AMUTC.getTime() - nowUTC.getTime();
+  
+  log(`📅 Daily summary scheduler: Next execution at ${next8AM.toLocaleString('it-IT', { timeZone: 'Europe/Rome' })} (in ${Math.round(msUntilNext / 1000 / 60)} minutes)`);
+  
+  return msUntilNext;
+}
+
+/**
+ * Send daily business summary and log results
+ */
+async function sendDailySummary(): Promise<void> {
+  try {
+    console.log('🕐 📊 Daily business summary scheduler triggered at:', new Date().toLocaleString('it-IT', { timeZone: 'Europe/Rome' }));
+    
+    // Get yesterday's business summary
+    const businessSummary = await getYesterdayBusinessSummary();
+    
+    // Send email
+    const emailResult = await sendDailyBusinessSummary(businessSummary);
+    
+    console.log('✅ Daily business summary sent successfully:', {
+      messageId: emailResult.messageId,
+      date: businessSummary.daily.date,
+      totalEvents: businessSummary.daily.newRegistrations + 
+                  businessSummary.daily.trialsStarted + 
+                  businessSummary.daily.subscriptionsCreated + 
+                  businessSummary.daily.subscriptionsRenewed + 
+                  businessSummary.daily.subscriptionsCanceled,
+      activeSubscriptions: businessSummary.totals.activeSubscriptions
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Daily business summary scheduler error:', error);
+    // Log error but don't crash the server
+  }
+}
+
+/**
+ * Initialize the daily business summary scheduler
+ */
+function initializeDailyScheduler(): void {
+  console.log('🤖 Initializing daily business summary scheduler (08:00 Europe/Rome)...');
+  
+  const msUntilFirst = getMillisecondsUntilNext8AM();
+  
+  // Schedule first execution
+  setTimeout(async () => {
+    await sendDailySummary();
+    
+    // Then schedule recurring execution every 24 hours
+    setInterval(async () => {
+      await sendDailySummary();
+    }, 24 * 60 * 60 * 1000); // 24 hours in milliseconds
+    
+  }, msUntilFirst);
+  
+  console.log('✅ Daily business summary scheduler initialized successfully');
+}
