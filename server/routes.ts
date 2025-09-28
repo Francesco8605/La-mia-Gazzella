@@ -2744,13 +2744,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Nessun abbonamento attivo da cancellare" });
       }
 
-      // Cancel subscription in Stripe
-      const subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
-        cancel_at_period_end: true
-      });
+      let subscription;
+      let endDate;
+      
+      try {
+        // Try to cancel subscription in Stripe
+        subscription = await stripe.subscriptions.update(user.stripeSubscriptionId, {
+          cancel_at_period_end: true
+        });
+        endDate = new Date((subscription as any).current_period_end * 1000);
+      } catch (stripeError: any) {
+        console.log(`⚠️ Stripe error canceling subscription ${user.stripeSubscriptionId}:`, {
+          message: stripeError.message,
+          code: stripeError.code,
+          type: stripeError.type,
+          statusCode: stripeError.statusCode
+        });
+        
+        // If subscription doesn't exist in Stripe, still cancel locally
+        // Stripe uses 'resource_missing' code for 404 errors
+        if (stripeError.code === 'resource_missing' || stripeError.statusCode === 404 || stripeError.message?.includes('No such subscription')) {
+          console.log('📝 Subscription not found in Stripe, canceling locally only');
+          // Set end date to current subscription end date or 30 days from now if not set
+          endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        } else {
+          // For other Stripe errors, re-throw
+          throw stripeError;
+        }
+      }
 
-      // Update user subscription status
-      const endDate = new Date((subscription as any).current_period_end * 1000);
+      // Update user subscription status in database
       await storage.updateUserStripeInfo(userId, {
         subscriptionStatus: 'canceled',
         subscriptionEndDate: endDate,
@@ -2765,8 +2788,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await whatsappService.sendCancellationNotification(cancelUser.email, 'Cancellazione programmata - attivo fino a fine periodo');
       }
 
+      const message = subscription 
+        ? "Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo di fatturazione corrente."
+        : "Abbonamento cancellato localmente. Rimarrà attivo fino alla data di scadenza impostata.";
+        
       res.json({ 
-        message: "Abbonamento cancellato. Rimarrà attivo fino alla fine del periodo di fatturazione corrente.",
+        message: message,
         endDate: endDate
       });
     } catch (error) {
@@ -2880,7 +2907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
       // Build query with optional status filter
-      let baseQuery = db
+      let queryBuilder = db
         .select({
           id: users.id,
           email: users.email,
@@ -2905,15 +2932,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Apply status filter if provided
       if (status && status !== 'all') {
         if (status === 'trial') {
-          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'trialing'));
+          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'trialing'));
         } else if (status === 'active') {
-          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'active'));
+          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'active'));
         } else if (status === 'canceled') {
-          baseQuery = baseQuery.where(eq(users.subscriptionStatus, 'canceled'));
+          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'canceled'));
         }
       }
 
-      const allUsers = await baseQuery
+      const allUsers = await queryBuilder
         .limit(parseInt(limit))
         .offset(offset)
         .orderBy(desc(users.createdAt));
