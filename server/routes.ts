@@ -2733,29 +2733,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Cancel subscription endpoint
   app.post("/api/cancel-subscription", isAuthenticated, async (req, res) => {
     try {
-      console.log('🚀 Starting cancellation flow...');
       const userId = (req as any).user.claims.sub;
-      console.log('👤 User ID:', userId);
-      
       const user = await storage.getUser(userId);
-      console.log('📊 User data:', { 
-        email: user?.email, 
-        stripeSubscriptionId: user?.stripeSubscriptionId,
-        subscriptionStatus: user?.subscriptionStatus,
-        subscriptionEndDate: user?.subscriptionEndDate
-      });
       
       if (!user) {
-        console.log('❌ User not found');
         return res.status(404).json({ message: "Utente non trovato" });
       }
 
       if (!user.stripeSubscriptionId) {
-        console.log('❌ No Stripe subscription ID');
         return res.status(400).json({ message: "Nessun abbonamento attivo da cancellare" });
       }
-
-      console.log('✅ Pre-flight checks passed, proceeding to Stripe cancellation...');
 
       let subscription;
       let endDate;
@@ -2767,13 +2754,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
         endDate = new Date((subscription as any).current_period_end * 1000);
       } catch (stripeError: any) {
-        console.log(`⚠️ Stripe error canceling subscription ${user.stripeSubscriptionId}:`, {
-          message: stripeError.message,
-          code: stripeError.code,
-          type: stripeError.type,
-          statusCode: stripeError.statusCode,
-          fullError: stripeError
-        });
+        console.log(`⚠️ Stripe error canceling subscription ${user.stripeSubscriptionId}:`, stripeError.message);
         
         // If subscription doesn't exist in Stripe, still cancel locally
         // Stripe uses 'resource_missing' code for 404 errors
@@ -2781,19 +2762,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                                  stripeError.statusCode === 404 || 
                                  stripeError.message?.includes('No such subscription');
         
-        console.log(`🔍 Checking if should handle locally: ${isResourceMissing}`, {
-          codeCheck: stripeError.code === 'resource_missing',
-          statusCheck: stripeError.statusCode === 404,
-          messageCheck: stripeError.message?.includes('No such subscription')
-        });
-        
         if (isResourceMissing) {
-          console.log('📝 Subscription not found in Stripe, canceling locally only');
+          console.log('📝 Subscription not found in Stripe, proceeding with local cancellation');
           // Set end date to current subscription end date or 30 days from now if not set
           endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-          console.log('✅ Set local endDate:', endDate);
         } else {
-          console.log('❌ Re-throwing Stripe error');
           // For other Stripe errors, re-throw
           throw stripeError;
         }
@@ -2932,8 +2905,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { page = 1, limit = 100, search, status } = req.query;
       const offset = (parseInt(page) - 1) * parseInt(limit);
 
-      // Build query with optional status filter
-      let queryBuilder = db
+      // Build base query
+      const baseQuery = db
         .select({
           id: users.id,
           email: users.email,
@@ -2955,21 +2928,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .from(users)
         .leftJoin(userProfiles, eq(users.id, userProfiles.userId));
 
-      // Apply status filter if provided
+      // Execute query with optional filter
+      let allUsers: any[] = [];
       if (status && status !== 'all') {
         if (status === 'trial') {
-          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'trialing'));
+          allUsers = await baseQuery
+            .where(eq(users.subscriptionStatus, 'trialing'))
+            .limit(parseInt(limit))
+            .offset(offset)
+            .orderBy(desc(users.createdAt));
         } else if (status === 'active') {
-          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'active'));
+          allUsers = await baseQuery
+            .where(eq(users.subscriptionStatus, 'active'))
+            .limit(parseInt(limit))
+            .offset(offset)
+            .orderBy(desc(users.createdAt));
         } else if (status === 'canceled') {
-          queryBuilder = queryBuilder.where(eq(users.subscriptionStatus, 'canceled'));
+          allUsers = await baseQuery
+            .where(eq(users.subscriptionStatus, 'canceled'))
+            .limit(parseInt(limit))
+            .offset(offset)
+            .orderBy(desc(users.createdAt));
         }
+      } else {
+        allUsers = await baseQuery
+          .limit(parseInt(limit))
+          .offset(offset)
+          .orderBy(desc(users.createdAt));
       }
-
-      const allUsers = await queryBuilder
-        .limit(parseInt(limit))
-        .offset(offset)
-        .orderBy(desc(users.createdAt));
 
       // Get activity logs for each user (last activity) and enhanced data
       const usersWithEnhancedData = await Promise.all(
