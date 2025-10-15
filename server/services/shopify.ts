@@ -5,6 +5,7 @@ interface ShopifyCustomer {
   email: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
   tags: string[];
 }
 
@@ -67,6 +68,7 @@ class ShopifyService {
             email
             firstName
             lastName
+            phone
             tags
           }
         }

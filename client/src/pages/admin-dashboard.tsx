@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText, ChevronDown, ChevronRight, Clock, Utensils } from "lucide-react";
+import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText, ChevronDown, ChevronRight, Clock, Utensils, Eye } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -370,16 +371,15 @@ export default function AdminDashboard() {
                           {new Date(user.createdAt).toLocaleDateString('it-IT')}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setActiveTab("user-detail");
-                            }}
-                            data-testid={`view-user-${user.id}`}
-                          >
-                            Visualizza
-                          </Button>
+                          <Link href={`/admin/client/${user.id}`}>
+                            <Button
+                              size="sm"
+                              data-testid={`view-user-${user.id}`}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Dettagli
+                            </Button>
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -432,16 +432,15 @@ export default function AdminDashboard() {
                           {user.lastActivity ? new Date(user.lastActivity).toLocaleDateString('it-IT') : 'Mai'}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setActiveTab("user-detail");
-                            }}
-                            data-testid={`view-user-${user.id}`}
-                          >
-                            Visualizza
-                          </Button>
+                          <Link href={`/admin/client/${user.id}`}>
+                            <Button
+                              size="sm"
+                              data-testid={`view-user-${user.id}`}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Dettagli
+                            </Button>
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -496,16 +495,15 @@ export default function AdminDashboard() {
                           {user.subscriptionEndDate ? new Date(user.subscriptionEndDate).toLocaleDateString('it-IT') : 'N/A'}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setActiveTab("user-detail");
-                            }}
-                            data-testid={`view-user-${user.id}`}
-                          >
-                            Visualizza
-                          </Button>
+                          <Link href={`/admin/client/${user.id}`}>
+                            <Button
+                              size="sm"
+                              data-testid={`view-user-${user.id}`}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Dettagli
+                            </Button>
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -562,16 +560,15 @@ export default function AdminDashboard() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedUserId(user.id);
-                              setActiveTab("user-detail");
-                            }}
-                            data-testid={`view-user-${user.id}`}
-                          >
-                            Visualizza
-                          </Button>
+                          <Link href={`/admin/client/${user.id}`}>
+                            <Button
+                              size="sm"
+                              data-testid={`view-user-${user.id}`}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Dettagli
+                            </Button>
+                          </Link>
                         </TableCell>
                       </TableRow>
                     ))}

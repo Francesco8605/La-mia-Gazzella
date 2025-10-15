@@ -439,9 +439,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ Input validation passed");
       
       // Check if email exists in Shopify and has purchased "Il Manuale della Gazzella"
+      let shopifyCustomer: any = null;
       try {
         console.log("🛍️ Checking if email exists in Shopify:", email);
-        const shopifyCustomer = await getShopifyService().findCustomerByEmail(email);
+        shopifyCustomer = await getShopifyService().findCustomerByEmail(email);
         if (!shopifyCustomer) {
           console.log("❌ Email not found in Shopify:", email);
           return res.status(403).json({ 
@@ -500,6 +501,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           password: hashedPassword,
         });
         console.log("✅ User created successfully:", user.email);
+
+        // Auto-create user profile with Shopify data if available
+        if (shopifyCustomer) {
+          try {
+            console.log("👤 Auto-creating user profile with Shopify data...");
+            const profileData: any = {
+              userId: user.id,
+              email: user.email,
+            };
+            
+            // Add Shopify data if available
+            if (shopifyCustomer.firstName) {
+              profileData.firstName = shopifyCustomer.firstName;
+              console.log("📝 Adding first name from Shopify:", shopifyCustomer.firstName);
+            }
+            
+            if (shopifyCustomer.lastName) {
+              profileData.lastName = shopifyCustomer.lastName;
+              console.log("📝 Adding last name from Shopify:", shopifyCustomer.lastName);
+            }
+            
+            if (shopifyCustomer.phone) {
+              profileData.phone = shopifyCustomer.phone;
+              console.log("📞 Adding phone from Shopify:", shopifyCustomer.phone);
+            }
+            
+            await storage.createUserProfile(profileData);
+            console.log("✅ User profile auto-created with Shopify data");
+          } catch (profileError: any) {
+            console.error("⚠️ Profile auto-creation error (registration continues):", profileError.message);
+            // Non bloccante - la registrazione continua anche se il profilo fallisce
+          }
+        }
 
         // Create database session
         console.log("🍪 Creating session...");
@@ -3813,6 +3847,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'Failed to fetch business metrics',
         error: error.message,
         timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // ADMIN DASHBOARD - CLIENT MANAGEMENT ENDPOINTS
+
+  // Get all clients with basic info
+  app.get("/api/admin/clients", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      // Get all users with subscription active or trial
+      const allUsers = await storage.getAllUsers();
+      
+      // Fetch profiles for each user
+      const clientsWithProfiles = await Promise.all(
+        allUsers.map(async (user) => {
+          const profile = await storage.getUserProfile(user.id);
+          const mealPlansCount = (await storage.getMealPlansByUser(user.id)).length;
+          const weightEntries = await storage.getWeightEntriesByUserId(user.id);
+          const latestWeight = weightEntries.length > 0 ? weightEntries[weightEntries.length - 1] : null;
+          
+          return {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            subscriptionStatus: user.subscriptionStatus,
+            subscriptionPlan: user.subscriptionPlan,
+            createdAt: user.createdAt,
+            profile: profile ? {
+              phone: profile.phone,
+              age: profile.age,
+              weight: profile.weight,
+              height: profile.height
+            } : null,
+            stats: {
+              mealPlansCount,
+              latestWeight: latestWeight?.weight,
+              lastWeightDate: latestWeight?.date
+            }
+          };
+        })
+      );
+      
+      res.json(clientsWithProfiles);
+    } catch (error: any) {
+      console.error('❌ Error fetching clients:', error);
+      res.status(500).json({
+        message: 'Failed to fetch clients',
+        error: error.message
+      });
+    }
+  });
+
+  // Get client history (profile + meal plans + weight entries)
+  app.get("/api/admin/clients/:userId/history", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      
+      // Get user basic info
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'Client not found' });
+      }
+
+      // Get profile
+      const profile = await storage.getUserProfile(userId);
+      
+      // Get all meal plans
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      
+      // Get weight history
+      const weightHistory = await storage.getWeightEntriesByUserId(userId);
+      
+      res.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          subscriptionStatus: user.subscriptionStatus,
+          subscriptionPlan: user.subscriptionPlan,
+          createdAt: user.createdAt,
+        },
+        profile,
+        mealPlans: mealPlans || [],
+        weightHistory: weightHistory || []
+      });
+    } catch (error: any) {
+      console.error('❌ Error fetching client history:', error);
+      res.status(500).json({
+        message: 'Failed to fetch client history',
+        error: error.message
       });
     }
   });

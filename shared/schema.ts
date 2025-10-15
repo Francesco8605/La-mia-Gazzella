@@ -34,6 +34,8 @@ export const userProfiles = pgTable("user_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
   // Informazioni di contatto
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   email: text("email"),
   phone: text("phone"),
   // Dati fisici
