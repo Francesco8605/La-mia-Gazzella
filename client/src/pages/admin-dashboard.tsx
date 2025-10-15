@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText, ChevronDown, ChevronRight, Clock, Utensils, Eye } from "lucide-react";
+import { Shield, Users, Activity, TrendingUp, Search, Calendar, MessageSquare, FileText, ChevronDown, ChevronRight, Clock, Utensils, Eye, RefreshCw, CheckCircle, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface AdminUser {
   id: string;
@@ -53,6 +54,8 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all-users");
   const [expandedItems, setExpandedItems] = useState<{[key: string]: boolean}>({});
+  const [syncResult, setSyncResult] = useState<any>(null);
+  const { toast } = useToast();
 
   // Login function
   const handleLogin = async (e: React.FormEvent) => {
@@ -159,6 +162,38 @@ export default function AdminDashboard() {
       return response.json();
     },
     enabled: isAuthenticated && !!selectedUserId,
+  });
+
+  // Shopify sync mutation
+  const syncShopifyMutation = useMutation({
+    mutationFn: async () => {
+      const token = localStorage.getItem("admin_token");
+      const email = localStorage.getItem("admin_email");
+      const response = await fetch("/api/admin/sync-shopify-data", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "X-Admin-Email": email || "",
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("Sync failed");
+      return response.json();
+    },
+    onSuccess: (data) => {
+      setSyncResult(data);
+      toast({
+        title: "✅ Sincronizzazione completata!",
+        description: `Aggiornati: ${data.summary.updated}, Saltati: ${data.summary.skipped}, Errori: ${data.summary.errors}`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Errore sincronizzazione",
+        description: error.message || "Errore durante la sincronizzazione dei dati Shopify",
+        variant: "destructive",
+      });
+    },
   });
 
   const handleLogout = () => {
@@ -289,6 +324,100 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Shopify Sync Section */}
+        <Card className="mb-8 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-blue-900">
+              <RefreshCw className="w-5 h-5" />
+              Sincronizzazione Dati Shopify
+            </CardTitle>
+            <CardDescription>
+              Aggiorna automaticamente i profili delle clienti con i dati (nome, cognome, telefono) presenti su Shopify
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={() => syncShopifyMutation.mutate()}
+                disabled={syncShopifyMutation.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+                data-testid="sync-shopify-button"
+              >
+                {syncShopifyMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Sincronizzazione in corso...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Avvia Sincronizzazione
+                  </>
+                )}
+              </Button>
+              {syncShopifyMutation.isPending && (
+                <div className="text-sm text-slate-600">
+                  Recupero dati da Shopify e aggiornamento profili...
+                </div>
+              )}
+            </div>
+
+            {/* Sync Results */}
+            {syncResult && (
+              <div className="mt-4 p-4 bg-white rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  Risultati Sincronizzazione
+                </h3>
+                <div className="grid grid-cols-4 gap-4 mb-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-slate-700">{syncResult.summary.total}</div>
+                    <div className="text-xs text-slate-500">Totale Utenti</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-600">{syncResult.summary.updated}</div>
+                    <div className="text-xs text-slate-500">Aggiornati</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-600">{syncResult.summary.skipped}</div>
+                    <div className="text-xs text-slate-500">Saltati</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-red-600">{syncResult.summary.errors}</div>
+                    <div className="text-xs text-slate-500">Errori</div>
+                  </div>
+                </div>
+                
+                {/* Details */}
+                {syncResult.details && syncResult.details.length > 0 && (
+                  <div className="mt-4 max-h-60 overflow-y-auto">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Dettagli:</h4>
+                    <div className="space-y-1">
+                      {syncResult.details.slice(0, 10).map((detail: any, idx: number) => (
+                        <div key={idx} className="text-xs flex items-center gap-2 py-1 px-2 bg-slate-50 rounded">
+                          {detail.status === 'updated' && <CheckCircle className="w-3 h-3 text-green-600" />}
+                          {detail.status === 'created' && <CheckCircle className="w-3 h-3 text-blue-600" />}
+                          {detail.status === 'skipped' && <span className="w-3 h-3 text-orange-600">-</span>}
+                          {detail.status === 'error' && <XCircle className="w-3 h-3 text-red-600" />}
+                          <span className="flex-1">{detail.email}</span>
+                          <Badge variant={detail.status === 'updated' || detail.status === 'created' ? 'default' : 'secondary'} className="text-xs">
+                            {detail.status}
+                          </Badge>
+                        </div>
+                      ))}
+                      {syncResult.details.length > 10 && (
+                        <div className="text-xs text-slate-500 text-center mt-2">
+                          ...e altri {syncResult.details.length - 10} risultati
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">

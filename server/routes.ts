@@ -3941,6 +3941,131 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Sync Shopify data for all users
+  app.post("/api/admin/sync-shopify-data", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      console.log('🔄 Starting Shopify data synchronization...');
+      
+      const shopifyService = getShopifyService();
+      const allUsers = await storage.getAllUsers();
+      
+      let updated = 0;
+      let skipped = 0;
+      let errors = 0;
+      const details: any[] = [];
+      
+      for (const user of allUsers) {
+        try {
+          // Skip if no email
+          if (!user.email) {
+            skipped++;
+            continue;
+          }
+          
+          // Fetch Shopify customer data
+          const shopifyCustomer = await shopifyService.findCustomerByEmail(user.email);
+          
+          if (!shopifyCustomer) {
+            // No Shopify customer found
+            details.push({
+              email: user.email,
+              status: 'skipped',
+              reason: 'Not found in Shopify'
+            });
+            skipped++;
+            continue;
+          }
+          
+          // Check if user has a profile
+          let profile = await storage.getUserProfile(user.id);
+          
+          if (!profile) {
+            // Create profile with Shopify data using direct DB insert
+            await db.insert(userProfiles).values({
+              userId: user.id,
+              email: user.email,
+              firstName: shopifyCustomer.firstName,
+              lastName: shopifyCustomer.lastName,
+              phone: shopifyCustomer.phone
+            });
+            
+            details.push({
+              email: user.email,
+              status: 'created',
+              data: {
+                firstName: shopifyCustomer.firstName,
+                lastName: shopifyCustomer.lastName,
+                phone: shopifyCustomer.phone
+              }
+            });
+            updated++;
+          } else {
+            // Update existing profile with Shopify data
+            const updateData: any = {};
+            
+            if (shopifyCustomer.firstName && !profile.firstName) {
+              updateData.firstName = shopifyCustomer.firstName;
+            }
+            if (shopifyCustomer.lastName && !profile.lastName) {
+              updateData.lastName = shopifyCustomer.lastName;
+            }
+            if (shopifyCustomer.phone && !profile.phone) {
+              updateData.phone = shopifyCustomer.phone;
+            }
+            
+            if (Object.keys(updateData).length > 0) {
+              await storage.updateUserProfile(user.id, updateData);
+              
+              details.push({
+                email: user.email,
+                status: 'updated',
+                data: updateData
+              });
+              updated++;
+            } else {
+              details.push({
+                email: user.email,
+                status: 'skipped',
+                reason: 'Already has complete data'
+              });
+              skipped++;
+            }
+          }
+        } catch (error: any) {
+          console.error(`❌ Error syncing user ${user.email}:`, error.message);
+          details.push({
+            email: user.email,
+            status: 'error',
+            error: error.message
+          });
+          errors++;
+        }
+      }
+      
+      const result = {
+        success: true,
+        summary: {
+          total: allUsers.length,
+          updated,
+          skipped,
+          errors
+        },
+        details
+      };
+      
+      console.log('✅ Shopify sync completed:', result.summary);
+      res.json(result);
+      
+    } catch (error: any) {
+      console.error('❌ Error in Shopify sync:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to sync Shopify data',
+        error: error.message
+      });
+    }
+  });
+
   console.log("✅ All routes registered successfully including admin dashboard");
 
   const httpServer = createServer(app);
