@@ -198,8 +198,8 @@ export default function Home() {
                       className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
                       data-testid="img-formula-gazzella-home"
                     />
-                    <div className="absolute -top-2 -right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
-                      -29€
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse shadow-lg">
+                      SOLO 20€
                     </div>
                   </div>
                 </div>
@@ -216,10 +216,31 @@ export default function Home() {
                   <p className="text-lg text-slate-700 mb-4 leading-relaxed">
                     L'integratore naturale studiato per accelerare il metabolismo durante la menopausa. 
                     {canAccessOffer 
-                      ? <span className="font-bold text-emerald-600"> Ricevi 29€ di sconto esclusivo!</span>
+                      ? <span className="font-bold text-emerald-600"> Sul sito costa 49€, per te solo 20€ - risparmi 29€!</span>
                       : <span className="font-bold text-amber-600"> Disponibile per abbonati Premium</span>
                     }
                   </p>
+
+                  {/* Price Comparison - Visible only for premium users */}
+                  {canAccessOffer && (
+                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 mb-4 border-2 border-emerald-200">
+                      <div className="flex items-center justify-center md:justify-start gap-4">
+                        <div className="text-center">
+                          <div className="text-slate-400 line-through text-sm">Prezzo normale</div>
+                          <div className="text-slate-500 line-through text-xl font-bold">49€</div>
+                        </div>
+                        <div className="text-emerald-600 text-2xl">→</div>
+                        <div className="text-center">
+                          <div className="text-emerald-700 text-sm font-semibold">Prezzo per te</div>
+                          <div className="text-emerald-600 text-3xl font-bold">20€</div>
+                        </div>
+                        <div className="ml-auto bg-red-500 text-white px-3 py-2 rounded-lg">
+                          <div className="text-xs font-semibold">RISPARMI</div>
+                          <div className="text-lg font-bold">29€</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-6">
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-slate-600">
