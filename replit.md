@@ -123,3 +123,21 @@ The system manages:
   - Social Proof: Personalized stats show user's commitment
   - Choice Architecture: Make retention the path of least resistance
 - **Analytics Recommendation**: Monitor click-through rates on "Mantieni" vs "Cancella" buttons to measure retention impact
+
+## Formula Gazzella Offer Pricing Enhancement
+- **Location**: Homepage offer section
+- **Objective**: Improve perceived value communication using price anchoring psychology
+- **Implementation**:
+  - **Badge Update**: Changed from "-29€" to "SOLO 20€" (more positive, direct messaging)
+  - **Descriptive Text**: Updated to "Sul sito costa 49€, per te solo 20€ - risparmi 29€!" (clear price comparison)
+  - **Visual Comparison Box** (premium users only):
+    - Left: "Prezzo normale 49€" (strikethrough, gray - anchoring reference)
+    - Center: Green arrow → (visual flow)
+    - Right: "Prezzo per te 20€" (large, green, emphasized - value proposition)
+    - Badge: "RISPARMI 29€" (red badge - savings highlight)
+- **Psychology Principles**:
+  - **Price Anchoring**: 49€ reference price increases perceived value of 20€ offer
+  - **Loss Framing**: Emphasizes savings (29€) rather than cost (20€)
+  - **Visual Hierarchy**: Price comparison draws attention to the discount
+- **Visibility Logic**: Comparison box only shown to `canAccessOffer` users (active premium, not trial)
+- **File Modified**: client/src/pages/home.tsx
