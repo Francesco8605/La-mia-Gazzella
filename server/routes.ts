@@ -3919,6 +3919,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get weight history
       const weightHistory = await storage.getWeightEntriesByUserId(userId);
       
+      // Get recipes
+      const recipes = await storage.getRecipesByUserId(userId);
+      
       res.json({
         user: {
           id: user.id,
@@ -3930,7 +3933,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         profile,
         mealPlans: mealPlans || [],
-        weightHistory: weightHistory || []
+        weightHistory: weightHistory || [],
+        recipes: recipes || []
       });
     } catch (error: any) {
       console.error('❌ Error fetching client history:', error);

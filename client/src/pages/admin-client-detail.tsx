@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -25,6 +25,27 @@ interface MealPlan {
   createdAt: string;
 }
 
+interface Recipe {
+  id: string;
+  title: string;
+  description?: string;
+  ingredients?: string[];
+  instructions?: string[];
+  calories?: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+  servings?: number;
+  prepTime?: number;
+  cookTime?: number;
+  difficulty?: string;
+  cuisine?: string;
+  dietaryTags?: string[];
+  imageUrl?: string;
+  rating?: number;
+  createdAt: string;
+}
+
 interface ClientHistory {
   user: {
     id: string;
@@ -35,6 +56,8 @@ interface ClientHistory {
     createdAt: string;
   };
   profile: {
+    firstName?: string;
+    lastName?: string;
     phone?: string;
     email?: string;
     age?: number;
@@ -43,6 +66,7 @@ interface ClientHistory {
   } | null;
   mealPlans: MealPlan[];
   weightHistory: WeightEntry[];
+  recipes: Recipe[];
 }
 
 export default function AdminClientDetail() {
@@ -141,9 +165,18 @@ export default function AdminClientDetail() {
           </Link>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
-                {clientHistory.user.email}
-              </h1>
+              {clientHistory.profile?.firstName || clientHistory.profile?.lastName ? (
+                <>
+                  <h1 className="text-3xl font-bold text-white mb-1">
+                    {clientHistory.profile.firstName || ''} {clientHistory.profile.lastName || ''}
+                  </h1>
+                  <p className="text-slate-400 text-sm mb-2">{clientHistory.user.email}</p>
+                </>
+              ) : (
+                <h1 className="text-3xl font-bold text-white mb-2">
+                  {clientHistory.user.email}
+                </h1>
+              )}
               <Badge className={`${getStatusColor(clientHistory.user.subscriptionStatus)} text-white`}>
                 {getStatusText(clientHistory.user.subscriptionStatus)}
               </Badge>
@@ -255,7 +288,7 @@ export default function AdminClientDetail() {
         )}
 
         {/* Meal Plans History */}
-        <Card className="bg-slate-800 border-slate-700">
+        <Card className="bg-slate-800 border-slate-700 mb-6">
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Calendar className="mr-2 h-5 w-5" />
@@ -297,6 +330,79 @@ export default function AdminClientDetail() {
                           <p className="text-sm font-medium text-white">{plan.targetWeight || 'N/A'} kg</p>
                         </div>
                       </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Recipes */}
+        <Card className="bg-slate-800 border-slate-700">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <ChefHat className="mr-2 h-5 w-5" />
+              Ricette Generate ({clientHistory.recipes.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {clientHistory.recipes.length === 0 ? (
+              <p className="text-slate-400">Nessuna ricetta generata</p>
+            ) : (
+              <div className="space-y-4">
+                {clientHistory.recipes
+                  .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                  .map((recipe) => (
+                    <div
+                      key={recipe.id}
+                      className="border border-slate-700 rounded-lg p-4 hover:bg-slate-700/50 transition-colors"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-white">{recipe.title}</h3>
+                          {recipe.description && (
+                            <p className="text-sm text-slate-400 mt-1">{recipe.description}</p>
+                          )}
+                        </div>
+                        <Badge variant="outline" className="text-blue-400 border-blue-400 ml-4">
+                          {format(new Date(recipe.createdAt), 'dd MMM yyyy', { locale: it })}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                        {recipe.calories && (
+                          <div>
+                            <p className="text-xs text-slate-400">Calorie</p>
+                            <p className="text-sm font-medium text-white">{recipe.calories} kcal</p>
+                          </div>
+                        )}
+                        {recipe.protein && (
+                          <div>
+                            <p className="text-xs text-slate-400">Proteine</p>
+                            <p className="text-sm font-medium text-white">{recipe.protein}g</p>
+                          </div>
+                        )}
+                        {recipe.carbs && (
+                          <div>
+                            <p className="text-xs text-slate-400">Carboidrati</p>
+                            <p className="text-sm font-medium text-white">{recipe.carbs}g</p>
+                          </div>
+                        )}
+                        {recipe.fat && (
+                          <div>
+                            <p className="text-xs text-slate-400">Grassi</p>
+                            <p className="text-sm font-medium text-white">{recipe.fat}g</p>
+                          </div>
+                        )}
+                      </div>
+                      {recipe.dietaryTags && recipe.dietaryTags.length > 0 && (
+                        <div className="flex gap-2 mt-3 flex-wrap">
+                          {recipe.dietaryTags.map((tag, idx) => (
+                            <Badge key={idx} variant="secondary" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
               </div>
