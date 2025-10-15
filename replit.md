@@ -77,4 +77,26 @@ The system manages:
 ## AI and External Services
 - **OpenAI**: GPT-4o for AI functionalities.
 - **Stripe**: Payment processing for subscriptions.
+- **Shopify**: E-commerce integration for customer data sync and purchase verification.
 - **Date-fns**: Date utility library.
+
+# Recent Changes (October 2025)
+
+## Shopify Data Synchronization Feature
+- **Admin Dashboard Integration**: Added one-click Shopify data synchronization in admin dashboard
+- **Endpoint**: POST /api/admin/sync-shopify-data (admin-protected)
+- **Functionality**: 
+  - Batch synchronizes all user profiles with Shopify customer data
+  - Auto-populates firstName, lastName, and phone fields
+  - Preserves existing data (won't overwrite)
+  - Provides detailed summary: total/updated/skipped/errors
+  - Individual user sync status tracking
+- **UI Components**:
+  - Dedicated sync card with gradient blue/indigo styling
+  - Loading states with spinning RefreshCw icon
+  - Results panel with statistics grid and details list
+  - Toast notifications for user feedback
+- **Safety Features**:
+  - Idempotent operation (safe to run multiple times)
+  - Per-user error isolation (single failure doesn't abort batch)
+  - Admin-only access with JWT authentication
