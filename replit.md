@@ -100,3 +100,26 @@ The system manages:
   - Idempotent operation (safe to run multiple times)
   - Per-user error isolation (single failure doesn't abort batch)
   - Admin-only access with JWT authentication
+
+## User Retention Optimization - Cancellation Page Redesign
+- **Route**: /cancella-abbonamento
+- **Objective**: Reduce subscription cancellation rate through persuasive UI design and psychological principles
+- **Strategy**: Multi-layered retention approach combining value reframing, loss aversion, and hierarchical CTAs
+- **Key Features**:
+  - **Value Proposition Hero**: Reframes €29/month as "meno di 1€ al giorno" (cost of daily coffee) with emotional icons
+  - **Loss Aversion Section**: "Cosa Perderai" card highlighting 4 key benefits user will lose (meal plans, recipes, tracking, support)
+  - **Benefits Cards**: 3 visually distinct cards emphasizing unique value (weekly plans, infinite recipes, sustainable lifestyle)
+  - **Personalized Stats**: Dynamic display of user's progress (meal plans count, recipes count) to emphasize sunk investment
+  - **Hierarchical CTA Design**:
+    - Primary: Large green "Mantieni il Mio Abbonamento" button (prominent, shadow, leads to homepage)
+    - Secondary: Small ghost "Procedi comunque" link (minimal, less visible, requires confirmation)
+- **Data Sources**:
+  - GET /api/user/subscription - subscription status
+  - GET /api/meal-plans - personalization data
+  - GET /api/recipes - personalization data
+- **Design Principles Applied**:
+  - Loss Aversion: Emphasize what user loses vs what they pay
+  - Value Framing: Daily cost vs monthly price
+  - Social Proof: Personalized stats show user's commitment
+  - Choice Architecture: Make retention the path of least resistance
+- **Analytics Recommendation**: Monitor click-through rates on "Mantieni" vs "Cancella" buttons to measure retention impact
