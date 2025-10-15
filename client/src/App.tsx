@@ -60,6 +60,7 @@ function Router() {
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms-of-service" component={TermsOfService} />
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/admin/client/:userId" component={AdminClientDetail} />
         <Route component={Auth} />
       </Switch>
@@ -229,6 +230,7 @@ function Router() {
         </Route>
         
         <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/admin/client/:userId" component={AdminClientDetail} />
         
         <Route path="/subscription-canceled">
