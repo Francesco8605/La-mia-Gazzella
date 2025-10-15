@@ -30,6 +30,7 @@ import PrivacyPolicy from "@/pages/privacy-policy";
 import TermsOfService from "@/pages/terms-of-service";
 import AdminDashboard from "@/pages/admin-dashboard";
 import ExclusiveOffer from "@/pages/exclusive-offer";
+import ShoppingList from "@/pages/shopping-list";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -170,6 +171,15 @@ function Router() {
               <ProfileGuard>
                 <AIChat />
               </ProfileGuard>
+            </SubscriptionGuard>
+          )}
+        </Route>
+        
+        {/* Shopping List */}
+        <Route path="/lista-spesa/:id">
+          {() => (
+            <SubscriptionGuard>
+              <ShoppingList />
             </SubscriptionGuard>
           )}
         </Route>

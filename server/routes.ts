@@ -9,6 +9,7 @@ import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sen
 import { getBusinessSummary, getYesterdayBusinessSummary } from "./services/business-metrics";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
+import { generateShoppingListFromMealPlan, regenerateShoppingList } from "./services/shopping-list-service";
 import { z } from "zod";
 import bcrypt from "bcrypt";
 import Stripe from "stripe";
@@ -1518,6 +1519,227 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid input", errors: error.errors });
       }
       res.status(500).json({ message: "Failed to calculate nutritional needs" });
+    }
+  });
+
+  // ============= SHOPPING LISTS ENDPOINTS =============
+  
+  // Get all shopping lists for current user
+  app.get("/api/shopping-lists", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const lists = await storage.getShoppingListsByUser(userId);
+      res.json(lists);
+    } catch (error) {
+      console.error("Error fetching shopping lists:", error);
+      res.status(500).json({ message: "Failed to fetch shopping lists" });
+    }
+  });
+
+  // Get single shopping list with items
+  app.get("/api/shopping-lists/:id", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const list = await storage.getShoppingList(req.params.id);
+      
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      
+      if (list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const items = await storage.getShoppingListItems(list.id);
+      res.json({ ...list, items });
+    } catch (error) {
+      console.error("Error fetching shopping list:", error);
+      res.status(500).json({ message: "Failed to fetch shopping list" });
+    }
+  });
+
+  // Generate shopping list from meal plan
+  app.post("/api/shopping-lists/generate/:mealPlanId", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const mealPlanId = req.params.mealPlanId;
+      
+      console.log(`🛒 Generating shopping list for meal plan ${mealPlanId}`);
+      const shoppingListId = await generateShoppingListFromMealPlan(userId, mealPlanId);
+      
+      const list = await storage.getShoppingList(shoppingListId);
+      const items = await storage.getShoppingListItems(shoppingListId);
+      
+      res.status(201).json({ ...list, items });
+    } catch (error) {
+      console.error("Error generating shopping list:", error);
+      res.status(500).json({ 
+        message: "Failed to generate shopping list",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // Regenerate shopping list (update ingredients)
+  app.post("/api/shopping-lists/:id/regenerate", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const listId = req.params.id;
+      
+      await regenerateShoppingList(userId, listId);
+      
+      const list = await storage.getShoppingList(listId);
+      const items = await storage.getShoppingListItems(listId);
+      
+      res.json({ ...list, items });
+    } catch (error) {
+      console.error("Error regenerating shopping list:", error);
+      res.status(500).json({ message: "Failed to regenerate shopping list" });
+    }
+  });
+
+  // Delete shopping list
+  app.delete("/api/shopping-lists/:id", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const list = await storage.getShoppingList(req.params.id);
+      
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      
+      if (list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      await storage.deleteShoppingList(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting shopping list:", error);
+      res.status(500).json({ message: "Failed to delete shopping list" });
+    }
+  });
+
+  // ============= SHOPPING LIST ITEMS ENDPOINTS =============
+
+  // Add item to shopping list
+  app.post("/api/shopping-lists/:listId/items", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const list = await storage.getShoppingList(req.params.listId);
+      
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+      
+      if (list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const schema = z.object({
+        name: z.string().min(1),
+        quantity: z.string().min(1),
+        category: z.string().min(1),
+        notes: z.string().optional(),
+      });
+      
+      const itemData = schema.parse(req.body);
+      const item = await storage.createShoppingListItem({
+        shoppingListId: req.params.listId,
+        ...itemData,
+        isPurchased: "no",
+        order: 0,
+      });
+      
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Error adding item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to add item" });
+    }
+  });
+
+  // Update shopping list item
+  app.patch("/api/shopping-list-items/:itemId", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const item = await storage.getShoppingListItem(req.params.itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      const list = await storage.getShoppingList(item.shoppingListId);
+      if (!list || list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const schema = z.object({
+        name: z.string().optional(),
+        quantity: z.string().optional(),
+        category: z.string().optional(),
+        notes: z.string().optional(),
+        isPurchased: z.enum(["yes", "no"]).optional(),
+      });
+      
+      const updateData = schema.parse(req.body);
+      const updated = await storage.updateShoppingListItem(req.params.itemId, updateData);
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating item:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to update item" });
+    }
+  });
+
+  // Toggle item purchased status
+  app.post("/api/shopping-list-items/:itemId/toggle", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const item = await storage.getShoppingListItem(req.params.itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      const list = await storage.getShoppingList(item.shoppingListId);
+      if (!list || list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      const updated = await storage.toggleShoppingListItem(req.params.itemId);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error toggling item:", error);
+      res.status(500).json({ message: "Failed to toggle item" });
+    }
+  });
+
+  // Delete shopping list item
+  app.delete("/api/shopping-list-items/:itemId", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const item = await storage.getShoppingListItem(req.params.itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: "Item not found" });
+      }
+      
+      const list = await storage.getShoppingList(item.shoppingListId);
+      if (!list || list.userId !== userId) {
+        return res.status(403).json({ message: "Not authorized" });
+      }
+      
+      await storage.deleteShoppingListItem(req.params.itemId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      res.status(500).json({ message: "Failed to delete item" });
     }
   });
 

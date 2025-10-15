@@ -217,6 +217,30 @@ export const activityLogs = pgTable("activity_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Shopping Lists table - automatically generated from meal plans
+export const shoppingLists = pgTable("shopping_lists", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  mealPlanId: varchar("meal_plan_id").notNull(), // Link to the meal plan
+  title: text("title").notNull(), // "Lista della Spesa - Settimana 1"
+  weekNumber: integer("week_number"), // Optional week reference
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shopping List Items - individual ingredients with quantities
+export const shoppingListItems = pgTable("shopping_list_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  shoppingListId: varchar("shopping_list_id").notNull(),
+  category: text("category").notNull(), // "Frutta", "Verdura", "Proteine", "Latticini", "Cereali", "Spezie", "Altro"
+  name: text("name").notNull(), // "Pollo"
+  quantity: text("quantity").notNull(), // "500g" or "2 pezzi"
+  isPurchased: text("is_purchased").notNull().default("no"), // "yes" | "no"
+  notes: text("notes"), // Optional notes
+  order: integer("order").default(0), // For custom ordering
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Type definitions
 export type MealPlanDay = {
   day: string;
@@ -355,3 +379,21 @@ export type AdminUser = typeof adminUsers.$inferSelect;
 export type InsertAdminUser = typeof adminUsers.$inferInsert;
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type InsertActivityLog = typeof activityLogs.$inferInsert;
+
+// Shopping List schemas
+export const insertShoppingListSchema = createInsertSchema(shoppingLists).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertShoppingListItemSchema = createInsertSchema(shoppingListItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+// Shopping List types
+export type ShoppingList = typeof shoppingLists.$inferSelect;
+export type InsertShoppingList = z.infer<typeof insertShoppingListSchema>;
+export type ShoppingListItem = typeof shoppingListItems.$inferSelect;
+export type InsertShoppingListItem = z.infer<typeof insertShoppingListItemSchema>;

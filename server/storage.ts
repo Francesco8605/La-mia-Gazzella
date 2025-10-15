@@ -1,7 +1,7 @@
-import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session, type Conversation, type InsertConversation, type ChatMessage, type InsertChatMessage, type UserMemory, type InsertUserMemory, type AdminUser, type InsertAdminUser, type ActivityLog, type InsertActivityLog } from "@shared/schema";
+import { type User, type InsertUser, type UserProfile, type InsertUserProfile, type MealPlan, type InsertMealPlan, type Recipe, type InsertRecipe, type WeightEntry, type InsertWeightEntry, type SubscriptionPlan, type InsertSubscriptionPlan, type MealPlanDay, type Session, type Conversation, type InsertConversation, type ChatMessage, type InsertChatMessage, type UserMemory, type InsertUserMemory, type AdminUser, type InsertAdminUser, type ActivityLog, type InsertActivityLog, type ShoppingList, type InsertShoppingList, type ShoppingListItem, type InsertShoppingListItem } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory, adminUsers, activityLogs } from "@shared/schema";
+import { users, userProfiles, mealPlans, recipes, weightEntries, subscriptionPlans, sessions, conversations, chatMessages, userMemory, adminUsers, activityLogs, shoppingLists, shoppingListItems } from "@shared/schema";
 import { eq, lt, desc, gte, and } from "drizzle-orm";
 
 export interface IStorage {
@@ -95,6 +95,22 @@ export interface IStorage {
   getActivityLogsByUser(userId: string, limit?: number): Promise<ActivityLog[]>;
   getAllActivityLogs(limit?: number, offset?: number): Promise<ActivityLog[]>;
   getActivityLogsByAction(action: string, limit?: number): Promise<ActivityLog[]>;
+
+  // Shopping Lists
+  getShoppingList(id: string): Promise<ShoppingList | undefined>;
+  getShoppingListByMealPlan(mealPlanId: string): Promise<ShoppingList | undefined>;
+  getShoppingListsByUser(userId: string): Promise<ShoppingList[]>;
+  createShoppingList(shoppingList: InsertShoppingList): Promise<ShoppingList>;
+  updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList | undefined>;
+  deleteShoppingList(id: string): Promise<boolean>;
+
+  // Shopping List Items
+  getShoppingListItem(id: string): Promise<ShoppingListItem | undefined>;
+  getShoppingListItems(shoppingListId: string): Promise<ShoppingListItem[]>;
+  createShoppingListItem(item: InsertShoppingListItem): Promise<ShoppingListItem>;
+  updateShoppingListItem(id: string, data: Partial<InsertShoppingListItem>): Promise<ShoppingListItem | undefined>;
+  deleteShoppingListItem(id: string): Promise<boolean>;
+  toggleShoppingListItem(id: string): Promise<ShoppingListItem | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -609,6 +625,22 @@ export class MemStorage implements IStorage {
     this.users.set(userId, updatedUser);
     return updatedUser;
   }
+
+  // Shopping Lists - placeholders for MemStorage
+  async getShoppingList(id: string): Promise<ShoppingList | undefined> { return undefined; }
+  async getShoppingListByMealPlan(mealPlanId: string): Promise<ShoppingList | undefined> { return undefined; }
+  async getShoppingListsByUser(userId: string): Promise<ShoppingList[]> { return []; }
+  async createShoppingList(shoppingList: InsertShoppingList): Promise<ShoppingList> { return {} as ShoppingList; }
+  async updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList | undefined> { return undefined; }
+  async deleteShoppingList(id: string): Promise<boolean> { return false; }
+
+  // Shopping List Items - placeholders for MemStorage
+  async getShoppingListItem(id: string): Promise<ShoppingListItem | undefined> { return undefined; }
+  async getShoppingListItems(shoppingListId: string): Promise<ShoppingListItem[]> { return []; }
+  async createShoppingListItem(item: InsertShoppingListItem): Promise<ShoppingListItem> { return {} as ShoppingListItem; }
+  async updateShoppingListItem(id: string, data: Partial<InsertShoppingListItem>): Promise<ShoppingListItem | undefined> { return undefined; }
+  async deleteShoppingListItem(id: string): Promise<boolean> { return false; }
+  async toggleShoppingListItem(id: string): Promise<ShoppingListItem | undefined> { return undefined; }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -1138,6 +1170,103 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId))
       .returning();
     return user || undefined;
+  }
+
+  // Shopping Lists
+  async getShoppingList(id: string): Promise<ShoppingList | undefined> {
+    const [list] = await db
+      .select()
+      .from(shoppingLists)
+      .where(eq(shoppingLists.id, id));
+    return list || undefined;
+  }
+
+  async getShoppingListByMealPlan(mealPlanId: string): Promise<ShoppingList | undefined> {
+    const [list] = await db
+      .select()
+      .from(shoppingLists)
+      .where(eq(shoppingLists.mealPlanId, mealPlanId));
+    return list || undefined;
+  }
+
+  async getShoppingListsByUser(userId: string): Promise<ShoppingList[]> {
+    return await db
+      .select()
+      .from(shoppingLists)
+      .where(eq(shoppingLists.userId, userId))
+      .orderBy(desc(shoppingLists.createdAt));
+  }
+
+  async createShoppingList(shoppingList: InsertShoppingList): Promise<ShoppingList> {
+    const [newList] = await db
+      .insert(shoppingLists)
+      .values(shoppingList)
+      .returning();
+    return newList;
+  }
+
+  async updateShoppingList(id: string, data: Partial<InsertShoppingList>): Promise<ShoppingList | undefined> {
+    const [list] = await db
+      .update(shoppingLists)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(shoppingLists.id, id))
+      .returning();
+    return list || undefined;
+  }
+
+  async deleteShoppingList(id: string): Promise<boolean> {
+    // First delete all items in this shopping list
+    await db.delete(shoppingListItems).where(eq(shoppingListItems.shoppingListId, id));
+    // Then delete the shopping list itself
+    const result = await db.delete(shoppingLists).where(eq(shoppingLists.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Shopping List Items
+  async getShoppingListItem(id: string): Promise<ShoppingListItem | undefined> {
+    const [item] = await db
+      .select()
+      .from(shoppingListItems)
+      .where(eq(shoppingListItems.id, id));
+    return item || undefined;
+  }
+
+  async getShoppingListItems(shoppingListId: string): Promise<ShoppingListItem[]> {
+    return await db
+      .select()
+      .from(shoppingListItems)
+      .where(eq(shoppingListItems.shoppingListId, shoppingListId))
+      .orderBy(shoppingListItems.category, shoppingListItems.order);
+  }
+
+  async createShoppingListItem(item: InsertShoppingListItem): Promise<ShoppingListItem> {
+    const [newItem] = await db
+      .insert(shoppingListItems)
+      .values(item)
+      .returning();
+    return newItem;
+  }
+
+  async updateShoppingListItem(id: string, data: Partial<InsertShoppingListItem>): Promise<ShoppingListItem | undefined> {
+    const [item] = await db
+      .update(shoppingListItems)
+      .set(data)
+      .where(eq(shoppingListItems.id, id))
+      .returning();
+    return item || undefined;
+  }
+
+  async deleteShoppingListItem(id: string): Promise<boolean> {
+    const result = await db.delete(shoppingListItems).where(eq(shoppingListItems.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async toggleShoppingListItem(id: string): Promise<ShoppingListItem | undefined> {
+    const item = await this.getShoppingListItem(id);
+    if (!item) return undefined;
+    
+    const newStatus = item.isPurchased === 'yes' ? 'no' : 'yes';
+    return await this.updateShoppingListItem(id, { isPurchased: newStatus });
   }
 }
 

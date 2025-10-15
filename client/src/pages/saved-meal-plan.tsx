@@ -1,22 +1,49 @@
-import { useQuery } from "@tanstack/react-query";
-import { useRoute, Link } from "wouter";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useRoute, Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock } from "lucide-react";
+import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock, ShoppingCart } from "lucide-react";
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import type { MealPlan } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SavedMealPlan() {
   const [match, params] = useRoute("/piano-salvato/:id");
   const mealPlanId = params?.id;
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
 
   const { data: mealPlan, isLoading, error } = useQuery<MealPlan>({
     queryKey: ["/api/meal-plan", mealPlanId],
     enabled: !!mealPlanId,
+  });
+
+  // Generate shopping list mutation
+  const generateShoppingListMutation = useMutation({
+    mutationFn: async () => {
+      return await apiRequest(`/api/shopping-lists/generate/${mealPlanId}`, {
+        method: "POST"
+      });
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "✅ Lista della Spesa Creata!",
+        description: "La tua lista della spesa è pronta"
+      });
+      setLocation(`/lista-spesa/${data.id}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "❌ Errore",
+        description: error.message || "Impossibile generare la lista della spesa",
+        variant: "destructive"
+      });
+    }
   });
 
   if (!match) return null;
@@ -112,6 +139,19 @@ export default function SavedMealPlan() {
 
           {/* Update Button */}
           <div className="flex flex-col sm:flex-row gap-3">
+            <Button 
+              size="lg" 
+              onClick={() => generateShoppingListMutation.mutate()}
+              disabled={generateShoppingListMutation.isPending}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+              data-testid="button-generate-shopping-list"
+            >
+              {generateShoppingListMutation.isPending ? (
+                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Creazione in corso...</>
+              ) : (
+                <><ShoppingCart className="w-5 h-5 mr-2" /> Lista della Spesa</>
+              )}
+            </Button>
             <Link href="/aggiorna-profilo">
               <Button 
                 size="lg" 
