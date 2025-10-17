@@ -228,14 +228,54 @@ export default function Home() {
             <div className="mb-16">
               {(() => {
                 // Determina se l'utente ha problemi intestinali
-                const hasIntestinalIssues = userProfile && 
-                  (userProfile as any).intestinalIssues && 
-                  !['mai', 'no', 'nessuno', 'mai avuti'].includes((userProfile as any).intestinalIssues.toLowerCase().trim());
+                // Pattern matching robusto per varie formulazioni negative
+                const hasIntestinalIssues = (() => {
+                  if (!userProfile || !(userProfile as any).intestinalIssues) return false;
+                  
+                  const response = (userProfile as any).intestinalIssues.toLowerCase().trim();
+                  
+                  // Patterns che indicano ASSENZA di problemi (ritorna false = NO issues)
+                  const negativePatterns = [
+                    /^(mai|no|nessun|nessuno)$/i,
+                    /nessun.*problem/i,
+                    /nessun.*disturb/i,
+                    /mai.*avut/i,
+                    /non.*ho/i,
+                    /^$/ // stringa vuota
+                  ];
+                  
+                  // Se match con pattern negativo = NO issues
+                  if (negativePatterns.some(pattern => pattern.test(response))) {
+                    return false;
+                  }
+                  
+                  // Altrimenti ha problemi intestinali
+                  return true;
+                })();
                 
                 // Determina se l'utente sta già usando Formula Gazzella
-                const isUsingFormula = userProfile && 
-                  (userProfile as any).takingFormulaGazzella && 
-                  !['no', 'mai', 'nessuno', 'non la prendo', 'non la uso'].includes((userProfile as any).takingFormulaGazzella.toLowerCase().trim());
+                const isUsingFormula = (() => {
+                  if (!userProfile || !(userProfile as any).takingFormulaGazzella) return false;
+                  
+                  const response = (userProfile as any).takingFormulaGazzella.toLowerCase().trim();
+                  
+                  // Patterns che indicano NON utilizzo (ritorna false = NOT using)
+                  const negativePatterns = [
+                    /^(no|mai|nessun|nessuno)$/i,
+                    /non.*prend/i,
+                    /non.*us/i,
+                    /mai.*pres/i,
+                    /^$/ // stringa vuota
+                  ];
+                  
+                  // Se match con pattern negativo = NOT using
+                  if (negativePatterns.some(pattern => pattern.test(response))) {
+                    return false;
+                  }
+                  
+                  // Altrimenti sta usando Formula Gazzella
+                  return true;
+                })();
 
                 // Se sta già usando Formula Gazzella - mostra badge congratulazioni
                 if (isUsingFormula) {
