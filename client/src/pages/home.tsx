@@ -111,33 +111,59 @@ export default function Home() {
             Scopri come migliaia di donne over 45 hanno trasformato il loro corpo con il metodo Gazzella. 
             <strong>Piani nutrizionali personalizzati</strong> che rispettano i cambiamenti ormonali e ti aiutano a raggiungere il tuo peso ideale in modo naturale e duraturo.
           </p>
-          {/* Ideal Weight Goal Section */}
-          <div className="mb-12 p-8 bg-gradient-to-r from-rose-50 to-pink-50 rounded-3xl shadow-lg border border-rose-100">
-            <div className="flex flex-col md:flex-row items-center gap-8">
-              <div className="flex-1 text-center md:text-left">
-                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4">
-                  🏆 Il Tuo Obiettivo di Peso Forma
-                </h2>
-                <p className="text-lg text-slate-600 mb-6">
-                  Basato sulla tua età e altezza, il tuo <strong>peso ideale è il primo passo</strong> verso una nuova versione di te stessa.
-                </p>
-                <div className="bg-white p-6 rounded-2xl shadow-md">
-                  <p className="text-sm text-slate-500 mb-2">Il tuo peso forma ideale:</p>
-                  <p className="text-4xl font-bold text-emerald-600 mb-2">{getIdealWeight()} kg</p>
-                  <p className="text-sm text-slate-600">
-                    {userProfile ? "✨ Calcolato con precisione per il tuo profilo" : "📝 Completa il profilo per un calcolo personalizzato"}
-                  </p>
+          {/* AI Personalized Plan Summary - Filosofia Gazzella */}
+          {latestPlan && latestPlan.aiSummary ? (
+            <div className="mb-12 p-8 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 rounded-3xl shadow-lg border border-emerald-200">
+              <div className="flex flex-col md:flex-row items-start gap-8">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-emerald-100 p-3 rounded-full">
+                      <Star className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                      💭 Il Tuo Piano Personalizzato - Filosofia Gazzella
+                    </h2>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-md">
+                    <p className="text-base md:text-lg text-slate-700 leading-relaxed whitespace-pre-line">
+                      {latestPlan.aiSummary}
+                    </p>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                    <span className="font-semibold">Piano generato:</span>
+                    <span>{new Date(latestPlan.createdAt).toLocaleDateString('it-IT', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}</span>
+                  </div>
+                </div>
+                <div className="w-64 h-48 flex-shrink-0">
+                  <img 
+                    src={String(confidentWomanImage)} 
+                    alt="Donna sicura di sé" 
+                    className="w-full h-full object-cover rounded-2xl shadow-lg"
+                  />
                 </div>
               </div>
-              <div className="w-64 h-48">
-                <img 
-                  src={String(successMeasurementImage)} 
-                  alt="Donna che misura la vita con successo" 
-                  className="w-full h-full object-cover rounded-2xl shadow-lg"
-                />
+            </div>
+          ) : (
+            <div className="mb-12 p-8 bg-gradient-to-r from-amber-50 to-orange-50 rounded-3xl shadow-lg border border-amber-200">
+              <div className="text-center">
+                <h2 className="text-2xl md:text-3xl font-bold text-slate-800 mb-4">
+                  🌟 Crea il Tuo Primo Piano Personalizzato
+                </h2>
+                <p className="text-lg text-slate-600 mb-6">
+                  Scopri come la <strong>Filosofia Gazzella</strong> può trasformare il tuo stile di vita con un approccio sostenibile
+                </p>
+                <Link href="/genera-piano-alimentare">
+                  <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg">
+                    Genera il Tuo Piano
+                  </Button>
+                </Link>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Main Action Button - Featured - Ottimizzato per Mobile */}
           <div className="mb-16 md:mb-16 pb-6 md:pb-0 relative px-2 md:px-4">
