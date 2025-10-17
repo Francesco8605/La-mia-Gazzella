@@ -706,7 +706,7 @@ export default function SavedMealPlan() {
                     </p>
                     <p className="text-xs text-slate-700 dark:text-slate-300">
                       <strong className="text-emerald-600 dark:text-emerald-400 text-base">20€ invece di 49€</strong> - 
-                      Recuperi i 29€ dell'abbonamento = <strong className="text-red-600 dark:text-red-400">app praticamente GRATIS!</strong>
+                      Risparmi 29€! = <strong className="text-red-600 dark:text-red-400">TOTALE 49€ invece di 78€!</strong>
                     </p>
                   </div>
 

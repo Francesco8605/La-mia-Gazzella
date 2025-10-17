@@ -363,10 +363,10 @@ export default function Home() {
                             </p>
                             <p className="text-base text-slate-700 leading-relaxed">
                               Pagandola <strong className="text-emerald-600 text-xl">solo 20€ invece di 49€</strong>, 
-                              recuperi esattamente i <strong className="text-red-600">29€ del tuo abbonamento mensile</strong>.
+                              risparmi <strong className="text-red-600">29€ sul totale</strong>.
                             </p>
                             <p className="text-lg font-bold text-emerald-700 mt-2">
-                              = APP + INTEGRATORE = SOLO 20€ invece che 78€! 💰
+                              = APP + INTEGRATORE = SOLO 49€ invece di 78€! 💰
                             </p>
                           </div>
 
@@ -430,10 +430,10 @@ export default function Home() {
                           </p>
                           <p className="text-base text-slate-700 leading-relaxed">
                             Con <strong className="text-emerald-600 text-xl">solo 20€ invece di 49€</strong>, 
-                            recuperi esattamente i <strong className="text-red-600">29€ del tuo abbonamento mensile</strong>.
+                            risparmi <strong className="text-red-600">29€ sul totale</strong>.
                           </p>
                           <p className="text-lg font-bold text-emerald-700 mt-2">
-                            = APP + INTEGRATORE = SOLO 20€ invece che 78€! 💰
+                            = APP + INTEGRATORE = SOLO 49€ invece di 78€! 💰
                           </p>
                         </div>
 
