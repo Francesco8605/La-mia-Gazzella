@@ -635,6 +635,7 @@ Rispondi in JSON con:
     "expectedResults": "PERSONALIZZA benefici per questa cliente specifica",
     "timeToGoal": "STIMA realistica basata su peso da perdere e metabolismo"
   },
+  "aiSummary": "GENERA UN RIASSUNTO PERSONALIZZATO (200-300 parole) che spiega alla cliente PERCHÉ questo piano è perfetto per lei. Includi: 1) Analisi del suo profilo specifico (età ${request.userProfile.age} anni, peso ${request.userProfile.weight}kg, BMI ${request.nutritionalNeeds.bmi}); 2) ENFATIZZA la filosofia Gazzella: NON punta a un deficit calorico drastico che danneggerebbe il metabolismo, ma RIATTIVA il metabolismo con il giusto equilibrio di nutrienti; 3) Spiega come il piano crea uno STILE DI VITA ALIMENTARE SOSTENIBILE a lungo termine, non una dieta temporanea; 4) Personalizza il messaggio considerando eventuali problemi di salute (tiroide: ${request.userProfile.thyroidIssues}, intestino: ${request.userProfile.intestinalIssues}); 5) Motivala spiegando perché le ${request.nutritionalNeeds.calories} kcal sono perfette per lei e come questo approccio graduale garantisce risultati duraturi. Scrivi in tono caldo, motivante e personale, come se parlassi direttamente a lei.",
   "targetCalories": ${request.nutritionalNeeds.calories},
   "targetProtein": ${request.nutritionalNeeds.protein},
   "targetCarbs": ${request.nutritionalNeeds.carbs},

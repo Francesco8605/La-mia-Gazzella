@@ -31,6 +31,18 @@ export default function Home() {
     enabled: !!user,
     retry: false
   });
+
+  // Fetch user's latest meal plan for AI summary
+  const { data: mealPlans } = useQuery<any[]>({
+    queryKey: ["/api/meal-plans"],
+    enabled: !!user,
+    retry: false
+  });
+  
+  // Get the most recent meal plan with AI summary
+  const latestPlan = mealPlans && mealPlans.length > 0 
+    ? mealPlans.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
+    : null;
   
   // Calculate ideal weight if user profile exists
   const calculateIdealWeight = (height: number, age: number): number => {

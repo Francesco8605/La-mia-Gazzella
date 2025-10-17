@@ -89,6 +89,8 @@ export const mealPlans = pgTable("meal_plans", {
   dietPrinciples: json("diet_principles").$type<string[]>(),
   expectedResults: text("expected_results"),
   timeToGoal: varchar("time_to_goal"),
+  // AI-generated personalized summary explaining the Gazzella philosophy for this specific plan
+  aiSummary: text("ai_summary"),
   // New fields for enhanced goal tracking
   scientificIdealWeight: numeric("scientific_ideal_weight", { precision: 5, scale: 1 }),
   progressiveGoals: json("progressive_goals").$type<{
