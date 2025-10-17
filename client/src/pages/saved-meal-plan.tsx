@@ -335,15 +335,118 @@ export default function SavedMealPlan() {
                 </div>
               </div>
               <h2 className="text-4xl font-black bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-                Guida Avanzata Gazzella
+                {isBodyRecomposition ? "Il Tuo Percorso di Trasformazione" : "Guida Avanzata Gazzella"}
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-                Precisione scientifica per il tuo percorso di trasformazione nutrizionale
+                {isBodyRecomposition 
+                  ? "Focus sulla ricomposizione corporea e il benessere, non sulla bilancia"
+                  : "Precisione scientifica per il tuo percorso di trasformazione nutrizionale"
+                }
               </p>
               <div className="w-24 h-1 bg-gradient-to-r from-violet-500 to-purple-600 mx-auto rounded-full mt-3"></div>
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8">
+            {isBodyRecomposition ? (
+              // Messaggio speciale per ricomposizione corporea
+              <div className="max-w-4xl mx-auto">
+                <Card className="group relative overflow-hidden backdrop-blur-md bg-gradient-to-br from-purple-50/80 via-pink-50/60 to-rose-50/80 dark:from-purple-900/20 dark:via-pink-900/15 dark:to-rose-900/20 border-0 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400/10 via-pink-400/5 to-rose-400/10 transition-all duration-500" />
+                  
+                  <CardHeader className="relative z-10 pb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Badge className="bg-gradient-to-r from-purple-500 to-pink-600 text-white">
+                        <Sparkles className="w-3 h-3 mr-1" />
+                        RICOMPOSIZIONE CORPOREA
+                      </Badge>
+                    </div>
+                    <CardTitle className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                      🌸 Non Serve Guardare la Bilancia
+                    </CardTitle>
+                    <p className="text-lg text-gray-700 dark:text-gray-300">
+                      Sei già in un peso sano e perfetto per la tua salute. Il tuo corpo ha bisogno di una trasformazione diversa.
+                    </p>
+                  </CardHeader>
+                  
+                  <CardContent className="relative z-10 space-y-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="p-6 bg-white/70 dark:bg-gray-800/70 rounded-2xl border border-purple-200/50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg">
+                            <Target className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Il Vero Obiettivo</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Non perdere peso sulla bilancia, ma <strong>trasformare massa grassa in massa magra</strong>. 
+                              Il numero sulla bilancia potrebbe anche restare uguale!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-white/70 dark:bg-gray-800/70 rounded-2xl border border-purple-200/50">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg">
+                            <Sparkles className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white mb-2">Cosa Vedrai</h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Ritroverai <strong>tonicità in tutto il corpo</strong>, sentirai i vestiti più comodi, 
+                              e vedrai una silhouette più definita e armoniosa.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-6 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-2xl">
+                      <h3 className="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <Award className="w-5 h-5 text-purple-600" />
+                        I Tuoi Indicatori di Successo
+                      </h3>
+                      <ul className="space-y-3">
+                        <li className="flex items-start gap-3">
+                          <span className="text-2xl">💪</span>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <strong>Più energia e forza:</strong> Ti sentirai più forte e vitale nelle attività quotidiane
+                          </p>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-2xl">👗</span>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <strong>Vestiti più comodi:</strong> La taglia potrebbe scendere anche se il peso resta uguale
+                          </p>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-2xl">✨</span>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <strong>Corpo più tonico:</strong> Braccia, gambe, addome - tutto più definito e armonioso
+                          </p>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-2xl">🌸</span>
+                          <p className="text-sm text-gray-700 dark:text-gray-300">
+                            <strong>Benessere generale:</strong> Miglioramento dell'umore, del sonno e della digestione
+                          </p>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-xl border-l-4 border-amber-500">
+                      <div className="flex items-start gap-3">
+                        <Lightbulb className="w-5 h-5 text-amber-600 mt-0.5" />
+                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                          <strong>Consiglio importante:</strong> Usa lo specchio e come ti senti nei vestiti come riferimento, 
+                          non la bilancia. Fai foto di progresso ogni 2-3 settimane per vedere la trasformazione reale.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            ) : (
+              <div className="grid lg:grid-cols-3 gap-8">
               {/* Scientific Ideal Weight Card */}
               {mealPlan.scientificIdealWeight ? (
                 <Card className="group relative overflow-hidden backdrop-blur-md bg-gradient-to-br from-cyan-50/80 via-teal-50/60 to-blue-50/80 dark:from-cyan-900/20 dark:via-teal-900/15 dark:to-blue-900/20 border-0 shadow-2xl hover:shadow-cyan-500/25 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2">
@@ -548,6 +651,7 @@ export default function SavedMealPlan() {
                 </Card>
               )}
             </div>
+            )}
           </div>
         )}
 
