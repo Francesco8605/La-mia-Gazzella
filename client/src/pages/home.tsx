@@ -156,7 +156,7 @@ export default function Home() {
                 <p className="text-lg text-slate-600 mb-6">
                   Scopri come la <strong>Filosofia Gazzella</strong> può trasformare il tuo stile di vita con un approccio sostenibile
                 </p>
-                <Link href="/genera-piano-alimentare">
+                <Link href="/genera-piano">
                   <Button className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3 text-lg">
                     Genera il Tuo Piano
                   </Button>
