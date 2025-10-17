@@ -223,112 +223,215 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Formula Gazzella Offer Section */}
-          <div className="mb-16">
-            <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-2xl border border-emerald-200 max-w-4xl mx-auto">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                {/* Product Image */}
-                <div className="flex-shrink-0">
-                  <div className="relative">
-                    <img 
-                      src={String(formulaGazzellaImage)} 
-                      alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
-                      className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
-                      data-testid="img-formula-gazzella-home"
-                    />
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse shadow-lg">
-                      SOLO 20€
-                    </div>
-                  </div>
-                </div>
+          {/* Intelligent Formula Gazzella Card */}
+          {canAccessOffer && (
+            <div className="mb-16">
+              {(() => {
+                // Determina se l'utente ha problemi intestinali
+                const hasIntestinalIssues = userProfile && 
+                  (userProfile as any).intestinalIssues && 
+                  !['mai', 'no', 'nessuno', 'mai avuti'].includes((userProfile as any).intestinalIssues.toLowerCase().trim());
+                
+                // Determina se l'utente sta già usando Formula Gazzella
+                const isUsingFormula = userProfile && 
+                  (userProfile as any).takingFormulaGazzella && 
+                  !['no', 'mai', 'nessuno', 'non la prendo', 'non la uso'].includes((userProfile as any).takingFormulaGazzella.toLowerCase().trim());
 
-                {/* Content */}
-                <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start mb-4">
-                    <Crown className="h-8 w-8 text-emerald-600 mr-3" />
-                    <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
-                      💎 Offerta Esclusiva Formula Gazzella
-                    </h2>
-                  </div>
-                  
-                  <p className="text-lg text-slate-700 mb-4 leading-relaxed">
-                    L'integratore naturale studiato per accelerare il metabolismo durante la menopausa. 
-                    {canAccessOffer 
-                      ? <span className="font-bold text-emerald-600"> Sul sito costa 49€, per te solo 20€ - risparmi 29€!</span>
-                      : <span className="font-bold text-amber-600"> Disponibile per abbonati Premium</span>
-                    }
-                  </p>
-
-                  {/* Price Comparison - Visible only for premium users */}
-                  {canAccessOffer && (
-                    <div className="bg-white/90 backdrop-blur-sm rounded-xl p-4 mb-4 border-2 border-emerald-200">
-                      <div className="flex items-center justify-center md:justify-start gap-4">
-                        <div className="text-center">
-                          <div className="text-slate-400 line-through text-sm">Prezzo normale</div>
-                          <div className="text-slate-500 line-through text-xl font-bold">49€</div>
+                // Se sta già usando Formula Gazzella - mostra badge congratulazioni
+                if (isUsingFormula) {
+                  return (
+                    <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 rounded-3xl p-8 md:p-10 shadow-2xl border-2 border-purple-300 max-w-4xl mx-auto">
+                      <div className="text-center">
+                        <div className="inline-block bg-gradient-to-r from-purple-500 to-pink-600 text-white px-6 py-3 rounded-full mb-4 shadow-lg">
+                          <Crown className="h-5 w-5 inline mr-2" />
+                          <span className="font-bold">PERCORSO COMPLETO GAZZELLA</span>
                         </div>
-                        <div className="text-emerald-600 text-2xl">→</div>
-                        <div className="text-center">
-                          <div className="text-emerald-700 text-sm font-semibold">Prezzo per te</div>
-                          <div className="text-emerald-600 text-3xl font-bold">20€</div>
-                        </div>
-                        <div className="ml-auto bg-red-500 text-white px-3 py-2 rounded-lg">
-                          <div className="text-xs font-semibold">RISPARMI</div>
-                          <div className="text-lg font-bold">29€</div>
+                        <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-3">
+                          🌟 Fantastico! Stai seguendo il percorso completo
+                        </h3>
+                        <p className="text-lg text-slate-700 mb-4 max-w-2xl mx-auto leading-relaxed">
+                          Con <strong>app La Mia Gazzella + Formula Gazzella</strong> hai tutti gli strumenti per risultati duraturi. 
+                          Quando dovrai riordinare, ricorda che come abbonata paghi sempre <strong className="text-emerald-600">solo 20€ invece di 49€!</strong>
+                        </p>
+                        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 inline-block">
+                          <p className="text-sm text-slate-600">
+                            💰 <strong>Il tuo risparmio mensile: 29€</strong> = app praticamente GRATIS!
+                          </p>
                         </div>
                       </div>
                     </div>
-                  )}
+                  );
+                }
 
-                  <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-6">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-slate-600">
-                      <div className="flex items-center">
-                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
-                        85% principi attivi
+                // Se ha problemi intestinali - messaggio mirato
+                if (hasIntestinalIssues) {
+                  return (
+                    <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-2xl border border-emerald-200 max-w-4xl mx-auto">
+                      <div className="flex flex-col md:flex-row items-center gap-8">
+                        {/* Product Image */}
+                        <div className="flex-shrink-0">
+                          <div className="relative">
+                            <img 
+                              src={String(formulaGazzellaImage)} 
+                              alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
+                              className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
+                              data-testid="img-formula-gazzella-home"
+                            />
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse shadow-lg">
+                              SOLO 20€
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Content - Messaggio mirato per problemi intestinali */}
+                        <div className="flex-1 text-center md:text-left">
+                          <div className="flex items-center justify-center md:justify-start mb-4">
+                            <Crown className="h-8 w-8 text-emerald-600 mr-3" />
+                            <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                              💊 Soluzione per il tuo gonfiore
+                            </h2>
+                          </div>
+                          
+                          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4 rounded-lg">
+                            <p className="text-sm text-amber-800 font-medium">
+                              📋 Ho notato che hai indicato problemi di <strong>gonfiore/digestione</strong> nel tuo profilo
+                            </p>
+                          </div>
+
+                          <p className="text-lg text-slate-700 mb-4 leading-relaxed">
+                            <strong>Formula Gazzella</strong> con <span className="text-emerald-600 font-semibold">Meliloto e Tarassaco</span> è studiata proprio per:
+                          </p>
+
+                          <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-4 space-y-2">
+                            <div className="flex items-center text-slate-700">
+                              <span className="text-emerald-500 mr-2">✓</span>
+                              <span>Drenaggio e riduzione gonfiore</span>
+                            </div>
+                            <div className="flex items-center text-slate-700">
+                              <span className="text-emerald-500 mr-2">✓</span>
+                              <span>Supporto digestione</span>
+                            </div>
+                            <div className="flex items-center text-slate-700">
+                              <span className="text-emerald-500 mr-2">✓</span>
+                              <span>Accelerazione metabolismo in menopausa</span>
+                            </div>
+                          </div>
+
+                          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-5 mb-4">
+                            <p className="text-lg font-bold text-slate-800 mb-2">
+                              🎁 E c'è una sorpresa incredibile:
+                            </p>
+                            <p className="text-base text-slate-700 leading-relaxed">
+                              Pagandola <strong className="text-emerald-600 text-xl">solo 20€ invece di 49€</strong>, 
+                              recuperi esattamente i <strong className="text-red-600">29€ del tuo abbonamento mensile</strong>.
+                            </p>
+                            <p className="text-lg font-bold text-emerald-700 mt-2">
+                              = APP + INTEGRATORE = SOLO 20€ invece che 78€! 💰
+                            </p>
+                          </div>
+
+                          <p className="text-base text-slate-600 mb-4 italic">
+                            Risolvi il gonfiore E l'app diventa praticamente GRATIS
+                          </p>
+
+                          {/* CTA Button */}
+                          <Link href="/offerta-esclusiva" className="group inline-block">
+                            <Button
+                              className="px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 min-h-[48px] bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                              data-testid="button-formula-gazzella-home"
+                            >
+                              <Crown className="h-5 w-5 mr-2" />
+                              <span className="mr-2">Scopri l'Offerta Esclusiva</span>
+                              <ArrowRight className="h-5 w-5" />
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
-                        100% naturale
+                    </div>
+                  );
+                }
+
+                // Caso generico - NON ha problemi intestinali ma NON usa Formula Gazzella
+                return (
+                  <div className="bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 rounded-3xl p-8 md:p-12 shadow-2xl border border-emerald-200 max-w-4xl mx-auto">
+                    <div className="flex flex-col md:flex-row items-center gap-8">
+                      {/* Product Image */}
+                      <div className="flex-shrink-0">
+                        <div className="relative">
+                          <img 
+                            src={String(formulaGazzellaImage)} 
+                            alt="Formula Gazzella - Acceleratore del Metabolismo per Menopausa" 
+                            className="w-32 h-32 md:w-48 md:h-48 object-contain rounded-2xl shadow-lg"
+                            data-testid="img-formula-gazzella-home"
+                          />
+                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse shadow-lg">
+                            SOLO 20€
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center">
-                        <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
-                        Specifico per menopausa
+
+                      {/* Content - Messaggio generico */}
+                      <div className="flex-1 text-center md:text-left">
+                        <div className="flex items-center justify-center md:justify-start mb-4">
+                          <Crown className="h-8 w-8 text-emerald-600 mr-3" />
+                          <h2 className="text-2xl md:text-3xl font-bold text-slate-800">
+                            💎 Offerta Esclusiva Formula Gazzella
+                          </h2>
+                        </div>
+                        
+                        <p className="text-lg text-slate-700 mb-4 leading-relaxed">
+                          L'integratore naturale studiato per <strong>accelerare il metabolismo durante la menopausa</strong>. 
+                          <span className="font-bold text-emerald-600"> Sul sito costa 49€, per te solo 20€ - risparmi 29€!</span>
+                        </p>
+
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-yellow-300 rounded-xl p-5 mb-4">
+                          <p className="text-lg font-bold text-slate-800 mb-2">
+                            🎁 Offerta incredibile per te:
+                          </p>
+                          <p className="text-base text-slate-700 leading-relaxed">
+                            Con <strong className="text-emerald-600 text-xl">solo 20€ invece di 49€</strong>, 
+                            recuperi esattamente i <strong className="text-red-600">29€ del tuo abbonamento mensile</strong>.
+                          </p>
+                          <p className="text-lg font-bold text-emerald-700 mt-2">
+                            = APP + INTEGRATORE = SOLO 20€ invece che 78€! 💰
+                          </p>
+                        </div>
+
+                        <div className="bg-white/70 backdrop-blur-sm rounded-xl p-4 mb-4">
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm text-slate-600">
+                            <div className="flex items-center">
+                              <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                              85% principi attivi
+                            </div>
+                            <div className="flex items-center">
+                              <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                              100% naturale
+                            </div>
+                            <div className="flex items-center">
+                              <Leaf className="h-4 w-4 text-emerald-500 mr-2" />
+                              Specifico per menopausa
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* CTA Button */}
+                        <Link href="/offerta-esclusiva" className="group inline-block">
+                          <Button
+                            className="px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 min-h-[48px] bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                            data-testid="button-formula-gazzella-home"
+                          >
+                            <Crown className="h-5 w-5 mr-2" />
+                            <span className="mr-2">Scopri l'Offerta Esclusiva</span>
+                            <ArrowRight className="h-5 w-5" />
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   </div>
-
-                  {/* CTA Button */}
-                  <Link href="/offerta-esclusiva" className="group inline-block">
-                    <Button
-                      className={`px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg transition-all duration-300 min-h-[48px] ${
-                        canAccessOffer 
-                          ? "bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
-                          : "bg-gradient-to-r from-gray-400 to-gray-500 text-gray-200 cursor-not-allowed"
-                      }`}
-                      data-testid="button-formula-gazzella-home"
-                    >
-                      {canAccessOffer ? (
-                        <Crown className="h-5 w-5 mr-2" />
-                      ) : (
-                        <Lock className="h-5 w-5 mr-2" />
-                      )}
-                      <span className="mr-2">
-                        {canAccessOffer ? "Scopri l'Offerta Esclusiva" : "Solo per Premium"}
-                      </span>
-                      <ArrowRight className="h-5 w-5" />
-                    </Button>
-                  </Link>
-
-                  {/* Trial User Message */}
-                  {!canAccessOffer && (
-                    <p className="text-sm text-amber-600 mt-3 font-medium">
-                      Passa a Premium per accedere all'offerta esclusiva Formula Gazzella
-                    </p>
-                  )}
-                </div>
-              </div>
+                );
+              })()}
             </div>
-          </div>
+          )}
 
           {/* Quick Actions Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-4xl mx-auto">
