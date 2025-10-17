@@ -48,6 +48,14 @@ export default function SavedMealPlan() {
 
   if (!match) return null;
 
+  // Determina se la cliente è in ricomposizione corporea
+  // (peso normale ma vuole perdere peso - NON deve seguire la bilancia)
+  const isBodyRecomposition = mealPlan && 
+    mealPlan.bmiCategory === "Peso normale" && 
+    mealPlan.targetWeight && 
+    mealPlan.currentWeight && 
+    mealPlan.targetWeight < mealPlan.currentWeight;
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-purple-900">
@@ -197,21 +205,37 @@ export default function SavedMealPlan() {
                         <p className="text-xl font-bold text-purple-600">{mealPlan.currentBMI}</p>
                       </div>
                     )}
-                    {mealPlan.weightToLose && (
+                    {mealPlan.weightToLose && !isBodyRecomposition && (
                       <div className="text-center p-3 bg-white/70 dark:bg-gray-800/70 rounded-lg">
                         <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Da Perdere</p>
                         <p className="text-xl font-bold text-orange-600">{mealPlan.weightToLose}kg</p>
                       </div>
                     )}
                   </div>
-                  {mealPlan.bmiCategory && (
+                  {isBodyRecomposition && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border-l-4 border-purple-500">
+                      <div className="flex items-start gap-3">
+                        <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-semibold text-purple-800 dark:text-purple-200 mb-1">
+                            💪 Ricomposizione Corporea
+                          </p>
+                          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                            Sei già in un peso sano! Non serve usare la bilancia come riferimento. 
+                            Il tuo obiettivo è <strong>trasformare massa grassa in massa magra</strong> e ritrovare tonicità.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  {mealPlan.bmiCategory && !isBodyRecomposition && (
                     <div className="text-center">
                       <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                         {mealPlan.bmiCategory}
                       </Badge>
                     </div>
                   )}
-                  {mealPlan.timeToGoal && (
+                  {mealPlan.timeToGoal && !isBodyRecomposition && (
                     <div className="text-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
                       <p className="text-sm font-medium text-amber-800 dark:text-amber-200">⏱️ {mealPlan.timeToGoal}</p>
                     </div>
