@@ -19,7 +19,10 @@ export default function SavedMealPlan() {
   const mealPlanId = params?.id;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const { canAccessOffer } = useSubscription();
+  const { hasActiveSubscription, isInTrial } = useSubscription();
+  
+  // Determina se l'utente può accedere all'offerta (solo premium, non trial)
+  const canAccessOffer = hasActiveSubscription && !isInTrial;
 
   const { data: mealPlan, isLoading, error } = useQuery<MealPlan>({
     queryKey: ["/api/meal-plan", mealPlanId],
