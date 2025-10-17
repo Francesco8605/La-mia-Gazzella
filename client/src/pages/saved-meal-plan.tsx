@@ -4,19 +4,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock, ShoppingCart } from "lucide-react";
+import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock, ShoppingCart, Crown, ArrowRight, Leaf } from "lucide-react";
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import type { MealPlan } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/useSubscription";
+import formulaGazzellaImage from "@assets/PRODOTTO_formulagazzella_-formatoQUADRATO_1758271113849.webp";
 
 export default function SavedMealPlan() {
   const [match, params] = useRoute("/piano-salvato/:id");
   const mealPlanId = params?.id;
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { canAccessOffer } = useSubscription();
 
   const { data: mealPlan, isLoading, error } = useQuery<MealPlan>({
     queryKey: ["/api/meal-plan", mealPlanId],
@@ -653,6 +656,87 @@ export default function SavedMealPlan() {
             </div>
             )}
           </div>
+        )}
+
+        {/* Potenzia i Tuoi Risultati - Formula Gazzella Banner */}
+        {canAccessOffer && (
+          <Card className="mb-8 overflow-hidden backdrop-blur-md bg-gradient-to-br from-emerald-50/90 via-green-50/80 to-teal-50/90 dark:from-emerald-900/40 dark:via-green-900/30 dark:to-teal-900/40 border-2 border-emerald-300 dark:border-emerald-700 shadow-2xl">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center text-2xl font-bold text-slate-800 dark:text-white">
+                <Zap className="w-6 h-6 mr-2 text-emerald-600 dark:text-emerald-400" />
+                💎 Potenzia i Tuoi Risultati
+              </CardTitle>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mt-2">
+                Accelera il metabolismo e ottieni risultati più rapidi con Formula Gazzella
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row items-center gap-6">
+                {/* Product Image */}
+                <div className="flex-shrink-0">
+                  <div className="relative">
+                    <img 
+                      src={String(formulaGazzellaImage)} 
+                      alt="Formula Gazzella - Acceleratore del Metabolismo" 
+                      className="w-28 h-28 md:w-36 md:h-36 object-contain rounded-2xl shadow-lg"
+                      data-testid="img-formula-gazzella-saved-plan"
+                    />
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold animate-pulse shadow-lg">
+                      SOLO 20€
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
+                    Completa il tuo percorso con Formula Gazzella
+                  </h3>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 mb-3 leading-relaxed">
+                    Integratore naturale con <strong className="text-emerald-600 dark:text-emerald-400">Meliloto e Tarassaco</strong> per 
+                    drenaggio, riduzione gonfiore e accelerazione metabolica.
+                  </p>
+
+                  <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/30 dark:to-orange-900/30 border-2 border-yellow-300 dark:border-yellow-700 rounded-xl p-4 mb-4">
+                    <p className="text-sm font-semibold text-slate-800 dark:text-white mb-1">
+                      🎁 Offerta Esclusiva Premium:
+                    </p>
+                    <p className="text-xs text-slate-700 dark:text-slate-300">
+                      <strong className="text-emerald-600 dark:text-emerald-400 text-base">20€ invece di 49€</strong> - 
+                      Recuperi i 29€ dell'abbonamento = <strong className="text-red-600 dark:text-red-400">app praticamente GRATIS!</strong>
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <Leaf className="h-3 w-3 text-emerald-500 mr-1" />
+                      85% attivi
+                    </div>
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <Leaf className="h-3 w-3 text-emerald-500 mr-1" />
+                      100% naturale
+                    </div>
+                    <div className="flex items-center text-xs text-slate-600 dark:text-slate-300">
+                      <Leaf className="h-3 w-3 text-emerald-500 mr-1" />
+                      Per menopausa
+                    </div>
+                  </div>
+
+                  {/* CTA Button */}
+                  <Link href="/offerta-esclusiva" className="inline-block">
+                    <Button
+                      className="px-4 py-2 text-sm font-semibold rounded-lg shadow-lg transition-all duration-300 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white"
+                      data-testid="button-formula-gazzella-saved-plan"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      <span className="mr-2">Scopri l'Offerta</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {/* Plan Summary */}
