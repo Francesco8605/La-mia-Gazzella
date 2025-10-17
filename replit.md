@@ -163,3 +163,32 @@ The system manages:
   - New plans automatically include personalized AI summary explaining diet strategy
 - **Key Messaging**: Emphasizes sustainability and metabolic health over quick weight loss
 - **Files Modified**: shared/schema.ts, server/services/openai.ts, client/src/pages/home.tsx
+
+## Body Recomposition Messaging for Healthy Weight Clients
+- **Location**: Saved meal plan page (/piano-salvato/:id)
+- **Objective**: Provide appropriate guidance for clients already at healthy weight who want to "lose weight"
+- **Detection Logic**: 
+  - Triggers when BMI category is "Peso normale" (healthy weight: 18.5-25)
+  - AND target weight is lower than current weight
+  - Flag: `isBodyRecomposition = bmiCategory === "Peso normale" && targetWeight < currentWeight`
+- **UI Adaptations**:
+  - **Profilo Section**: Hides "Da Perdere" (weight to lose) metric
+  - **Body Recomposition Card**: Purple/pink gradient card with message explaining:
+    - User is already at healthy weight
+    - Goal should be transforming fat mass into lean mass, not losing weight
+    - Body composition and muscle tone focus instead of scale numbers
+  - **Guida Avanzata Section**: 
+    - Title changes from "Guida Avanzata Gazzella" to "Il Tuo Percorso di Trasformazione"
+    - Subtitle emphasizes body recomposition and wellness over scale weight
+    - Special content card "Non Serve Guardare la Bilancia" with:
+      - True objective: transform fat to muscle (scale may stay same)
+      - What to expect: improved muscle tone, better-fitting clothes, defined silhouette
+      - Success indicators: energy levels, clothing fit, body definition, general wellness
+      - Important tip: use mirror and clothing fit as reference, not scale; take progress photos every 2-3 weeks
+- **Key Messaging Principles**:
+  - Filosofia Gazzella alignment: sustainable transformation over drastic weight loss
+  - Focus on non-scale victories: strength, energy, clothing fit, body composition
+  - Positive framing: "transform" not "lose", "tone" not "shrink"
+  - Empowerment: client already has healthy weight, now focus on body quality
+- **Files Modified**: client/src/pages/saved-meal-plan.tsx
+- **Testing**: E2E test verified all UI adaptations display correctly for body recomposition cases
