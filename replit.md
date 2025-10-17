@@ -141,3 +141,25 @@ The system manages:
   - **Visual Hierarchy**: Price comparison draws attention to the discount
 - **Visibility Logic**: Comparison box only shown to `canAccessOffer` users (active premium, not trial)
 - **File Modified**: client/src/pages/home.tsx
+
+## AI-Powered Personalized Plan Summaries - Filosofia Gazzella
+- **Location**: Homepage dashboard (replaces generic "ideal weight" section)
+- **Objective**: Provide users with clear, personalized explanations of their meal plan strategy aligned with Filosofia Gazzella principles
+- **Implementation**:
+  - **Database Schema**: Added `ai_summary` TEXT column to `meal_plans` table (maps to `aiSummary` in Drizzle ORM)
+  - **AI Generation**: Enhanced OpenAI meal plan prompt to generate 200-300 word personalized summaries including:
+    - Client profile analysis (age, current weight, BMI, health considerations)
+    - Explanation of chosen calorie target and macronutrient distribution
+    - Emphasis on Filosofia Gazzella methodology: sustainable lifestyle, metabolism reactivation, NO drastic caloric deficit
+    - Personalized reasoning for dietary approach
+  - **UI Design**:
+    - **With AI Summary**: Gradient emerald/teal card displaying AI-generated text, plan creation date, confident woman image
+    - **Without Summary**: Gradient amber/orange fallback card inviting user to create first meal plan
+- **Data Flow**:
+  - AI summary generated during meal plan creation (POST /api/meal-plans)
+  - Displayed on homepage via GET /api/meal-plans (latest plan with aiSummary field)
+- **User Experience**:
+  - Existing plans (created before feature) show fallback CTA to generate new plan
+  - New plans automatically include personalized AI summary explaining diet strategy
+- **Key Messaging**: Emphasizes sustainability and metabolic health over quick weight loss
+- **Files Modified**: shared/schema.ts, server/services/openai.ts, client/src/pages/home.tsx

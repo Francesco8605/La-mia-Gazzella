@@ -1202,6 +1202,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get current user's meal plans (base route) - MUST BE BEFORE :userId and /user routes
+  app.get("/api/meal-plans", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
+    try {
+      const userId = (req as any).user.claims.sub;
+      const mealPlans = await storage.getMealPlansByUser(userId);
+      res.json(mealPlans || []);
+    } catch (error) {
+      console.error("Error fetching user meal plans:", error);
+      res.status(500).json({ message: "Failed to fetch meal plans" });
+    }
+  });
+
   // Get current user's meal plans (simplified route) - MUST BE BEFORE :userId route  
   app.get("/api/meal-plans/user", isAuthenticated, requireActiveSubscription, async (req: any, res) => {
     try {
