@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat, Heart, Ruler, Weight, Clock, Droplets, AlertCircle, Apple } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 
@@ -63,6 +63,18 @@ interface ClientHistory {
     age?: number;
     weight?: number;
     height?: number;
+    thyroidIssues?: string;
+    intestinalIssues?: string;
+    weeklyExercise?: number;
+    breakfastTime?: string;
+    lunchTime?: string;
+    dinnerTime?: string;
+    excludedFoods?: string[];
+    allergies?: string[];
+    dailyWaterIntake?: string;
+    cravingTimeFrame?: string;
+    preferredCheatFood?: string;
+    takingFormulaGazzella?: string;
   } | null;
   mealPlans: MealPlan[];
   weightHistory: WeightEntry[];
@@ -242,6 +254,163 @@ export default function AdminClientDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Client Profile Data */}
+        {clientHistory.profile && (
+          <Card className="bg-slate-800 border-slate-700 mb-6">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <User className="mr-2 h-5 w-5" />
+                Dati Profilo Cliente
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* Dati Fisici */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-emerald-400 flex items-center">
+                    <Ruler className="mr-2 h-4 w-4" />
+                    Dati Fisici
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Età</p>
+                      <p className="text-sm text-white">{clientHistory.profile.age || 'N/A'} anni</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Peso</p>
+                      <p className="text-sm text-white">{clientHistory.profile.weight || 'N/A'} kg</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Altezza</p>
+                      <p className="text-sm text-white">{clientHistory.profile.height || 'N/A'} cm</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Condizioni di Salute */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-red-400 flex items-center">
+                    <Heart className="mr-2 h-4 w-4" />
+                    Condizioni di Salute
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Problemi Tiroide</p>
+                      <p className="text-sm text-white">{clientHistory.profile.thyroidIssues || 'Nessuno'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Problemi Intestinali</p>
+                      <p className="text-sm text-white">{clientHistory.profile.intestinalIssues || 'Nessuno'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Attività Fisica */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-blue-400 flex items-center">
+                    <Activity className="mr-2 h-4 w-4" />
+                    Attività Fisica
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Esercizio Settimanale</p>
+                      <p className="text-sm text-white">
+                        {clientHistory.profile.weeklyExercise 
+                          ? `${clientHistory.profile.weeklyExercise} volte/settimana` 
+                          : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Orari Pasti */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-orange-400 flex items-center">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Orari Pasti
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Colazione</p>
+                      <p className="text-sm text-white">{clientHistory.profile.breakfastTime || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Pranzo</p>
+                      <p className="text-sm text-white">{clientHistory.profile.lunchTime || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Cena</p>
+                      <p className="text-sm text-white">{clientHistory.profile.dinnerTime || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preferenze Alimentari */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-purple-400 flex items-center">
+                    <Apple className="mr-2 h-4 w-4" />
+                    Preferenze Alimentari
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Cibi Esclusi</p>
+                      <p className="text-sm text-white">
+                        {clientHistory.profile.excludedFoods && clientHistory.profile.excludedFoods.length > 0 
+                          ? clientHistory.profile.excludedFoods.join(', ') 
+                          : 'Nessuno'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Allergie</p>
+                      <p className="text-sm text-white">
+                        {clientHistory.profile.allergies && clientHistory.profile.allergies.length > 0 
+                          ? clientHistory.profile.allergies.join(', ') 
+                          : 'Nessuna'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Abitudini */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-cyan-400 flex items-center">
+                    <Droplets className="mr-2 h-4 w-4" />
+                    Abitudini
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Assunzione Acqua</p>
+                      <p className="text-sm text-white">{clientHistory.profile.dailyWaterIntake || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Orario Voglie</p>
+                      <p className="text-sm text-white">{clientHistory.profile.cravingTimeFrame || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-400">Cibo Sgarro Preferito</p>
+                      <p className="text-sm text-white">{clientHistory.profile.preferredCheatFood || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Integratori */}
+                <div className="space-y-3">
+                  <h3 className="text-sm font-semibold text-pink-400 flex items-center">
+                    <AlertCircle className="mr-2 h-4 w-4" />
+                    Integratori
+                  </h3>
+                  <div className="space-y-2 pl-6">
+                    <div>
+                      <p className="text-xs text-slate-400">Formula Gazzella</p>
+                      <p className="text-sm text-white">{clientHistory.profile.takingFormulaGazzella || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Weight Chart */}
         {weightChartData.length > 0 && (
