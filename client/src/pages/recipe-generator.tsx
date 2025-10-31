@@ -174,7 +174,7 @@ export default function RecipeGenerator() {
       setPendingRecipeData(null);
       
       // Invalida la cache delle ricette per aggiornare la pagina "Ricette"
-      queryClient.invalidateQueries({ queryKey: ["/api/recipes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/recipes/user"] });
       
       toast({
         title: "Ricetta Generata e Salvata!",

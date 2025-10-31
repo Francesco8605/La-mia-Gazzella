@@ -78,3 +78,18 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
 - **Stripe**: Payment processing for subscriptions.
 - **Shopify**: E-commerce integration for customer data sync.
 - **Date-fns**: Date utility library.
+
+# Recent Changes
+
+## Bug Fixes (October 31, 2025)
+
+### Recipe Generation Cache Invalidation Fix
+- **Issue**: After generating a new recipe, it didn't appear in the /recipes page without manual refresh
+- **Root Cause**: Cache invalidation used wrong query key `["/api/recipes"]` instead of `["/api/recipes/user"]`
+- **Fix**: Updated `client/src/pages/recipe-generator.tsx` to invalidate cache with correct query key
+- **Impact**: Recipes now appear immediately in the /recipes page after generation
+
+### Admin Client Detail TypeScript Errors
+- **Issue**: TypeScript errors in admin client detail page due to missing profile field types
+- **Fix**: Added all questionnaire fields to the client profile interface (thyroidIssues, intestinalIssues, weeklyExercise, breakfastTime, lunchTime, dinnerTime, excludedFoods, allergies, dailyWaterIntake, cravingTimeFrame, preferredCheatFood, takingFormulaGazzella)
+- **Impact**: Admin dashboard now shows comprehensive client profile data in 7 color-coded categories
