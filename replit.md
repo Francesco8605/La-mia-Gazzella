@@ -81,6 +81,29 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
 
 # Recent Changes
 
+## Feature Implementation (November 17, 2025)
+
+### Full 7-Day Meal Plan Visualization in Admin Dashboard
+- **Feature**: Admin can now view complete 7-day meal plans for any client
+- **Implementation**:
+  - Added expandable/collapsible view for each meal plan in admin client detail page
+  - Created dedicated admin endpoint `GET /api/admin/meal-plan/:id` with no ownership check
+  - Lazy loading: Plan details fetched only when expanded
+  - Complete daily breakdown: Shows all days (Lunedì-Domenica) with:
+    - Daily calorie totals
+    - All meals: Colazione (🌅), Pranzo (☀️), Cena (🌙), Spuntini (🍎)
+    - Individual meal names and calorie counts
+- **UI/UX**:
+  - Toggle button: "Visualizza Piano Completo (7 Giorni)" ↔ "Nascondi Dettagli"
+  - Dark theme cards (bg-slate-700/50) with responsive grid layout
+  - Emoji icons for visual meal identification
+- **Technical Details**:
+  - Frontend: `client/src/pages/admin-client-detail.tsx`
+  - Backend: New endpoint at line 3574-3587 in `server/routes.ts`
+  - Authentication: Uses `fetchWithAuth` helper with admin tokens
+  - Middleware: Protected by `isAdminAuthenticated`
+- **Impact**: Admin can now provide better support by viewing exact meal plans without client screenshots
+
 ## Bug Fixes (October 31, 2025)
 
 ### Recipe Generation Cache Invalidation Fix

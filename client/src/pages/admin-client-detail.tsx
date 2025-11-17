@@ -4,15 +4,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat, Heart, Ruler, Weight, Clock, Droplets, AlertCircle, Apple } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat, Heart, Ruler, Weight, Clock, Droplets, AlertCircle, Apple, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface WeightEntry {
   id: string;
   weight: number;
   date: string;
   notes?: string;
+}
+
+interface Meal {
+  name: string;
+  calories: number;
+  protein?: number;
+  carbs?: number;
+  fat?: number;
+}
+
+interface MealPlanDay {
+  day: string;
+  totalCalories: number;
+  meals: {
+    breakfast: Meal;
+    lunch: Meal;
+    dinner: Meal;
+    snacks?: Meal[];
+  };
 }
 
 interface MealPlan {
@@ -23,6 +44,10 @@ interface MealPlan {
   currentWeight: number;
   targetWeight: number;
   createdAt: string;
+  days?: MealPlanDay[];
+  targetProtein?: number;
+  targetCarbs?: number;
+  targetFat?: number;
 }
 
 interface Recipe {
@@ -84,6 +109,10 @@ interface ClientHistory {
 export default function AdminClientDetail() {
   const [match, params] = useRoute("/admin/client/:userId");
   const userId = params?.userId;
+  const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
+  const [loadingPlanDetails, setLoadingPlanDetails] = useState<Set<string>>(new Set());
+  const [planDetails, setPlanDetails] = useState<Map<string, MealPlan>>(new Map());
+  const { toast } = useToast();
 
   // API helper with auth headers
   const fetchWithAuth = async (url: string) => {
@@ -95,6 +124,81 @@ export default function AdminClientDetail() {
         "X-Admin-Email": email || "",
       },
     });
+  };
+
+  // Toggle plan details visibility and load full details if not already loaded
+  const togglePlanDetails = async (planId: string) => {
+    const newExpanded = new Set(expandedPlans);
+    if (newExpanded.has(planId)) {
+      newExpanded.delete(planId);
+      setExpandedPlans(newExpanded);
+    } else {
+      newExpanded.add(planId);
+      setExpandedPlans(newExpanded);
+      
+      // Load full plan details if not already loaded
+      if (!planDetails.has(planId)) {
+        setLoadingPlanDetails(prev => {
+          const next = new Set(prev);
+          next.add(planId);
+          return next;
+        });
+        
+        try {
+          const response = await fetchWithAuth(`/api/admin/meal-plan/${planId}`);
+          if (response.ok) {
+            const fullPlan = await response.json();
+            setPlanDetails(prev => {
+              const next = new Map(prev);
+              next.set(planId, fullPlan);
+              return next;
+            });
+          } else {
+            console.error("Error loading plan details: unauthorized or not found");
+            toast({
+              title: "Errore",
+              description: "Impossibile caricare i dettagli del piano",
+              variant: "destructive",
+            });
+          }
+        } catch (error) {
+          console.error("Error loading plan details:", error);
+          toast({
+            title: "Errore",
+            description: "Errore durante il caricamento del piano",
+            variant: "destructive",
+          });
+        } finally {
+          setLoadingPlanDetails(prev => {
+            const next = new Set(prev);
+            next.delete(planId);
+            return next;
+          });
+        }
+      }
+    }
+  };
+
+  // Helper to translate day names
+  const translateDay = (day: string) => {
+    const dayTranslations: Record<string, string> = {
+      'Monday': 'Lunedì',
+      'Tuesday': 'Martedì', 
+      'Wednesday': 'Mercoledì',
+      'Thursday': 'Giovedì',
+      'Friday': 'Venerdì',
+      'Saturday': 'Sabato',
+      'Sunday': 'Domenica'
+    };
+    return dayTranslations[day] || day;
+  };
+
+  // Meal icons
+  const mealIcons = {
+    breakfast: "🌅",
+    lunch: "☀️",
+    dinner: "🌙",
+    snacks: "🍎",
   };
 
   // Fetch client history
@@ -471,36 +575,143 @@ export default function AdminClientDetail() {
               <div className="space-y-4">
                 {clientHistory.mealPlans
                   .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-                  .map((plan) => (
-                    <div
-                      key={plan.id}
-                      className="border border-slate-700 rounded-lg p-4 hover:bg-slate-700/50 transition-colors"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="text-lg font-semibold text-white">{plan.title}</h3>
-                          <p className="text-sm text-slate-400">{plan.description}</p>
+                  .map((plan) => {
+                    const isExpanded = expandedPlans.has(plan.id);
+                    const isLoading = loadingPlanDetails.has(plan.id);
+                    const fullPlan = planDetails.get(plan.id);
+                    
+                    return (
+                      <div
+                        key={plan.id}
+                        className="border border-slate-700 rounded-lg p-4 transition-colors"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-semibold text-white">{plan.title}</h3>
+                            <p className="text-sm text-slate-400">{plan.description}</p>
+                          </div>
+                          <Badge variant="outline" className="text-emerald-400 border-emerald-400">
+                            {format(new Date(plan.createdAt), 'dd MMM yyyy', { locale: it })}
+                          </Badge>
                         </div>
-                        <Badge variant="outline" className="text-emerald-400 border-emerald-400">
-                          {format(new Date(plan.createdAt), 'dd MMM yyyy', { locale: it })}
-                        </Badge>
+                        <div className="grid grid-cols-3 gap-4 mt-3">
+                          <div>
+                            <p className="text-xs text-slate-400">Calorie Target</p>
+                            <p className="text-sm font-medium text-white">{plan.targetCalories || 'N/A'} kcal</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400">Peso Iniziale</p>
+                            <p className="text-sm font-medium text-white">{plan.currentWeight || 'N/A'} kg</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-400">Peso Obiettivo</p>
+                            <p className="text-sm font-medium text-white">{plan.targetWeight || 'N/A'} kg</p>
+                          </div>
+                        </div>
+
+                        {/* Toggle Details Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4 w-full bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+                          onClick={() => togglePlanDetails(plan.id)}
+                        >
+                          {isLoading ? (
+                            <>Caricamento dettagli...</>
+                          ) : isExpanded ? (
+                            <>
+                              <ChevronUp className="mr-2 h-4 w-4" />
+                              Nascondi Dettagli
+                            </>
+                          ) : (
+                            <>
+                              <ChevronDown className="mr-2 h-4 w-4" />
+                              Visualizza Piano Completo (7 Giorni)
+                            </>
+                          )}
+                        </Button>
+
+                        {/* Expanded View with All Days */}
+                        {isExpanded && fullPlan?.days && (
+                          <div className="mt-6 border-t border-slate-600 pt-6">
+                            <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+                              <Calendar className="mr-2 h-5 w-5" />
+                              Piano Settimanale Completo
+                            </h4>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                              {fullPlan.days.map((day: MealPlanDay, index: number) => (
+                                <div
+                                  key={`${day.day}-${index}`}
+                                  className="bg-slate-700/50 rounded-lg p-4 border border-slate-600"
+                                >
+                                  <div className="text-center mb-3">
+                                    <h5 className="font-bold text-white text-base">{translateDay(day.day)}</h5>
+                                    <p className="text-xs text-emerald-400">{day.totalCalories} kcal</p>
+                                  </div>
+                                  
+                                  <div className="space-y-3">
+                                    {/* Breakfast */}
+                                    <div className="bg-slate-800/70 rounded p-2">
+                                      <h6 className="font-semibold text-slate-300 text-xs mb-1 flex items-center">
+                                        <span className="mr-1">{mealIcons.breakfast}</span>
+                                        Colazione
+                                      </h6>
+                                      <p className="text-xs text-white leading-relaxed">
+                                        {day.meals.breakfast.name}
+                                      </p>
+                                      <p className="text-xs text-slate-400 mt-1">{day.meals.breakfast.calories} kcal</p>
+                                    </div>
+                                    
+                                    {/* Lunch */}
+                                    <div className="bg-slate-800/70 rounded p-2">
+                                      <h6 className="font-semibold text-slate-300 text-xs mb-1 flex items-center">
+                                        <span className="mr-1">{mealIcons.lunch}</span>
+                                        Pranzo
+                                      </h6>
+                                      <p className="text-xs text-white leading-relaxed">
+                                        {day.meals.lunch.name}
+                                      </p>
+                                      <p className="text-xs text-slate-400 mt-1">{day.meals.lunch.calories} kcal</p>
+                                    </div>
+                                    
+                                    {/* Dinner */}
+                                    <div className="bg-slate-800/70 rounded p-2">
+                                      <h6 className="font-semibold text-slate-300 text-xs mb-1 flex items-center">
+                                        <span className="mr-1">{mealIcons.dinner}</span>
+                                        Cena
+                                      </h6>
+                                      <p className="text-xs text-white leading-relaxed">
+                                        {day.meals.dinner.name}
+                                      </p>
+                                      <p className="text-xs text-slate-400 mt-1">{day.meals.dinner.calories} kcal</p>
+                                    </div>
+                                    
+                                    {/* Snacks */}
+                                    {day.meals.snacks && day.meals.snacks.length > 0 && (
+                                      <div className="bg-slate-800/70 rounded p-2">
+                                        <h6 className="font-semibold text-slate-300 text-xs mb-1 flex items-center">
+                                          <span className="mr-1">{mealIcons.snacks}</span>
+                                          Spuntini
+                                        </h6>
+                                        {day.meals.snacks.map((snack: Meal, snackIndex: number) => (
+                                          <div key={snackIndex} className="mb-1">
+                                            <p className="text-xs text-white leading-relaxed">
+                                              {snack.name}
+                                            </p>
+                                            <p className="text-xs text-slate-400">{snack.calories} kcal</p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="grid grid-cols-3 gap-4 mt-3">
-                        <div>
-                          <p className="text-xs text-slate-400">Calorie Target</p>
-                          <p className="text-sm font-medium text-white">{plan.targetCalories || 'N/A'} kcal</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-400">Peso Iniziale</p>
-                          <p className="text-sm font-medium text-white">{plan.currentWeight || 'N/A'} kg</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-400">Peso Obiettivo</p>
-                          <p className="text-sm font-medium text-white">{plan.targetWeight || 'N/A'} kg</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
               </div>
             )}
           </CardContent>

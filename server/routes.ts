@@ -3568,6 +3568,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get meal plan details (admin version - no ownership check)
+  app.get("/api/admin/meal-plan/:id", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const mealPlan = await storage.getMealPlan(req.params.id);
+      if (!mealPlan) {
+        return res.status(404).json({ message: "Piano alimentare non trovato" });
+      }
+      
+      res.json(mealPlan);
+    } catch (error) {
+      console.error("Error fetching meal plan for admin:", error);
+      res.status(500).json({ message: "Errore nel recupero del piano alimentare" });
+    }
+  });
+
   // Get dashboard stats
   app.get("/api/admin/stats", isAdminAuthenticated, async (req: any, res) => {
     try {
