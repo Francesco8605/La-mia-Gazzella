@@ -17,6 +17,7 @@ export default function CancelSubscription() {
   const queryClient = useQueryClient();
   const { subscription, isLoading } = useSubscription();
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [hasUnderstoodImmediateAccess, setHasUnderstoodImmediateAccess] = useState(false);
 
   // Fetch user's meal plans for personalization
   const { data: mealPlans } = useQuery<any[]>({
@@ -383,38 +384,106 @@ export default function CancelSubscription() {
             </>
           ) : (
             /* Confirmation Step */
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-600">
-                  <AlertTriangle className="h-5 w-5" />
-                  Conferma Cancellazione
+            <Card className="border-red-300">
+              <CardHeader className="bg-red-50 rounded-t-lg">
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <AlertTriangle className="h-6 w-6" />
+                  ⚠️ ATTENZIONE: Conferma Cancellazione
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <Alert className="mb-6 border-red-200 bg-red-50">
-                  <AlertDescription className="text-red-800">
-                    <strong>Sei sicuro di voler cancellare il tuo abbonamento?</strong>
-                    <br />
-                    Questa azione non può essere annullata. Il tuo abbonamento rimarrà attivo fino al {subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString('it-IT') : 'termine del periodo corrente'}.
-                  </AlertDescription>
-                </Alert>
+              <CardContent className="pt-6">
+                {/* Avviso Prominente - Perdita Immediata Accesso */}
+                <div className="bg-red-100 border-2 border-red-400 rounded-lg p-6 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-8 w-8 text-red-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h3 className="text-xl font-bold text-red-800 mb-3">
+                        🚨 IMPORTANTE: Perderai l'accesso IMMEDIATAMENTE
+                      </h3>
+                      <p className="text-red-800 font-medium mb-4">
+                        Quando cancelli l'abbonamento, <strong>perderai l'accesso alla piattaforma SUBITO</strong>, 
+                        anche se hai ancora giorni o settimane di abbonamento pagato.
+                      </p>
+                      <div className="bg-white/80 rounded-lg p-4 mb-4">
+                        <p className="text-red-700 mb-2">
+                          <strong>📅 Il tuo abbonamento scade il: </strong>
+                          <span className="font-bold">{subscription?.endDate ? new Date(subscription.endDate).toLocaleDateString('it-IT') : 'N/A'}</span>
+                        </p>
+                        <p className="text-red-700 text-sm">
+                          Se cancelli oggi, perderai immediatamente l'accesso anche se hai ancora tempo pagato fino a questa data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                {/* Consigli Pratici */}
+                <div className="bg-amber-50 border border-amber-300 rounded-lg p-5 mb-6">
+                  <h4 className="font-bold text-amber-800 mb-3 flex items-center gap-2">
+                    💡 Ti consigliamo di:
+                  </h4>
+                  <ul className="space-y-3 text-amber-900">
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600">→</span>
+                      <span><strong>Aspettare gli ultimi giorni</strong> prima di cancellare, così sfrutti tutto il periodo che hai già pagato</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600">→</span>
+                      <span><strong>Salvare il tuo piano alimentare e le ricette</strong> se vuoi conservarli - puoi fare screenshot o copiarli prima di cancellare</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-600">→</span>
+                      <span>Ricorda che una volta cancellato, <strong>non potrai più accedere ai tuoi piani e ricette salvati</strong></span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Checkbox di Conferma Obbligatorio */}
+                <div className="bg-slate-100 border-2 border-slate-300 rounded-lg p-5 mb-6">
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={hasUnderstoodImmediateAccess}
+                      onChange={(e) => setHasUnderstoodImmediateAccess(e.target.checked)}
+                      className="mt-1 h-5 w-5 rounded border-red-400 text-red-600 focus:ring-red-500"
+                      data-testid="checkbox-understand-immediate-access"
+                    />
+                    <span className="text-slate-800 font-semibold text-base leading-relaxed">
+                      HO CAPITO CHE PERDERÒ L'ACCESSO IMMEDIATAMENTE APPENA CANCELLO L'ABBONAMENTO
+                    </span>
+                  </label>
+                </div>
+
+                {/* Bottoni Azione */}
                 <div className="flex gap-4 justify-center">
                   <Button
                     variant="outline"
-                    onClick={() => setShowConfirmation(false)}
+                    onClick={() => {
+                      setShowConfirmation(false);
+                      setHasUnderstoodImmediateAccess(false);
+                    }}
                     disabled={cancelMutation.isPending}
+                    className="px-6"
+                    data-testid="button-cancel-go-back"
                   >
-                    Annulla
+                    ← Torna Indietro
                   </Button>
                   <Button
                     variant="destructive"
                     onClick={handleCancel}
-                    disabled={cancelMutation.isPending}
+                    disabled={cancelMutation.isPending || !hasUnderstoodImmediateAccess}
+                    className={`px-6 ${!hasUnderstoodImmediateAccess ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    data-testid="button-confirm-cancel-subscription"
                   >
                     {cancelMutation.isPending ? "Cancellando..." : "Conferma Cancellazione"}
                   </Button>
                 </div>
+
+                {!hasUnderstoodImmediateAccess && (
+                  <p className="text-center text-sm text-slate-500 mt-4">
+                    ⬆️ Devi spuntare la casella sopra per procedere con la cancellazione
+                  </p>
+                )}
               </CardContent>
             </Card>
           )}
