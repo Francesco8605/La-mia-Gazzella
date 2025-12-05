@@ -116,3 +116,21 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
 - **Issue**: TypeScript errors in admin client detail page due to missing profile field types
 - **Fix**: Added all questionnaire fields to the client profile interface (thyroidIssues, intestinalIssues, weeklyExercise, breakfastTime, lunchTime, dinnerTime, excludedFoods, allergies, dailyWaterIntake, cravingTimeFrame, preferredCheatFood, takingFormulaGazzella)
 - **Impact**: Admin dashboard now shows comprehensive client profile data in 7 color-coded categories
+
+## UX Enhancement (December 5, 2025)
+
+### Cancellation Page - Immediate Access Loss Warning
+- **Feature**: Enhanced cancellation confirmation to clearly communicate immediate access loss
+- **Implementation**:
+  - Added prominent red warning box explaining access ends IMMEDIATELY upon cancellation
+  - Shows subscription end date with clear message about losing access even with remaining paid days
+  - Added practical advice section (amber box) recommending:
+    - Wait until last days before cancelling
+    - Save meal plans and recipes before cancellation
+  - Mandatory checkbox confirmation: "HO CAPITO CHE PERDERÒ L'ACCESSO IMMEDIATAMENTE APPENA CANCELLO L'ABBONAMENTO"
+  - Cancel button disabled until checkbox is checked
+- **Technical Details**:
+  - File: `client/src/pages/cancel-subscription.tsx`
+  - New state: `hasUnderstoodImmediateAccess` for checkbox tracking
+  - Test IDs: `checkbox-understand-immediate-access`, `button-confirm-cancel-subscription`, `button-cancel-go-back`
+- **Impact**: Reduces user confusion about subscription cancellation behavior and encourages maximum use of paid period
