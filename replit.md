@@ -134,3 +134,19 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
   - New state: `hasUnderstoodImmediateAccess` for checkbox tracking
   - Test IDs: `checkbox-understand-immediate-access`, `button-confirm-cancel-subscription`, `button-cancel-go-back`
 - **Impact**: Reduces user confusion about subscription cancellation behavior and encourages maximum use of paid period
+
+## Weight Goal Logic Update (January 12, 2026)
+
+### Minimum -2kg Weight Goal for Normal BMI Users
+- **Feature**: Users with normal BMI (18.5-25) now always have at least -2kg as weight goal instead of 0kg
+- **Rationale**: "0kg da perdere" was not motivating for clients; always showing a small achievable goal is more encouraging
+- **Implementation**:
+  - Modified `calculateNutritionalNeeds()` in `server/services/openai.ts`
+  - Calculates minimum healthy weight using BMI 18.5 threshold: `18.5 × height(m)²`
+  - For normal BMI: `weightGoal = max(minHealthyWeight, currentWeight - 2)`
+  - Edge case: if already near minimum, allows only small reduction (0.5kg) without going below healthy threshold
+- **Examples**:
+  - 165cm/65kg (BMI 23.9) → Goal: 63kg (-2kg)
+  - 160cm/52kg (BMI 20.3) → Goal: 50kg (-2kg)
+  - 170cm/54kg (BMI 18.7) → Goal: 53.5kg (-0.5kg, limited by min healthy weight)
+- **Impact**: All normal-weight clients now see an achievable weight goal, improving motivation and engagement
