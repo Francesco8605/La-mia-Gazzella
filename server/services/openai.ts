@@ -1470,12 +1470,21 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
   let weightGoal = currentWeight;
   let healthStatus = "";
   
+  // Peso minimo sano (BMI 18.5)
+  const minHealthyWeight = Math.round(18.5 * heightInMeters * heightInMeters * 10) / 10;
+  
   if (bmi < 18.5) {
     healthStatus = "Sottopeso";
     weightGoal = idealWeight;
   } else if (bmi >= 18.5 && bmi < 25) {
     healthStatus = "Peso normale";
-    weightGoal = currentWeight;
+    // Sempre almeno -2kg come obiettivo, ma senza scendere sotto il peso minimo sano
+    const targetWith2kg = currentWeight - 2;
+    weightGoal = Math.max(minHealthyWeight, targetWith2kg);
+    // Se siamo già al/sotto il minimo, obiettivo = peso minimo sano
+    if (weightGoal >= currentWeight) {
+      weightGoal = Math.max(minHealthyWeight, currentWeight - 0.5);
+    }
   } else if (bmi >= 25 && bmi < 30) {
     healthStatus = "Sovrappeso";
     weightGoal = idealWeight;
