@@ -111,6 +111,12 @@ export interface IStorage {
   updateShoppingListItem(id: string, data: Partial<InsertShoppingListItem>): Promise<ShoppingListItem | undefined>;
   deleteShoppingListItem(id: string): Promise<boolean>;
   toggleShoppingListItem(id: string): Promise<ShoppingListItem | undefined>;
+  
+  // Content Delay System - simulates human elaboration time
+  getProcessingMealPlans(): Promise<MealPlan[]>;
+  getProcessingRecipes(): Promise<Recipe[]>;
+  updateMealPlanStatus(id: string, status: string, emailSent?: string): Promise<MealPlan | undefined>;
+  updateRecipeStatus(id: string, status: string, emailSent?: string): Promise<Recipe | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -189,6 +195,8 @@ export class MemStorage implements IStorage {
       id,
       userId: insertProfile.userId!,
       createdAt: new Date(),
+      firstName: insertProfile.firstName ?? null,
+      lastName: insertProfile.lastName ?? null,
       email: insertProfile.email ?? null,
       phone: insertProfile.phone ?? null,
       height: insertProfile.height ?? null,
@@ -275,6 +283,9 @@ export class MemStorage implements IStorage {
       ...insertMealPlan,
       id,
       createdAt: new Date(),
+      status: insertMealPlan.status ?? null,
+      availableAt: insertMealPlan.availableAt ?? null,
+      emailNotificationSent: insertMealPlan.emailNotificationSent ?? null,
       description: insertMealPlan.description ?? null,
       targetCalories: insertMealPlan.targetCalories ?? null,
       targetProtein: insertMealPlan.targetProtein ?? null,
@@ -376,6 +387,9 @@ export class MemStorage implements IStorage {
       ...insertRecipe,
       id,
       createdAt: new Date(),
+      status: insertRecipe.status ?? null,
+      availableAt: insertRecipe.availableAt ?? null,
+      emailNotificationSent: insertRecipe.emailNotificationSent ?? null,
       userId: insertRecipe.userId ?? null,
       description: insertRecipe.description ?? null,
       ingredients: insertRecipe.ingredients ? [...insertRecipe.ingredients] as string[] : null,
@@ -641,6 +655,12 @@ export class MemStorage implements IStorage {
   async updateShoppingListItem(id: string, data: Partial<InsertShoppingListItem>): Promise<ShoppingListItem | undefined> { return undefined; }
   async deleteShoppingListItem(id: string): Promise<boolean> { return false; }
   async toggleShoppingListItem(id: string): Promise<ShoppingListItem | undefined> { return undefined; }
+  
+  // Content Delay System - not implemented for MemStorage
+  async getProcessingMealPlans(): Promise<MealPlan[]> { return []; }
+  async getProcessingRecipes(): Promise<Recipe[]> { return []; }
+  async updateMealPlanStatus(id: string, status: string, emailSent?: string): Promise<MealPlan | undefined> { return undefined; }
+  async updateRecipeStatus(id: string, status: string, emailSent?: string): Promise<Recipe | undefined> { return undefined; }
 }
 
 // DatabaseStorage implementation using PostgreSQL
@@ -1267,6 +1287,57 @@ export class DatabaseStorage implements IStorage {
     
     const newStatus = item.isPurchased === 'yes' ? 'no' : 'yes';
     return await this.updateShoppingListItem(id, { isPurchased: newStatus });
+  }
+
+  // Content Delay System - simulates human elaboration time
+  async getProcessingMealPlans(): Promise<MealPlan[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(mealPlans)
+      .where(
+        and(
+          eq(mealPlans.status, 'processing'),
+          lt(mealPlans.availableAt, now)
+        )
+      );
+  }
+
+  async getProcessingRecipes(): Promise<Recipe[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(recipes)
+      .where(
+        and(
+          eq(recipes.status, 'processing'),
+          lt(recipes.availableAt, now)
+        )
+      );
+  }
+
+  async updateMealPlanStatus(id: string, status: string, emailSent?: string): Promise<MealPlan | undefined> {
+    const updateData: any = { status };
+    if (emailSent) updateData.emailNotificationSent = emailSent;
+    
+    const [plan] = await db
+      .update(mealPlans)
+      .set(updateData)
+      .where(eq(mealPlans.id, id))
+      .returning();
+    return plan || undefined;
+  }
+
+  async updateRecipeStatus(id: string, status: string, emailSent?: string): Promise<Recipe | undefined> {
+    const updateData: any = { status };
+    if (emailSent) updateData.emailNotificationSent = emailSent;
+    
+    const [recipe] = await db
+      .update(recipes)
+      .set(updateData)
+      .where(eq(recipes.id, id))
+      .returning();
+    return recipe || undefined;
   }
 }
 

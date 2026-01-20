@@ -1090,6 +1090,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deletedCount = await storage.deleteMealPlansByUser(userId);
       console.log(`✅ Deleted ${deletedCount} previous meal plans`);
       
+      // Calculate availableAt: 57 minutes from now
+      const MEAL_PLAN_DELAY_MINUTES = 57;
+      const availableAt = new Date(Date.now() + MEAL_PLAN_DELAY_MINUTES * 60 * 1000);
+      
       // Save to storage with client profile and diet explanation
       const mealPlan = await storage.createMealPlan({
         userId: userId,
@@ -1099,6 +1103,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         targetProtein: aiMealPlan.targetProtein,
         targetCarbs: aiMealPlan.targetCarbs,
         targetFat: aiMealPlan.targetFat,
+        // Delay system - simula elaborazione umana
+        status: "processing",
+        availableAt: availableAt,
+        emailNotificationSent: "no",
         // Save client profile data for display
         currentWeight: aiResponse.clientProfile?.currentWeight ? String(aiResponse.clientProfile.currentWeight) : String(validatedProfile.weight),
         targetWeight: aiResponse.clientProfile?.targetWeight ? String(aiResponse.clientProfile.targetWeight) : String(nutritionalNeeds.weightGoal),
@@ -1492,6 +1500,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Object.assign(aiRecipe, uniqueRecipe);
       }
       
+      // Calculate availableAt: 22 minutes from now
+      const RECIPE_DELAY_MINUTES = 22;
+      const recipeAvailableAt = new Date(Date.now() + RECIPE_DELAY_MINUTES * 60 * 1000);
+      
       // Salva automaticamente la ricetta nel database con userId
       const savedRecipe = await storage.createRecipe({
         title: aiRecipe.title,
@@ -1511,6 +1523,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         imageUrl: null,
         rating: 5, // Default rating per ricette generate
         userId: userId, // Associate recipe with authenticated user
+        // Delay system - simula elaborazione umana
+        status: "processing",
+        availableAt: recipeAvailableAt,
+        emailNotificationSent: "no",
       });
       
       // Ritorna la ricetta salvata

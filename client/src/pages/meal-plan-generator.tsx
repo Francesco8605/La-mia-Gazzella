@@ -53,14 +53,14 @@ export default function MealPlanGenerator() {
     },
     onSuccess: (mealPlan) => {
       toast({
-        title: "Piano Alimentare Creato! 🎉",
-        description: `Il tuo piano personalizzato è stato salvato. Ti stiamo reindirizzando ai tuoi piani...`,
+        title: "Richiesta Inviata! 📋",
+        description: `Le nostre nutrizioniste stanno elaborando il tuo piano personalizzato. Riceverai un'email quando sarà pronto!`,
       });
       
       // Invalida le query per aggiornare la cache
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
       
-      // Reindirizza al piano salvato dopo 2 secondi
+      // Reindirizza alla pagina dei piani dove vedrà lo stato "in elaborazione"
       setTimeout(() => {
         window.location.href = `/piani-personalizzati`;
       }, 2000);

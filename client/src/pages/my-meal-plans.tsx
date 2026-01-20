@@ -1,22 +1,26 @@
-import { Calendar, Eye, Plus, RefreshCw, Clock, Sparkles, TrendingUp } from "lucide-react";
+import { Calendar, Eye, Plus, RefreshCw, Clock, Sparkles, TrendingUp, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import { it } from "date-fns/locale";
 import type { MealPlan } from "@shared/schema";
 import logoGazzella from "@/immagini/Logo-gazzella.jpg";
+
+// MealPlan now includes status and availableAt fields in the schema
+type MealPlanWithStatus = MealPlan;
 
 export default function MyMealPlans() {
   const { user, isAuthenticated } = useAuth();
   
   // Fetch user's meal plans
-  const { data: mealPlans = [], isLoading, error } = useQuery<MealPlan[]>({
+  const { data: mealPlans = [], isLoading, error } = useQuery<MealPlanWithStatus[]>({
     queryKey: ["/api/meal-plans/user"],
     enabled: isAuthenticated,
+    refetchInterval: 30000, // Refetch every 30 seconds to check for status changes
   });
 
   // Sort meal plans by creation date (most recent first)
@@ -73,9 +77,63 @@ export default function MyMealPlans() {
     );
   };
 
-  const renderMealPlanCard = (mealPlan: MealPlan) => {
+  const renderMealPlanCard = (mealPlan: MealPlanWithStatus) => {
     const createdDate = new Date(mealPlan.createdAt || mealPlan.startDate || new Date());
     const isRecent = (new Date().getTime() - createdDate.getTime()) < 24 * 60 * 60 * 1000;
+    const isProcessing = mealPlan.status === 'processing';
+    const availableAt = mealPlan.availableAt ? new Date(mealPlan.availableAt) : null;
+    const timeRemaining = availableAt ? formatDistanceToNow(availableAt, { locale: it, addSuffix: true }) : null;
+    
+    // If processing, show a different card style
+    if (isProcessing) {
+      return (
+        <Card 
+          key={mealPlan.id} 
+          className="backdrop-blur-md bg-amber-50/80 border border-amber-200/50 shadow-2xl relative overflow-hidden"
+          data-testid={`meal-plan-card-${mealPlan.id}`}
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-yellow-500/10" />
+          
+          <div className="absolute top-4 right-4 z-10">
+            <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white animate-pulse">
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              IN ELABORAZIONE
+            </Badge>
+          </div>
+          
+          <CardHeader className="pb-4 relative z-10">
+            <CardTitle className="text-lg font-bold text-amber-800 leading-tight">
+              Il tuo piano è in preparazione
+            </CardTitle>
+            <p className="text-sm text-amber-700 mt-2">
+              Le nostre nutrizioniste stanno elaborando il tuo piano personalizzato seguendo il protocollo Gazzella
+            </p>
+          </CardHeader>
+          
+          <CardContent className="pt-0 relative z-10">
+            <div className="flex items-center justify-center mb-4 p-4 bg-white/50 rounded-xl">
+              <div className="text-center">
+                <Loader2 className="w-12 h-12 text-amber-600 mx-auto mb-3 animate-spin" />
+                <p className="text-amber-800 font-semibold">
+                  {timeRemaining ? `Pronto ${timeRemaining}` : 'Elaborazione in corso...'}
+                </p>
+                <p className="text-amber-600 text-sm mt-1">
+                  Riceverai un'email quando sarà disponibile
+                </p>
+              </div>
+            </div>
+            
+            <Button 
+              disabled
+              className="w-full bg-amber-400 text-amber-800 font-semibold rounded-xl cursor-not-allowed opacity-70"
+            >
+              <Clock className="w-4 h-4 mr-2" />
+              In Attesa...
+            </Button>
+          </CardContent>
+        </Card>
+      );
+    }
     
     return (
       <Card 

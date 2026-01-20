@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { getYesterdayBusinessSummary } from "./services/business-metrics";
 import { sendDailyBusinessSummary } from "./services/email";
+import { startContentReleaseJob } from "./jobs/contentReleaseJob";
 
 const app = express();
 app.use(cookieParser());
@@ -96,6 +97,9 @@ app.use((req, res, next) => {
     
     // Initialize daily business summary scheduler
     initializeDailyScheduler();
+    
+    // Initialize content release job (for delayed meal plans and recipes)
+    startContentReleaseJob();
   });
 })();
 

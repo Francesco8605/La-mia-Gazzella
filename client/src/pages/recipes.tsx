@@ -5,7 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ChefHat, Clock, Users, Star, Search, Filter } from "lucide-react";
+import { ChefHat, Clock, Users, Star, Search, Filter, Loader2 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { it } from "date-fns/locale";
 
 interface Recipe {
   id: string;
@@ -26,6 +28,8 @@ interface Recipe {
   imageUrl: string | null;
   rating: number;
   createdAt: string;
+  status?: string | null;
+  availableAt?: string | null;
 }
 
 export default function Recipes() {
@@ -36,6 +40,7 @@ export default function Recipes() {
   const { data: recipes, isLoading } = useQuery<Recipe[]>({
     queryKey: ["/api/recipes/user"],
     retry: false,
+    refetchInterval: 30000, // Refetch every 30 seconds to check for status changes
   });
 
   // Filtra le ricette in base ai criteri di ricerca
@@ -146,7 +151,50 @@ export default function Recipes() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRecipes.map((recipe) => (
+            {filteredRecipes.map((recipe) => {
+              const isProcessing = recipe.status === 'processing';
+              const availableAt = recipe.availableAt ? new Date(recipe.availableAt) : null;
+              const timeRemaining = availableAt ? formatDistanceToNow(availableAt, { locale: it, addSuffix: true }) : null;
+              
+              if (isProcessing) {
+                return (
+                  <Card key={recipe.id} className="bg-amber-50/80 border border-amber-200/50 shadow-lg" data-testid={`recipe-card-${recipe.id}`}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white mb-2">
+                            <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                            IN ELABORAZIONE
+                          </Badge>
+                          <CardTitle className="text-lg font-semibold text-amber-800 mb-2">
+                            Ricetta in preparazione
+                          </CardTitle>
+                          <CardDescription className="text-amber-700">
+                            Le nostre nutrizioniste stanno creando la tua ricetta personalizzata
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-center py-4 bg-white/50 rounded-xl mb-4">
+                        <Loader2 className="w-10 h-10 text-amber-600 mx-auto mb-2 animate-spin" />
+                        <p className="text-amber-800 font-semibold text-sm">
+                          {timeRemaining ? `Pronta ${timeRemaining}` : 'Elaborazione in corso...'}
+                        </p>
+                        <p className="text-amber-600 text-xs mt-1">
+                          Riceverai un'email quando sarà pronta
+                        </p>
+                      </div>
+                      <Button disabled className="w-full bg-amber-400 text-amber-800 cursor-not-allowed opacity-70">
+                        <Clock className="w-4 h-4 mr-2" />
+                        In Attesa...
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              }
+              
+              return (
               <Card key={recipe.id} className="glass-morphism hover:shadow-xl transition-all duration-300" data-testid={`recipe-card-${recipe.id}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
@@ -219,7 +267,8 @@ export default function Recipes() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

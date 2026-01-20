@@ -547,3 +547,101 @@ export async function sendDailyBusinessSummary(businessSummary: any) {
     throw error;
   }
 }
+
+// Send notification when meal plan or recipe is ready
+export async function sendContentReadyNotification(
+  email: string, 
+  contentType: 'meal_plan' | 'recipe',
+  contentTitle: string
+) {
+  try {
+    const transporter = createTransporter();
+    
+    const isRecipe = contentType === 'recipe';
+    const contentName = isRecipe ? 'ricetta' : 'piano alimentare';
+    const contentIcon = isRecipe ? '🍳' : '🍽️';
+    const subject = isRecipe 
+      ? `🍳 La tua nuova ricetta è pronta! - La Mia Gazzella`
+      : `🍽️ Il tuo piano alimentare è pronto! - La Mia Gazzella`;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: 'Georgia', serif; background-color: #f8f9fa; padding: 20px; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(45, 80, 22, 0.1); overflow: hidden;">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 40px 30px; text-align: center;">
+            <div style="font-size: 4em; margin-bottom: 15px;">${contentIcon}</div>
+            <h1 style="margin: 0; font-size: 1.8em; font-weight: bold;">La Mia Gazzella</h1>
+            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Ottime notizie!</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #2d5016; margin-bottom: 15px; font-size: 1.6em;">
+                ${isRecipe ? 'La tua nuova ricetta è pronta!' : 'Il tuo piano alimentare è pronto!'}
+              </h2>
+              
+              <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border: 2px solid #22c55e;">
+                <p style="margin: 0; color: #166534; font-size: 1.2em; font-weight: 500;">
+                  "${contentTitle}"
+                </p>
+              </div>
+              
+              <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+                Le nostre nutrizioniste hanno preparato ${contentType === 'recipe' ? 'la tua ricetta personalizzata' : 'il tuo piano alimentare personalizzato'} seguendo la <strong>Filosofia Gazzella</strong>.
+              </p>
+            </div>
+
+            <!-- Call to action -->
+            <div style="text-align: center; margin: 30px 0;">
+              <p style="color: #666; font-size: 15px; margin-bottom: 20px;">
+                Accedi alla piattaforma per visualizzare ${isRecipe ? 'la tua nuova ricetta' : 'il tuo nuovo piano'}.
+              </p>
+            </div>
+
+            <!-- Info box -->
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #22c55e;">
+              <p style="margin: 0; color: #333; font-size: 14px;">
+                <strong>💡 Ricorda:</strong> ${isRecipe 
+                  ? 'Puoi trovare tutte le tue ricette nella sezione "Le mie ricette" della piattaforma.' 
+                  : 'Puoi trovare il tuo piano nella sezione "Il mio piano" della piattaforma.'}
+              </p>
+            </div>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f8f9fa; padding: 25px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              <strong>La Mia Gazzella</strong> - Sistema Nutrizionale Personalizzato<br>
+              Specializzato per donne in menopausa
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `"La Mia Gazzella" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Content ready notification sent to ${email}: ${contentType} - "${contentTitle}"`);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error: any) {
+    console.error('❌ Error sending content ready notification:', error);
+    // Don't throw - we don't want notification errors to break user flow
+    return { success: false, error: error.message };
+  }
+}

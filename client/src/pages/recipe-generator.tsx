@@ -169,7 +169,7 @@ export default function RecipeGenerator() {
       return apiRequest("/api/recipes/generate-gazzella", recipeRequest);
     },
     onSuccess: (recipe: GeneratedRecipe) => {
-      setGeneratedRecipe(recipe);
+      setGeneratedRecipe(null); // Non mostrare la ricetta subito, è in elaborazione
       setShowQuickProfileDialog(false);
       setPendingRecipeData(null);
       
@@ -177,9 +177,14 @@ export default function RecipeGenerator() {
       queryClient.invalidateQueries({ queryKey: ["/api/recipes/user"] });
       
       toast({
-        title: "Ricetta Generata e Salvata!",
-        description: "La tua ricetta personalizzata è stata salvata nella pagina Ricette.",
+        title: "Richiesta Inviata! 👩‍🍳",
+        description: "Le nostre nutrizioniste stanno preparando la tua ricetta. Riceverai un'email quando sarà pronta!",
       });
+      
+      // Redirect alla pagina ricette dopo 2 secondi
+      setTimeout(() => {
+        window.location.href = `/ricette`;
+      }, 2000);
     },
     onError: (error: any) => {
       toast({
