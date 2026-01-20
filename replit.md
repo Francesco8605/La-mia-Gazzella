@@ -150,3 +150,24 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
   - 160cm/52kg (BMI 20.3) → Goal: 50kg (-2kg)
   - 170cm/54kg (BMI 18.7) → Goal: 53.5kg (-0.5kg, limited by min healthy weight)
 - **Impact**: All normal-weight clients now see an achievable weight goal, improving motivation and engagement
+
+## Print and PDF Download (January 12, 2026)
+
+### Meal Plan Print and PDF Export
+- **Feature**: Users can now print or download their meal plan as PDF
+- **Implementation**:
+  - Added "Stampa" button using native window.print()
+  - Added "Scarica PDF" button using html2pdf.js library
+  - PDF named with date: `Piano-Gazzella-DD-MM-YYYY.pdf`
+  - Loading state with spinner during PDF generation
+  - Success/error toast notifications
+- **Print Styles**:
+  - @media print CSS rules in index.css
+  - Action buttons hidden during print
+  - Cards optimized with page-break rules
+  - Text colors adjusted for readability while preserving accent colors
+- **Technical Details**:
+  - File: `client/src/pages/saved-meal-plan.tsx`
+  - Library: html2pdf.js
+  - Test IDs: `button-print-plan`, `button-download-pdf`
+- **Impact**: Users can save their meal plans offline for easy reference in kitchen or while shopping
