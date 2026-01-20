@@ -72,6 +72,10 @@ export const mealPlans = pgTable("meal_plans", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
   title: text("title").notNull(),
+  // Delay system - simula elaborazione umana
+  status: varchar("status").default("ready"), // "processing" | "ready"
+  availableAt: timestamp("available_at"), // Quando il piano diventa visibile
+  emailNotificationSent: varchar("email_notification_sent").default("no"), // "yes" | "no"
   description: text("description"),
   targetCalories: integer("target_calories"),
   targetProtein: integer("target_protein"),
@@ -165,6 +169,10 @@ export const recipes = pgTable("recipes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id"), // Associate recipes with users - nullable for backward compatibility
   title: text("title").notNull(),
+  // Delay system - simula elaborazione umana
+  status: varchar("status").default("ready"), // "processing" | "ready"
+  availableAt: timestamp("available_at"), // Quando la ricetta diventa visibile
+  emailNotificationSent: varchar("email_notification_sent").default("no"), // "yes" | "no"
   description: text("description"),
   ingredients: json("ingredients").$type<string[]>(),
   instructions: json("instructions").$type<string[]>(),
