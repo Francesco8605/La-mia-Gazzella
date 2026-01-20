@@ -4,8 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock, ShoppingCart, Crown, ArrowRight, Leaf } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, RefreshCw, Calendar, Target, Scale, TrendingUp, Lightbulb, AlertCircle, Sparkles, Award, Zap, Clock, ShoppingCart, Crown, ArrowRight, Leaf, Printer, Download } from "lucide-react";
+import { useState, useRef } from "react";
+import html2pdf from "html2pdf.js";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import type { MealPlan } from "@shared/schema";
@@ -20,9 +21,50 @@ export default function SavedMealPlan() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { hasActiveSubscription, isInTrial } = useSubscription();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const printContentRef = useRef<HTMLDivElement>(null);
   
   // Determina se l'utente può accedere all'offerta (solo premium, non trial)
   const canAccessOffer = hasActiveSubscription && !isInTrial;
+
+  // Funzione per stampare il piano
+  const handlePrint = () => {
+    window.print();
+  };
+
+  // Funzione per scaricare il PDF
+  const handleDownloadPdf = async () => {
+    if (!printContentRef.current || !mealPlan) return;
+    
+    setIsGeneratingPdf(true);
+    try {
+      const element = printContentRef.current;
+      const opt = {
+        margin: [10, 10, 10, 10] as [number, number, number, number],
+        filename: `Piano-Gazzella-${format(new Date(mealPlan.createdAt || new Date()), 'dd-MM-yyyy')}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'mm' as const, format: 'a4' as const, orientation: 'portrait' as const },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      
+      await html2pdf().set(opt).from(element).save();
+      
+      toast({
+        title: "✅ PDF Scaricato!",
+        description: "Il tuo piano alimentare è stato salvato come PDF"
+      });
+    } catch (error) {
+      console.error("Errore generazione PDF:", error);
+      toast({
+        title: "❌ Errore",
+        description: "Impossibile generare il PDF. Riprova.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const { data: mealPlan, isLoading, error } = useQuery<MealPlan>({
     queryKey: ["/api/meal-plan", mealPlanId],
@@ -151,8 +193,8 @@ export default function SavedMealPlan() {
             </p>
           </div>
 
-          {/* Update Button */}
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 print:hidden">
             <Button 
               size="lg" 
               onClick={() => generateShoppingListMutation.mutate()}
@@ -164,6 +206,30 @@ export default function SavedMealPlan() {
                 <><RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Creazione in corso...</>
               ) : (
                 <><ShoppingCart className="w-5 h-5 mr-2" /> Lista della Spesa</>
+              )}
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={handlePrint}
+              className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
+              data-testid="button-print-plan"
+            >
+              <Printer className="w-5 h-5 mr-2" />
+              Stampa
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="border-blue-300 text-blue-600 hover:bg-blue-50 dark:border-blue-600 dark:text-blue-400 dark:hover:bg-blue-900/20"
+              data-testid="button-download-pdf"
+            >
+              {isGeneratingPdf ? (
+                <><RefreshCw className="w-5 h-5 mr-2 animate-spin" /> Generazione...</>
+              ) : (
+                <><Download className="w-5 h-5 mr-2" /> Scarica PDF</>
               )}
             </Button>
             <Link href="/aggiorna-profilo">
@@ -179,6 +245,8 @@ export default function SavedMealPlan() {
           </div>
         </div>
 
+        {/* Printable Content */}
+        <div ref={printContentRef} className="print:bg-white print:p-4">
         {/* Client Profile & Diet Info */}
         {(mealPlan.currentWeight || mealPlan.currentBMI || mealPlan.dietMethod) && (
           <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -909,8 +977,11 @@ export default function SavedMealPlan() {
           ))}
         </div>
 
+        </div>
+        {/* End Printable Content */}
+
         {/* Bottom Actions */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center mt-12 print:hidden">
           <Link href="/aggiorna-profilo">
             <Button 
               size="lg" 

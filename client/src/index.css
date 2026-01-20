@@ -201,3 +201,52 @@
     text-wrap: balance;
   }
 }
+
+/* Print Styles */
+@media print {
+  body {
+    background: white !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  .print\\:bg-white {
+    background: white !important;
+  }
+  
+  .print\\:p-4 {
+    padding: 1rem !important;
+  }
+  
+  /* Hide navigation, header, footer during print */
+  nav, header, footer, .no-print {
+    display: none !important;
+  }
+  
+  /* Optimize cards for print */
+  .card, [class*="Card"] {
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    break-inside: avoid;
+  }
+  
+  /* Ensure text is readable */
+  * {
+    color: #1f2937 !important;
+  }
+  
+  /* Page breaks */
+  h1, h2, h3 {
+    break-after: avoid;
+  }
+  
+  /* Full width on print */
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+}
