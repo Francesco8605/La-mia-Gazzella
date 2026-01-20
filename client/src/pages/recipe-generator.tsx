@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { ChefHat, Users, Utensils, Sparkles, AlertCircle } from "lucide-react";
+import { ChefHat, Users, Utensils, Sparkles, AlertCircle, Clock, Mail, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,6 +56,7 @@ export default function RecipeGenerator() {
   const [generatedRecipe, setGeneratedRecipe] = useState<GeneratedRecipe | null>(null);
   const [showQuickProfileDialog, setShowQuickProfileDialog] = useState(false);
   const [pendingRecipeData, setPendingRecipeData] = useState<RecipeFormData | null>(null);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
   const { toast } = useToast();
 
   // Controlla se esistono piani personalizzati salvati
@@ -169,22 +170,15 @@ export default function RecipeGenerator() {
       return apiRequest("/api/recipes/generate-gazzella", recipeRequest);
     },
     onSuccess: (recipe: GeneratedRecipe) => {
-      setGeneratedRecipe(null); // Non mostrare la ricetta subito, è in elaborazione
+      setGeneratedRecipe(null);
       setShowQuickProfileDialog(false);
       setPendingRecipeData(null);
       
       // Invalida la cache delle ricette per aggiornare la pagina "Ricette"
       queryClient.invalidateQueries({ queryKey: ["/api/recipes/user"] });
       
-      toast({
-        title: "Richiesta Inviata! 👩‍🍳",
-        description: "Le nostre nutrizioniste stanno preparando la tua ricetta. Riceverai un'email quando sarà pronta!",
-      });
-      
-      // Redirect alla pagina ricette dopo 2 secondi
-      setTimeout(() => {
-        window.location.href = `/ricette`;
-      }, 2000);
+      // Mostra il dialog di conferma grande e visibile
+      setShowConfirmationDialog(true);
     },
     onError: (error: any) => {
       toast({
@@ -576,6 +570,76 @@ export default function RecipeGenerator() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog di conferma visibile - I nostri Chef stanno lavorando */}
+        <Dialog open={showConfirmationDialog} onOpenChange={setShowConfirmationDialog}>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-20 h-20 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mb-4">
+                  <ChefHat className="w-10 h-10 text-white" />
+                </div>
+                <DialogTitle className="text-2xl font-bold text-amber-800">
+                  Richiesta Ricevuta! 👨‍🍳
+                </DialogTitle>
+                <DialogDescription className="text-base mt-2 text-slate-600">
+                  I nostri Chef stanno preparando la tua ricetta personalizzata
+                </DialogDescription>
+              </div>
+            </DialogHeader>
+            
+            <div className="space-y-4 mt-4">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-amber-800">Tempo di preparazione stimato</p>
+                    <p className="text-amber-700 text-sm">Circa 22 minuti</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-green-800">Ti avviseremo via email</p>
+                    <p className="text-green-700 text-sm">Riceverai un'email appena la ricetta sarà pronta!</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-blue-800">Dove troverai la ricetta</p>
+                    <p className="text-blue-700 text-sm">La troverai nella sezione "Le mie ricette" della piattaforma</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2 mt-6">
+              <Button 
+                onClick={() => {
+                  setShowConfirmationDialog(false);
+                  window.location.href = '/ricette';
+                }}
+                className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+              >
+                Vai alle Mie Ricette
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => setShowConfirmationDialog(false)}
+                className="w-full"
+              >
+                Genera un'altra ricetta
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>

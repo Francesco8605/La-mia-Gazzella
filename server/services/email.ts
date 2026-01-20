@@ -645,3 +645,118 @@ export async function sendContentReadyNotification(
     return { success: false, error: error.message };
   }
 }
+
+// Send confirmation email when content request is received (immediate notification)
+export async function sendContentRequestConfirmation(
+  email: string, 
+  contentType: 'meal_plan' | 'recipe',
+  contentDescription?: string
+) {
+  try {
+    const transporter = createTransporter();
+    
+    const isRecipe = contentType === 'recipe';
+    const teamName = isRecipe ? 'i nostri Chef' : 'i nostri Esperti';
+    const contentName = isRecipe ? 'la tua ricetta personalizzata' : 'il tuo piano alimentare personalizzato';
+    const contentIcon = isRecipe ? '👨‍🍳' : '📋';
+    const subject = isRecipe 
+      ? `👨‍🍳 Richiesta ricevuta! I nostri Chef sono al lavoro - La Mia Gazzella`
+      : `📋 Richiesta ricevuta! I nostri Esperti sono al lavoro - La Mia Gazzella`;
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: 'Georgia', serif; background-color: #f8f9fa; padding: 20px; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(45, 80, 22, 0.1); overflow: hidden;">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 40px 30px; text-align: center;">
+            <div style="font-size: 4em; margin-bottom: 15px;">${contentIcon}</div>
+            <h1 style="margin: 0; font-size: 1.8em; font-weight: bold;">Richiesta Ricevuta!</h1>
+            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">La Mia Gazzella</p>
+          </div>
+          
+          <!-- Content -->
+          <div style="padding: 40px 30px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #92400e; margin-bottom: 15px; font-size: 1.5em;">
+                ${teamName} stanno lavorando per te! 💪
+              </h2>
+              
+              ${contentDescription ? `
+              <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 12px; margin: 25px 0; border: 2px solid #f59e0b;">
+                <p style="margin: 0; color: #92400e; font-size: 1.1em; font-weight: 500;">
+                  "${contentDescription}"
+                </p>
+              </div>
+              ` : ''}
+              
+              <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+                Abbiamo ricevuto la tua richiesta per ${contentName}. 
+                ${teamName} stanno preparando tutto con cura seguendo la <strong>Filosofia Gazzella</strong>.
+              </p>
+            </div>
+
+            <!-- Status box -->
+            <div style="background: linear-gradient(135deg, #fef3c7 0%, #fef9c3 100%); padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 5px solid #f59e0b;">
+              <h3 style="color: #92400e; margin-top: 0; margin-bottom: 15px;">⏳ Cosa succede ora?</h3>
+              <ul style="color: #78350f; margin: 0; padding-left: 20px;">
+                <li style="margin-bottom: 10px;">
+                  ${teamName} stanno analizzando le tue preferenze e creando ${isRecipe ? 'la ricetta perfetta' : 'il piano perfetto'} per te
+                </li>
+                <li style="margin-bottom: 10px;">
+                  <strong>Riceverai un'email</strong> appena ${isRecipe ? 'la ricetta sarà' : 'il piano sarà'} pronto/a
+                </li>
+                <li>
+                  Potrai trovare ${isRecipe ? 'la ricetta' : 'il piano'} nella sezione "${isRecipe ? 'Le mie ricette' : 'I miei piani'}" della piattaforma
+                </li>
+              </ul>
+            </div>
+
+            <!-- Tempo stimato -->
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="display: inline-block; background-color: #fef3c7; padding: 15px 30px; border-radius: 50px; border: 2px solid #f59e0b;">
+                <span style="color: #92400e; font-size: 16px; font-weight: 500;">
+                  ⏱️ Tempo stimato: <strong>${isRecipe ? '~22 minuti' : '~57 minuti'}</strong>
+                </span>
+              </div>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center; margin-top: 25px;">
+              Nel frattempo, puoi continuare a esplorare la piattaforma o rilassarti - ti avviseremo noi!
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="background-color: #f8f9fa; padding: 25px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              <strong>La Mia Gazzella</strong> - Sistema Nutrizionale Personalizzato<br>
+              Specializzato per donne in menopausa
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `"La Mia Gazzella" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Content request confirmation sent to ${email}: ${contentType}`);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error: any) {
+    console.error('❌ Error sending content request confirmation:', error);
+    // Don't throw - we don't want notification errors to break user flow
+    return { success: false, error: error.message };
+  }
+}

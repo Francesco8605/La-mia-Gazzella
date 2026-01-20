@@ -5,7 +5,7 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sendDailyBusinessSummary } from "./services/email";
+import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sendDailyBusinessSummary, sendContentRequestConfirmation } from "./services/email";
 import { getBusinessSummary, getYesterdayBusinessSummary } from "./services/business-metrics";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
@@ -1142,6 +1142,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Continue with response even if timestamp update fails
       }
       
+      // Send immediate confirmation email (non-blocking)
+      const user = await storage.getUser(userId);
+      if (user?.email) {
+        sendContentRequestConfirmation(user.email, 'meal_plan', aiMealPlan.title)
+          .catch(err => console.error('Error sending meal plan confirmation email:', err));
+      }
+      
       res.status(201).json(mealPlan);
     } catch (error) {
       console.error("Error generating meal plan:", error);
@@ -1528,6 +1535,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         availableAt: recipeAvailableAt,
         emailNotificationSent: "no",
       });
+      
+      // Send immediate confirmation email (non-blocking)
+      const user = await storage.getUser(userId);
+      if (user?.email) {
+        sendContentRequestConfirmation(user.email, 'recipe', requestData.mealName)
+          .catch(err => console.error('Error sending recipe confirmation email:', err));
+      }
       
       // Ritorna la ricetta salvata
       res.status(200).json(savedRecipe);

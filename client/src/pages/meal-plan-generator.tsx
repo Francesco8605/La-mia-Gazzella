@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Clock, Target, Heart, Utensils } from "lucide-react";
+import { Sparkles, Clock, Target, Heart, Utensils, Mail, CheckCircle2, ClipboardList } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { MealPlanLoading } from "@/components/meal-plan-loading";
 import MealPlanTimer from "@/components/meal-plan-timer";
@@ -24,6 +25,7 @@ export default function MealPlanGenerator() {
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
   const [timerRefreshKey, setTimerRefreshKey] = useState(0);
+  const [showConfirmationDialog, setShowConfirmationDialog] = useState(false);
 
   // Recupera il profilo utente
   const { data: userProfile, isLoading: isLoadingProfile } = useQuery({
@@ -52,18 +54,12 @@ export default function MealPlanGenerator() {
       return await apiRequest("/api/meal-plans/generate", {}, "POST");
     },
     onSuccess: (mealPlan) => {
-      toast({
-        title: "Richiesta Inviata! 📋",
-        description: `Le nostre nutrizioniste stanno elaborando il tuo piano personalizzato. Riceverai un'email quando sarà pronto!`,
-      });
-      
       // Invalida le query per aggiornare la cache
       queryClient.invalidateQueries({ queryKey: ["/api/meal-plans"] });
       
-      // Reindirizza alla pagina dei piani dove vedrà lo stato "in elaborazione"
-      setTimeout(() => {
-        window.location.href = `/piani-personalizzati`;
-      }, 2000);
+      // Mostra il dialog di conferma grande e visibile
+      setShowConfirmationDialog(true);
+      setIsGenerating(false);
     },
     onError: (error: any) => {
       // Se l'errore è il limite di generazione (429), forza il refresh del timer invece di mostrare l'errore
@@ -256,6 +252,76 @@ export default function MealPlanGenerator() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialog di conferma visibile - I nostri Esperti stanno lavorando */}
+      <Dialog open={showConfirmationDialog} onOpenChange={setShowConfirmationDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <div className="flex flex-col items-center text-center">
+              <div className="w-20 h-20 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full flex items-center justify-center mb-4">
+                <ClipboardList className="w-10 h-10 text-white" />
+              </div>
+              <DialogTitle className="text-2xl font-bold text-amber-800">
+                Richiesta Ricevuta! 📋
+              </DialogTitle>
+              <DialogDescription className="text-base mt-2 text-slate-600">
+                I nostri Esperti stanno preparando il tuo piano alimentare personalizzato
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Clock className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-amber-800">Tempo di elaborazione stimato</p>
+                  <p className="text-amber-700 text-sm">Circa 57 minuti</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Mail className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-green-800">Ti avviseremo via email</p>
+                  <p className="text-green-700 text-sm">Riceverai un'email appena il piano sarà pronto!</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="font-medium text-blue-800">Dove troverai il piano</p>
+                  <p className="text-blue-700 text-sm">Lo troverai nella sezione "I miei piani" della piattaforma</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col gap-2 mt-6">
+            <Button 
+              onClick={() => {
+                setShowConfirmationDialog(false);
+                window.location.href = '/piani-personalizzati';
+              }}
+              className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+            >
+              Vai ai Miei Piani
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setShowConfirmationDialog(false)}
+              className="w-full"
+            >
+              Chiudi
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
