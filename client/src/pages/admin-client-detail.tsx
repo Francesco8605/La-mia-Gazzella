@@ -87,6 +87,7 @@ interface ClientHistory {
     email?: string;
     age?: number;
     weight?: number;
+    initialWeight?: number;
     height?: number;
     thyroidIssues?: string;
     intestinalIssues?: string;
@@ -244,9 +245,10 @@ export default function AdminClientDetail() {
       fullDate: format(new Date(entry.date), 'dd MMMM yyyy', { locale: it })
     }));
 
-  // Calculate weight progress
-  const startWeight = weightChartData[0]?.peso || clientHistory.profile?.weight || 0;
-  const currentWeight = weightChartData[weightChartData.length - 1]?.peso || clientHistory.profile?.weight || 0;
+  // Calculate weight progress - use initialWeight as reference if available
+  const initialWeight = clientHistory.profile?.initialWeight ? parseFloat(String(clientHistory.profile.initialWeight)) : null;
+  const startWeight = initialWeight || weightChartData[0]?.peso || (clientHistory.profile?.weight ? parseFloat(String(clientHistory.profile.weight)) : 0);
+  const currentWeight = weightChartData[weightChartData.length - 1]?.peso || (clientHistory.profile?.weight ? parseFloat(String(clientHistory.profile.weight)) : 0);
   const weightLost = startWeight - currentWeight;
 
   // Get subscription status color

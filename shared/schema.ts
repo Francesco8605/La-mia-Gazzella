@@ -41,6 +41,7 @@ export const userProfiles = pgTable("user_profiles", {
   // Dati fisici
   age: integer("age"),
   weight: numeric("weight", { precision: 5, scale: 1 }),
+  initialWeight: numeric("initial_weight", { precision: 5, scale: 1 }), // Peso iniziale alla registrazione
   height: integer("height"),
   // Condizioni di salute (testo libero)
   thyroidIssues: text("thyroid_issues"), // Testo libero per problemi alla tiroide

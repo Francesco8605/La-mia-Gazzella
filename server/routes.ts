@@ -919,6 +919,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileData.weight = String(profileData.weight);
       }
       
+      // Save initial weight if not already set (first time weight is recorded)
+      const existingInitialWeight = currentProfile?.initialWeight ? parseFloat(String(currentProfile.initialWeight)) : null;
+      if (!existingInitialWeight && newWeight) {
+        profileData.initialWeight = String(newWeight);
+        console.log(`Setting initial weight: ${newWeight}kg for user ${userId}`);
+      }
+      
       // Use upsert to create profile if it doesn't exist
       const updatedProfile = await storage.upsertUserProfile(userId, profileData);
       
