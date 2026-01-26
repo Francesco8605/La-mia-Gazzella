@@ -908,6 +908,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Updating profile for user:", userId);
       console.log("Profile data:", req.body);
       
+      // Get current profile to check if weight changed
+      const currentProfile = await storage.getUserProfile(userId);
+      const oldWeight = currentProfile?.weight ? parseFloat(String(currentProfile.weight)) : null;
+      const newWeight = req.body.weight ? parseFloat(String(req.body.weight)) : null;
+      
       // Convert weight to string for database compatibility
       const profileData = { ...req.body };
       if (profileData.weight !== undefined) {
@@ -916,6 +921,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Use upsert to create profile if it doesn't exist
       const updatedProfile = await storage.upsertUserProfile(userId, profileData);
+      
+      // If weight changed, add entry to weight history for tracking
+      if (newWeight && newWeight !== oldWeight) {
+        try {
+          await storage.createWeightEntry({
+            userId,
+            weight: newWeight,
+            date: new Date(),
+            notes: "Aggiornamento profilo"
+          });
+          console.log(`Weight history entry created: ${newWeight}kg for user ${userId}`);
+        } catch (weightError) {
+          console.error("Error creating weight history entry:", weightError);
+          // Continue - weight history is optional
+        }
+      }
       
       console.log("Profile updated successfully");
       res.json(updatedProfile);
