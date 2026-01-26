@@ -263,9 +263,12 @@ export default function AdminDashboard() {
   };
 
   const currentUsers = getUsersByTab(activeTab);
-  const filteredUsers = currentUsers.filter((user: any) =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = currentUsers.filter((user: any) => {
+    const searchLower = searchTerm.toLowerCase();
+    const emailMatch = user.email?.toLowerCase().includes(searchLower);
+    const phoneMatch = user.profile?.phone?.toLowerCase().includes(searchLower);
+    return emailMatch || phoneMatch;
+  });
 
   // Main dashboard
   return (
@@ -450,7 +453,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder="Cerca per email..."
+                    placeholder="Cerca per email o telefono..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
@@ -526,7 +529,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder="Cerca per email..."
+                    placeholder="Cerca per email o telefono..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
@@ -587,7 +590,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder="Cerca per email..."
+                    placeholder="Cerca per email o telefono..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
@@ -650,7 +653,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center space-x-2">
                   <Search className="w-4 h-4 text-slate-400" />
                   <Input
-                    placeholder="Cerca per email..."
+                    placeholder="Cerca per email o telefono..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"

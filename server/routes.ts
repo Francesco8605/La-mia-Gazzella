@@ -3455,6 +3455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             age: userProfiles.age,
             weight: userProfiles.weight,
             height: userProfiles.height,
+            phone: userProfiles.phone,
           }
         })
         .from(users)

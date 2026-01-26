@@ -11,7 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDes
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { User, Clock, Scale, Heart, AlertTriangle, Sparkles, CheckCircle } from "lucide-react";
+import { User, Clock, Scale, Heart, AlertTriangle, Sparkles, CheckCircle, Phone } from "lucide-react";
 import { insertUserProfileSchema } from "@shared/schema";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -21,6 +21,7 @@ const createProfileSchema = insertUserProfileSchema.extend({
   age: z.number().min(18, "Devi avere almeno 18 anni").max(100, "Età massima 100 anni"),
   weight: z.number().min(30, "Peso minimo 30kg").max(300, "Peso massimo 300kg"),
   height: z.number().min(130, "Altezza minima 130cm").max(220, "Altezza massima 220cm"),
+  phone: z.string().min(1, "Numero di telefono obbligatorio").regex(/^[\d\s\+\-\(\)]+$/, "Formato telefono non valido"),
   breakfastTime: z.string().min(1, "Orario colazione obbligatorio"),
   lunchTime: z.string().min(1, "Orario pranzo obbligatorio"),
   dinnerTime: z.string().min(1, "Orario cena obbligatorio"),
@@ -40,6 +41,7 @@ export default function CreateProfileForm() {
       age: undefined,
       weight: undefined,
       height: undefined,
+      phone: "",
       thyroidIssues: "",
       intestinalIssues: "",
       weeklyExercise: 0,
@@ -209,6 +211,30 @@ export default function CreateProfileForm() {
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                               />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-gray-700 dark:text-gray-300">
+                              <Phone className="inline h-4 w-4 mr-1" />
+                              Numero di telefono *
+                            </FormLabel>
+                            <FormControl>
+                              <Input
+                                type="tel"
+                                placeholder="+39 333 1234567"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription className="text-sm text-gray-500">
+                              Inserisci il tuo numero WhatsApp per ricevere assistenza rapida
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
