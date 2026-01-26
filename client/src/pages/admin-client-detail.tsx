@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat, Heart, Ruler, Weight, Clock, Droplets, AlertCircle, Apple, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, User, Mail, Phone, Calendar, TrendingDown, Activity, Utensils, ChefHat, Heart, Ruler, Weight, Clock, Droplets, AlertCircle, Apple, ChevronDown, ChevronUp, Edit2, Check, X } from "lucide-react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface WeightEntry {
   id: string;
@@ -113,7 +115,10 @@ export default function AdminClientDetail() {
   const [expandedPlans, setExpandedPlans] = useState<Set<string>>(new Set());
   const [loadingPlanDetails, setLoadingPlanDetails] = useState<Set<string>>(new Set());
   const [planDetails, setPlanDetails] = useState<Map<string, MealPlan>>(new Map());
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [phoneValue, setPhoneValue] = useState("");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // API helper with auth headers
   const fetchWithAuth = async (url: string) => {
@@ -178,6 +183,58 @@ export default function AdminClientDetail() {
         }
       }
     }
+  };
+
+  // Mutation to update phone
+  const updatePhoneMutation = useMutation({
+    mutationFn: async (phone: string) => {
+      const token = localStorage.getItem("admin_token");
+      const email = localStorage.getItem("admin_email");
+      const response = await fetch(`/api/admin/users/${userId}/phone`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "X-Admin-Email": email || "",
+        },
+        body: JSON.stringify({ phone }),
+      });
+      if (!response.ok) {
+        throw new Error("Errore nell'aggiornamento");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Successo",
+        description: "Numero di telefono aggiornato",
+      });
+      setEditingPhone(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/clients", userId, "history"] });
+    },
+    onError: () => {
+      toast({
+        title: "Errore",
+        description: "Impossibile aggiornare il numero",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSavePhone = () => {
+    if (phoneValue.trim()) {
+      updatePhoneMutation.mutate(phoneValue.trim());
+    }
+  };
+
+  const handleStartEditPhone = () => {
+    setPhoneValue(clientHistory?.profile?.phone || "");
+    setEditingPhone(true);
+  };
+
+  const handleCancelEditPhone = () => {
+    setEditingPhone(false);
+    setPhoneValue("");
   };
 
   // Helper to translate day names
@@ -320,15 +377,60 @@ export default function AdminClientDetail() {
 
           <Card className="bg-slate-800 border-slate-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-slate-400 flex items-center">
-                <Phone className="mr-2 h-4 w-4" />
-                Telefono
+              <CardTitle className="text-sm font-medium text-slate-400 flex items-center justify-between">
+                <div className="flex items-center">
+                  <Phone className="mr-2 h-4 w-4" />
+                  Telefono
+                </div>
+                {!editingPhone && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleStartEditPhone}
+                    className="h-6 w-6 p-0 text-slate-400 hover:text-white"
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">
-                {clientHistory.profile?.phone || 'N/A'}
-              </div>
+              {editingPhone ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="tel"
+                    value={phoneValue}
+                    onChange={(e) => setPhoneValue(e.target.value)}
+                    placeholder="+39 333 1234567"
+                    className="bg-slate-700 border-slate-600 text-white h-9"
+                    autoFocus
+                  />
+                  <Button 
+                    size="sm" 
+                    onClick={handleSavePhone}
+                    disabled={updatePhoneMutation.isPending || !phoneValue.trim()}
+                    className="h-9 w-9 p-0 bg-green-600 hover:bg-green-700"
+                  >
+                    {updatePhoneMutation.isPending ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    onClick={handleCancelEditPhone}
+                    className="h-9 w-9 p-0 text-slate-400 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="text-2xl font-bold text-white">
+                  {clientHistory.profile?.phone || 'N/A'}
+                </div>
+              )}
             </CardContent>
           </Card>
 

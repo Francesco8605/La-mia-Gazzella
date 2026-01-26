@@ -3635,6 +3635,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile phone (admin)
+  app.patch("/api/admin/users/:userId/phone", isAdminAuthenticated, async (req: any, res) => {
+    try {
+      const { userId } = req.params;
+      const { phone } = req.body;
+      
+      if (!phone || typeof phone !== 'string') {
+        return res.status(400).json({ message: "Numero di telefono non valido" });
+      }
+      
+      // Get existing profile
+      let profile = await storage.getUserProfile(userId);
+      
+      if (!profile) {
+        // Create a minimal profile - just update the phone later if profile doesn't exist
+        // We can't create a profile with just phone due to required fields, so return error
+        return res.status(400).json({ message: "Profilo utente non esistente. La cliente deve prima completare il profilo." });
+      } else {
+        // Update existing profile
+        profile = await storage.updateUserProfile(userId, { phone });
+      }
+      
+      res.json({ success: true, phone: profile?.phone });
+    } catch (error) {
+      console.error("Error updating user phone:", error);
+      res.status(500).json({ message: "Errore nell'aggiornamento del telefono" });
+    }
+  });
+
   // Get meal plan details (admin version - no ownership check)
   app.get("/api/admin/meal-plan/:id", isAdminAuthenticated, async (req: any, res) => {
     try {
