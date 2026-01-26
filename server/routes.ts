@@ -428,13 +428,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         databaseUrlPrefix: process.env.DATABASE_URL?.substring(0, 20) || 'N/A'
       });
       
-      const { email, password } = req.body;
+      const { email, password, phone } = req.body;
       
       // Validate input
       if (!email || !password) {
         console.log("❌ Missing required fields");
         return res.status(400).json({ message: "Email e password sono obbligatori" });
       }
+      
+      // Phone is optional but if provided, store it for later use
+      const userPhone = phone || null;
+      console.log("📞 Phone number provided:", userPhone ? "Yes" : "No");
       
       console.log("✅ Input validation passed");
       
@@ -522,7 +526,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log("📝 Adding last name from Shopify:", shopifyCustomer.lastName);
             }
             
-            if (shopifyCustomer.phone) {
+            // Priority: user-provided phone > Shopify phone
+            if (userPhone) {
+              profileData.phone = userPhone;
+              console.log("📞 Adding phone from registration form:", userPhone);
+            } else if (shopifyCustomer.phone) {
               profileData.phone = shopifyCustomer.phone;
               console.log("📞 Adding phone from Shopify:", shopifyCustomer.phone);
             }

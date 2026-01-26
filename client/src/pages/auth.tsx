@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Heart, Zap, Star, Trophy, ChefHat, ShoppingCart } from "lucide-react";
+import { User, Mail, Lock, UserPlus, LogIn, Sparkles, Heart, Zap, Star, Trophy, ChefHat, ShoppingCart, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,7 @@ const loginSchema = z.object({
 
 const signupSchema = z.object({
   email: z.string().email("Email non valida"),
+  phone: z.string().min(8, "Inserisci un numero di telefono valido").regex(/^[\d\s\+\-\(\)]+$/, "Formato telefono non valido"),
   password: z.string().min(6, "Password deve essere almeno 6 caratteri"),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -47,6 +48,7 @@ export default function Auth() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
       email: "",
+      phone: "",
       password: "",
       confirmPassword: "",
     },
@@ -424,6 +426,30 @@ export default function Auth() {
                               />
                             </div>
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={signupForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Numero di Telefono</FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <Phone className="absolute left-3 top-3 h-4 w-4 text-slate-500" />
+                              <Input 
+                                type="tel" 
+                                placeholder="+39 333 1234567"
+                                className="pl-10"
+                                {...field}
+                                data-testid="input-signup-phone"
+                              />
+                            </div>
+                          </FormControl>
+                          <p className="text-xs text-slate-500 mt-1">Per assistenza via WhatsApp</p>
                           <FormMessage />
                         </FormItem>
                       )}
