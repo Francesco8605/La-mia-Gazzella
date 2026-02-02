@@ -140,6 +140,11 @@ PERSONALIZZAZIONE OBBLIGATORIA:
  * Formula: Le grammature sono proporzionali alle calorie target
  * Base di riferimento: 1600 kcal (media per donna in perdita peso moderata)
  */
+// Helper: arrotonda ai 5g più vicini per praticità in cucina
+function roundTo5g(grams: number): number {
+  return Math.round(grams / 5) * 5;
+}
+
 function calculatePrecisePortions(
   weight: number, 
   height: number, 
@@ -189,26 +194,26 @@ function calculatePrecisePortions(
   
   const portions = {
     // Proteine principali (carne/pesce per secondi piatti)
-    proteinsMain: Math.round(130 * finalScale),
+    proteinsMain: roundTo5g(130 * finalScale),
     // Proteine accompagnamento (per primi piatti con proteina)
-    proteinsSide: Math.round(90 * finalScale),
+    proteinsSide: roundTo5g(90 * finalScale),
     // Carboidrati base (pasta/riso per primi piatti)
-    carbsMain: Math.round(75 * finalScale),
+    carbsMain: roundTo5g(75 * finalScale),
     // Carboidrati contorno (pane con secondi)
-    carbsSide: Math.round(50 * finalScale),
+    carbsSide: roundTo5g(50 * finalScale),
     // Verdure (abbondanti sempre)
-    vegetables: Math.round(180 * finalScale),
-    // Olio EVO (grassi buoni)
-    oil: Math.round(15 * finalScale),
+    vegetables: roundTo5g(180 * finalScale),
+    // Olio EVO (grassi buoni) - minimo 5g, max 20g
+    oil: Math.max(5, Math.min(20, roundTo5g(15 * finalScale))),
     // Frutta per spuntini
-    fruit: Math.round(150 * finalScale),
+    fruit: roundTo5g(150 * finalScale),
     // Frutta secca
-    nuts: Math.round(20 * finalScale),
+    nuts: roundTo5g(20 * finalScale),
     // Yogurt
-    yogurt: Math.round(150 * finalScale),
+    yogurt: roundTo5g(150 * finalScale),
     // Fiocchi avena
-    oats: Math.round(35 * finalScale),
-    // Uova (numero)
+    oats: roundTo5g(35 * finalScale),
+    // Uova (numero) - non arrotondare ai 5, è un numero intero
     eggs: Math.max(1, Math.round(2 * finalScale))
   };
   
