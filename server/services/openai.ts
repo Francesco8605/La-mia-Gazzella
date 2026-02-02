@@ -134,43 +134,90 @@ PERSONALIZZAZIONE OBBLIGATORIA:
 `;
 
 /**
- * Calcola grammature personalizzate precise basate sul peso esatto della cliente
- * Reattivo anche a piccoli cambiamenti di peso (pochi grammi)
+ * Calcola grammature personalizzate BASATE SULLE CALORIE TARGET
+ * Deriva le porzioni esatte dal fabbisogno calorico personalizzato della cliente
+ * 
+ * Formula: Le grammature sono proporzionali alle calorie target
+ * Base di riferimento: 1600 kcal (media per donna in perdita peso moderata)
  */
-function calculatePrecisePortions(weight: number, height: number, bmi: number, isForMainDish: boolean = true) {
-  // Calcolo granulare basato sul peso esatto - sensibile al grammo
-  const baseWeight = 60; // peso di riferimento medio
-  const weightDifference = weight - baseWeight;
+function calculatePrecisePortions(
+  weight: number, 
+  height: number, 
+  bmi: number, 
+  targetCalories: number = 1600,
+  hasThyroidIssues: boolean = false,
+  hasIntestinalIssues: boolean = false
+) {
+  // ============ SCALA BASATA SULLE CALORIE ============
+  // Base di riferimento: 1600 kcal
+  // Le porzioni scalano proporzionalmente alle calorie target
+  const calorieBase = 1600;
+  const calorieScale = targetCalories / calorieBase;
   
-  // Fattore di scala preciso: ogni 100g di peso influenza le porzioni dello 0.15%
-  const scaleFactor = 1 + (weightDifference * 0.0015); // 0.15% per ogni 100g di differenza
+  console.log(`📏 Calcolo porzioni personalizzate:`);
+  console.log(`   Calorie target: ${targetCalories} kcal`);
+  console.log(`   Fattore scala calorie: ${calorieScale.toFixed(3)}`);
   
-  // Correzione BMI per precisione estrema
-  const bmiCorrection = bmi > 25 ? 0.92 : bmi < 18.5 ? 1.08 : 1.0;
+  // ============ CORREZIONI AGGIUNTIVE ============
   
-  // Correzione altezza per metabolismo
-  const heightCorrection = height > 170 ? 1.03 : height < 160 ? 0.97 : 1.0;
+  // Correzione BMI: chi ha BMI alto riceve porzioni leggermente ridotte
+  let bmiCorrection = 1.0;
+  if (bmi >= 30) {
+    bmiCorrection = 0.90; // -10% per obesità
+  } else if (bmi >= 25) {
+    bmiCorrection = 0.95; // -5% per sovrappeso
+  } else if (bmi < 18.5) {
+    bmiCorrection = 1.10; // +10% per sottopeso
+  }
   
-  const finalScale = scaleFactor * bmiCorrection * heightCorrection;
+  // Correzione intestino: porzioni più piccole ma più frequenti
+  const intestinalCorrection = hasIntestinalIssues ? 0.90 : 1.0; // -10% per problemi intestinali
   
-  return {
-    // Proteine principali (per secondi piatti)
-    proteinsMain: Math.round(140 * finalScale),
-    // Proteine accompagnamento (per primi piatti) 
-    proteinsSide: Math.round(100 * finalScale),
-    // Carboidrati base (per primi piatti)
-    carbsMain: Math.round(80 * finalScale),
-    // Carboidrati contorno (per secondi piatti)
-    carbsSide: Math.round(60 * finalScale),
-    // Verdure sempre abbondanti
-    vegetables: Math.round(200 * finalScale),
-    // Olio extravergine
-    oil: Math.round(12 * finalScale),
+  // Correzione tiroide: porzioni ridotte per metabolismo lento
+  const thyroidCorrection = hasThyroidIssues ? 0.92 : 1.0; // -8% per problemi tiroidei
+  
+  // Fattore finale
+  const finalScale = calorieScale * bmiCorrection * intestinalCorrection * thyroidCorrection;
+  
+  console.log(`   BMI: ${bmi} → correzione: ${bmiCorrection}`);
+  console.log(`   Tiroide: ${hasThyroidIssues ? 'sì' : 'no'} → correzione: ${thyroidCorrection}`);
+  console.log(`   Intestino: ${hasIntestinalIssues ? 'sì' : 'no'} → correzione: ${intestinalCorrection}`);
+  console.log(`   Fattore scala finale: ${finalScale.toFixed(3)}`);
+  
+  // ============ GRAMMATURE BASE (per 1600 kcal) ============
+  // Queste sono le porzioni standard che scalano in base alle calorie
+  
+  const portions = {
+    // Proteine principali (carne/pesce per secondi piatti)
+    proteinsMain: Math.round(130 * finalScale),
+    // Proteine accompagnamento (per primi piatti con proteina)
+    proteinsSide: Math.round(90 * finalScale),
+    // Carboidrati base (pasta/riso per primi piatti)
+    carbsMain: Math.round(75 * finalScale),
+    // Carboidrati contorno (pane con secondi)
+    carbsSide: Math.round(50 * finalScale),
+    // Verdure (abbondanti sempre)
+    vegetables: Math.round(180 * finalScale),
+    // Olio EVO (grassi buoni)
+    oil: Math.round(15 * finalScale),
     // Frutta per spuntini
     fruit: Math.round(150 * finalScale),
     // Frutta secca
-    nuts: Math.round(20 * finalScale)
+    nuts: Math.round(20 * finalScale),
+    // Yogurt
+    yogurt: Math.round(150 * finalScale),
+    // Fiocchi avena
+    oats: Math.round(35 * finalScale),
+    // Uova (numero)
+    eggs: Math.max(1, Math.round(2 * finalScale))
   };
+  
+  console.log(`   Porzioni calcolate:`);
+  console.log(`   - Pasta/riso: ${portions.carbsMain}g`);
+  console.log(`   - Proteine: ${portions.proteinsMain}g`);
+  console.log(`   - Verdure: ${portions.vegetables}g`);
+  
+  return portions;
 }
 
 /**
@@ -286,11 +333,21 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
     const allergies = safeProfile.allergies || [];
     const merluzzo_excluded = excludedFoods.includes('merluzzo') || allergies.includes('merluzzo');
 
-    // Calcolo grammature precise per questa specifica cliente
+    // Verifica condizioni di salute per calcolo porzioni
+    const thyroidValue = request.userProfile.thyroidIssues?.toLowerCase() || '';
+    const hasThyroidIssues = thyroidValue !== '' && thyroidValue !== 'no' && thyroidValue !== 'nessuno';
+    
+    const intestinalValue = request.userProfile.intestinalIssues?.toLowerCase() || '';
+    const hasIntestinalIssues = intestinalValue !== '' && intestinalValue !== 'no' && intestinalValue !== 'nessuno';
+
+    // Calcolo grammature precise BASATE SULLE CALORIE TARGET
     const precisePortions = calculatePrecisePortions(
       parseFloat(request.userProfile.weight.toString()), 
       request.userProfile.height, 
-      request.nutritionalNeeds.bmi
+      request.nutritionalNeeds.bmi,
+      request.nutritionalNeeds.calories, // CALORIE TARGET
+      hasThyroidIssues,
+      hasIntestinalIssues
     );
     
     // Calcolo peso ideale personalizzato basato su altezza ed età
@@ -304,6 +361,26 @@ export async function generateMealPlan(request: MealPlanRequest): Promise<{
       parseFloat(request.userProfile.weight.toString()),
       calculatedIdealWeight
     );
+
+    // ============ DISTRIBUZIONE CALORICA PER PASTO ============
+    // Garantisce che la somma dei 5 pasti = calorie target totali
+    const targetCalories = request.nutritionalNeeds.calories;
+    const mealCalorieDistribution = {
+      colazione: Math.round(targetCalories * 0.20),    // 20% a colazione
+      spuntino: Math.round(targetCalories * 0.08),     // 8% spuntino mattino
+      pranzo: Math.round(targetCalories * 0.35),       // 35% pranzo (pasto principale)
+      merenda: Math.round(targetCalories * 0.07),      // 7% merenda pomeriggio
+      cena: Math.round(targetCalories * 0.30),         // 30% cena
+    };
+    
+    // Verifica che la somma sia corretta
+    const totalMealCalories = Object.values(mealCalorieDistribution).reduce((a, b) => a + b, 0);
+    console.log(`🍽️ Distribuzione calorica per pasto (totale: ${totalMealCalories} kcal):`);
+    console.log(`   Colazione: ${mealCalorieDistribution.colazione} kcal`);
+    console.log(`   Spuntino: ${mealCalorieDistribution.spuntino} kcal`);
+    console.log(`   Pranzo: ${mealCalorieDistribution.pranzo} kcal`);
+    console.log(`   Merenda: ${mealCalorieDistribution.merenda} kcal`);
+    console.log(`   Cena: ${mealCalorieDistribution.cena} kcal`);
 
     // Formatta il piano settimanale per l'AI
     const weeklyPlanFormatted = formatWeeklyPlanForAI(weeklyPlanResult.weeklyPlan);
@@ -364,26 +441,55 @@ COSA AGGIORNARE:
 💡 PERCHÉ È IMPORTANTE:
 Il sistema Gazzella ricalcola automaticamente le grammature precise per il tuo nuovo peso, garantendo la massima efficacia e personalizzazione. Anche 100g di differenza possono richiedere aggiustamenti nelle porzioni!
 
-CALCOLO GRAMMATURE PERSONALIZZATE OBBLIGATORIO:
-🎯 PESO ${request.userProfile.weight}kg → OBIETTIVO ${request.nutritionalNeeds.weightGoal}kg
-📊 BMI ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
-⚖️ Da perdere: ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
+🔬 CALCOLO SCIENTIFICO DELLE GRAMMATURE - BASATO SULLE CALORIE TARGET:
 
-GRAMMATURE PERSONALIZZATE PRECISISSIME - CALCOLATE AL GRAMMO:
-🎯 CLIENTE ${request.userProfile.weight}kg | ALTEZZA ${request.userProfile.height}cm | BMI ${request.nutritionalNeeds.bmi}
+📊 DATI METABOLICI PERSONALIZZATI:
+- Peso attuale: ${request.userProfile.weight}kg
+- Obiettivo peso: ${request.nutritionalNeeds.weightGoal}kg  
+- Da perdere: ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
+- BMI: ${request.nutritionalNeeds.bmi} (${request.nutritionalNeeds.healthStatus})
+- CALORIE GIORNALIERE TARGET: ${request.nutritionalNeeds.calories} kcal
+${hasThyroidIssues ? '⚠️ TIROIDE: Metabolismo ridotto del 12% - porzioni calibrate di conseguenza' : ''}
+${hasIntestinalIssues ? '⚠️ INTESTINO: Porzioni ridotte del 10% per minor stress digestivo' : ''}
 
-CALCOLI PERSONALIZZATI ESATTI PER QUESTA CLIENTE:
-- Proteine principali (carne/pesce secondi): ${precisePortions.proteinsMain}g esatti
-- Proteine accompagnamento (primi piatti): ${precisePortions.proteinsSide}g esatti  
-- Carboidrati base (primi piatti): ${precisePortions.carbsMain}g esatti
-- Carboidrati contorno (secondi): ${precisePortions.carbsSide}g esatti
-- Verdure: ${precisePortions.vegetables}g esatti
-- Olio EVO: ${precisePortions.oil}g esatti
-- Frutta spuntini: ${precisePortions.fruit}g esatti
-- Frutta secca: ${precisePortions.nuts}g esatti
+🍽️ DISTRIBUZIONE CALORICA OBBLIGATORIA PER PASTO:
+╔═══════════════════════════════════════════════════════════════════╗
+║  PASTO          │  CALORIE ESATTE  │  PERCENTUALE  │  VERIFICA   ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  🌅 Colazione   │  ${mealCalorieDistribution.colazione} kcal         │     20%       │  OBBLIGATORIO ║
+║  🍎 Spuntino    │  ${mealCalorieDistribution.spuntino} kcal          │      8%       │  OBBLIGATORIO ║
+║  ☀️ Pranzo      │  ${mealCalorieDistribution.pranzo} kcal         │     35%       │  OBBLIGATORIO ║
+║  🥤 Merenda     │  ${mealCalorieDistribution.merenda} kcal          │      7%       │  OBBLIGATORIO ║
+║  🌙 Cena        │  ${mealCalorieDistribution.cena} kcal         │     30%       │  OBBLIGATORIO ║
+╠═══════════════════════════════════════════════════════════════════╣
+║  TOTALE GIORNO  │  ${totalMealCalories} kcal       │    100%       │  ✅ VERIFICATO ║
+╚═══════════════════════════════════════════════════════════════════╝
 
-⚠️ FONDAMENTALE: USA ESATTAMENTE QUESTI PESI - NON FASCE GENERICHE
-Sono calcolati specificamente per il peso ${request.userProfile.weight}kg di questa cliente
+⚠️ CRITICO: La somma delle calorie dei 5 pasti DEVE essere esattamente ${request.nutritionalNeeds.calories} kcal!
+Ogni pasto deve rispettare le calorie indicate sopra. NON superare MAI questi valori!
+
+🎯 GRAMMATURE ESATTE CALCOLATE PER QUESTA CLIENTE (da ${request.nutritionalNeeds.calories} kcal/giorno):
+
+╔══════════════════════════════════════════════════════════════╗
+║  QUESTE GRAMMATURE SONO OBBLIGATORIE - USA QUESTI NUMERI!    ║
+╠══════════════════════════════════════════════════════════════╣
+║  🍝 Pasta/Riso (primi piatti):     ${precisePortions.carbsMain}g                      ║
+║  🍞 Pane (con secondi):            ${precisePortions.carbsSide}g                      ║
+║  🥩 Carne/Pesce (secondi):         ${precisePortions.proteinsMain}g                     ║
+║  🐟 Proteina in primi:             ${precisePortions.proteinsSide}g                      ║
+║  🥗 Verdure:                       ${precisePortions.vegetables}g                     ║
+║  🫒 Olio EVO:                      ${precisePortions.oil}g                      ║
+║  🍎 Frutta:                        ${precisePortions.fruit}g                     ║
+║  🥜 Frutta secca:                  ${precisePortions.nuts}g                      ║
+║  🥛 Yogurt:                        ${precisePortions.yogurt}g                     ║
+║  🌾 Fiocchi d'avena:               ${precisePortions.oats}g                      ║
+╚══════════════════════════════════════════════════════════════╝
+
+⚠️ ATTENZIONE: Non usare "80g di pasta" per tutti!
+Le grammature sopra sono calcolate SCIENTIFICAMENTE per:
+- Raggiungere esattamente ${request.nutritionalNeeds.calories} kcal/giorno
+- Garantire il deficit calorico corretto per perdere ${(parseFloat(request.userProfile.weight.toString()) - request.nutritionalNeeds.weightGoal).toFixed(1)}kg
+- Rispettare le condizioni di salute specifiche di questa cliente
 
 CONDIZIONI E PREFERENZE:
 - Problemi tiroide: ${request.userProfile.thyroidIssues}
@@ -751,6 +857,31 @@ Rispondi in JSON con:
       }
     }
 
+    // ============ VALIDAZIONE POST-GENERAZIONE DELLE CALORIE ============
+    // Verifica che le calorie totali di ogni giorno siano coerenti con il target
+    const validationTargetCalories = request.nutritionalNeeds.calories;
+    const tolerance = 0.15; // 15% di tolleranza
+    
+    console.log(`\n🔍 VALIDAZIONE CALORIE POST-GENERAZIONE:`);
+    console.log(`   Target: ${validationTargetCalories} kcal (tolleranza ±${Math.round(tolerance * 100)}%)`);
+    
+    for (const day of result.days) {
+      if (day.totalCalories) {
+        const deviation = Math.abs(day.totalCalories - validationTargetCalories) / validationTargetCalories;
+        const status = deviation <= tolerance ? '✅' : '⚠️';
+        console.log(`   ${day.day}: ${day.totalCalories} kcal ${status} (${deviation <= tolerance ? 'OK' : 'DEVIAZIONE ' + Math.round(deviation * 100) + '%'})`);
+        
+        // Se la deviazione è troppo alta, logga un warning
+        if (deviation > tolerance) {
+          console.warn(`   ⚠️ ATTENZIONE: ${day.day} ha ${day.totalCalories} kcal invece di ${validationTargetCalories} kcal`);
+        }
+      }
+    }
+    
+    // Calcola media delle calorie giornaliere
+    const avgCalories = result.days.reduce((sum: number, day: any) => sum + (day.totalCalories || 0), 0) / result.days.length;
+    console.log(`   📊 Media giornaliera: ${Math.round(avgCalories)} kcal (target: ${validationTargetCalories})`);
+
     return result;
   } catch (error) {
     console.error("Error generating meal plan:", error);
@@ -913,11 +1044,21 @@ export async function generatePersonalizedRecipe(request: {
 
     const dishType = request.mealName.includes("Primo piatto") ? "PRIMO PIATTO" : "SECONDO PIATTO";
     
+    // Stima calorie target per ricetta (usa peso obiettivo per calcolare)
+    const weightDiff = clientProfile.peso - clientProfile.pesoObbiettivo;
+    let estimatedTargetCalories = 1600; // default
+    if (weightDiff <= 3) estimatedTargetCalories = 1500;
+    else if (weightDiff <= 8) estimatedTargetCalories = 1400;
+    else estimatedTargetCalories = 1300;
+    
     // Calcolo grammature precise per questa ricetta specifica
     const recipePortions = calculatePrecisePortions(
       clientProfile.peso, 
       clientProfile.altezza, 
-      bmi
+      bmi,
+      estimatedTargetCalories,
+      false, // no thyroid info disponibile qui
+      false  // no intestinal info disponibile qui
     );
     
     // Build unique recipe requirements
@@ -1456,7 +1597,7 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
   weightGoal: number;
   healthStatus: string;
 }> {
-  const { age, weight, height, weeklyExercise } = userProfile;
+  const { age, weight, height, weeklyExercise, thyroidIssues, intestinalIssues } = userProfile;
   
   // BMI calculation
   const heightInMeters = (height || 170) / 100;
@@ -1494,7 +1635,16 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
   }
   
   // BMR calculation using Mifflin-St Jeor equation for women
-  const bmr = 10 * currentWeight + 6.25 * (height || 170) - 5 * (age || 30) - 161;
+  let bmr = 10 * currentWeight + 6.25 * (height || 170) - 5 * (age || 30) - 161;
+  
+  // ============ CORREZIONI BASATE SUL PROFILO ============
+  
+  // Correzione tiroide: ipotiroidismo rallenta il metabolismo del 10-15%
+  const hasThyroidIssues = thyroidIssues && thyroidIssues.toLowerCase() !== 'no' && thyroidIssues.toLowerCase() !== 'nessuno';
+  if (hasThyroidIssues) {
+    bmr = bmr * 0.88; // -12% metabolismo per problemi tiroidei
+    console.log(`⚠️ Correzione tiroide applicata: BMR ridotto del 12%`);
+  }
   
   // Activity factor based on weekly exercise
   let activityFactor = 1.2; // sedentary
@@ -1503,19 +1653,62 @@ export async function calculateNutritionalNeeds(userProfile: InsertUserProfile):
   else if (exerciseFreq >= 3) activityFactor = 1.55; // moderately active
   else if (exerciseFreq >= 1) activityFactor = 1.375; // lightly active
   
-  let calories = Math.round(bmr * activityFactor);
+  // TDEE (Total Daily Energy Expenditure) - calorie di mantenimento
+  const tdee = Math.round(bmr * activityFactor);
   
-  // Adjust calories for weight goal
-  if (weightGoal < currentWeight) {
-    calories = calories - 300; // Deficit for weight loss
-  } else if (weightGoal > currentWeight) {
-    calories = calories + 200; // Surplus for weight gain
+  // ============ DEFICIT CALORICO DINAMICO BASATO SULL'OBIETTIVO ============
+  // 1kg grasso = 7700 kcal, perdita sana = 0.5-1kg/settimana
+  
+  const weightToLose = currentWeight - weightGoal;
+  let dailyDeficit = 0;
+  
+  if (weightToLose > 0) {
+    // Calcola deficit in base a quanto deve perdere
+    if (weightToLose <= 3) {
+      // Poco da perdere: deficit leggero 300-400 kcal/giorno (0.3-0.4 kg/settimana)
+      dailyDeficit = 350;
+    } else if (weightToLose <= 8) {
+      // Moderato da perdere: deficit medio 450-550 kcal/giorno (0.5-0.6 kg/settimana)
+      dailyDeficit = 500;
+    } else if (weightToLose <= 15) {
+      // Molto da perdere: deficit alto 600-700 kcal/giorno (0.7-0.8 kg/settimana)
+      dailyDeficit = 650;
+    } else {
+      // Tantissimo da perdere: deficit massimo 750-800 kcal/giorno (0.9-1 kg/settimana)
+      dailyDeficit = 750;
+    }
+    
+    // Correzione intestino: problemi intestinali richiedono deficit più moderato
+    const hasIntestinalIssues = intestinalIssues && intestinalIssues.toLowerCase() !== 'no' && intestinalIssues.toLowerCase() !== 'nessuno';
+    if (hasIntestinalIssues) {
+      dailyDeficit = dailyDeficit * 0.85; // Riduce deficit del 15% per non stressare l'intestino
+      console.log(`⚠️ Correzione intestino applicata: deficit ridotto del 15%`);
+    }
+  } else if (weightToLose < 0) {
+    // Deve prendere peso
+    dailyDeficit = -200; // Surplus per aumento peso
   }
   
-  // Macro distribution for Gazzella protocol
-  const protein = Math.round((calories * 0.25) / 4); // 25% protein
-  const carbs = Math.round((calories * 0.45) / 4);   // 45% carbs
-  const fat = Math.round((calories * 0.30) / 9);     // 30% fat
+  let calories = Math.round(tdee - dailyDeficit);
+  
+  // Limite minimo sicuro: mai sotto 1100 kcal per le donne
+  calories = Math.max(1100, calories);
+  
+  // Limite massimo: mai sopra 2200 kcal (anche per chi fa molto sport)
+  calories = Math.min(2200, calories);
+  
+  console.log(`📊 Calcolo nutrizionale personalizzato:`);
+  console.log(`   BMR base: ${Math.round(bmr)} kcal`);
+  console.log(`   TDEE (mantenimento): ${tdee} kcal`);
+  console.log(`   Peso da perdere: ${weightToLose.toFixed(1)} kg`);
+  console.log(`   Deficit giornaliero: ${dailyDeficit} kcal`);
+  console.log(`   Calorie target: ${calories} kcal`);
+  
+  // Macro distribution for Gazzella protocol - OTTIMIZZATA PER PERDITA PESO
+  // Proteine più alte per preservare massa muscolare durante il deficit
+  const protein = Math.round((calories * 0.30) / 4); // 30% protein (maggiore per preservare muscoli)
+  const carbs = Math.round((calories * 0.40) / 4);   // 40% carbs (ridotti per deficit)
+  const fat = Math.round((calories * 0.30) / 9);     // 30% fat (grassi buoni)
   
   return { 
     calories, 

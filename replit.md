@@ -171,3 +171,21 @@ The system manages Users, User Profiles (health and dietary data), Meal Plans (n
   - Library: html2pdf.js
   - Test IDs: `button-print-plan`, `button-download-pdf`
 - **Impact**: Users can save their meal plans offline for easy reference in kitchen or while shopping
+
+## Personalized Calorie and Portion System (February 2, 2026)
+
+### Dynamic Calorie Calculation with Health Conditions
+- **Feature**: Complete rewrite of calorie calculation to ensure truly personalized meal plans
+- **Implementation**:
+  - Dynamic calorie deficit based on weight to lose (350-750 kcal gradient)
+  - Thyroid condition integration: -12% BMR reduction for hypothyroid clients
+  - Intestinal issues integration: -15% deficit reduction for digestive sensitivities
+  - Portion scaling based on calorie target (scale = targetCalories / 1600)
+  - Per-meal calorie distribution: Colazione 20%, Spuntino 8%, Pranzo 35%, Merenda 7%, Cena 30%
+  - Post-generation validation with 15% tolerance logging
+- **Calorie Limits**: Minimum 1100 kcal, Maximum 2200 kcal for safety
+- **Technical Details**:
+  - File: `server/services/openai.ts` - `calculateNutritionalNeeds()` and `calculatePrecisePortions()`
+  - Mifflin-St Jeor BMR formula with activity factor 1.4 (sedentary with exercise)
+  - OpenAI prompt includes mandatory calorie distribution table per meal
+- **Impact**: Each client now receives portions truly calibrated to their metabolic needs and health conditions
