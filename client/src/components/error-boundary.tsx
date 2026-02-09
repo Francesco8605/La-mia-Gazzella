@@ -1,4 +1,5 @@
 import React from "react";
+import { queryClient } from "@/lib/queryClient";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -20,7 +21,41 @@ export class ErrorBoundary extends React.Component<
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    try {
+      fetch("/api/client-error", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          message: error?.message || "Unknown error",
+          stack: error?.stack || "",
+          componentStack: errorInfo?.componentStack || "",
+          url: window.location.href,
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    } catch (e) {}
   }
+
+  handleReset = () => {
+    try {
+      queryClient.clear();
+    } catch (e) {}
+    try {
+      sessionStorage.clear();
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && !key.startsWith("pwa-")) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) {}
+    this.setState({ hasError: false, error: null });
+    window.location.href = "/";
+  };
 
   render() {
     if (this.state.hasError) {
@@ -34,11 +69,13 @@ export class ErrorBoundary extends React.Component<
             <p className="text-slate-600 mb-6">
               Si è verificato un errore imprevisto. Prova a ricaricare la pagina.
             </p>
+            {this.state.error && (
+              <p className="text-xs text-red-400 mb-4 font-mono break-all max-h-20 overflow-hidden">
+                {this.state.error.message}
+              </p>
+            )}
             <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                window.location.href = "/";
-              }}
+              onClick={this.handleReset}
               className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors"
             >
               Torna alla Home

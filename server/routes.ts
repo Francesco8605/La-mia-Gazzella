@@ -103,6 +103,50 @@ async function requireActiveSubscription(req: any, res: any, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+
+  const clientErrorTimestamps: Map<string, number[]> = new Map();
+  app.post("/api/client-error", async (req, res) => {
+    try {
+      const ip = req.ip || "unknown";
+      const now = Date.now();
+      const timestamps = clientErrorTimestamps.get(ip) || [];
+      const recentTimestamps = timestamps.filter(t => now - t < 60000);
+      if (recentTimestamps.length >= 10) {
+        return res.status(429).json({ received: false });
+      }
+      recentTimestamps.push(now);
+      clientErrorTimestamps.set(ip, recentTimestamps);
+
+      const body = req.body || {};
+      const message = String(body.message || "").substring(0, 500);
+      const stack = String(body.stack || "").substring(0, 1000);
+      const componentStack = String(body.componentStack || "").substring(0, 1000);
+      const url = String(body.url || "").substring(0, 200);
+      const userAgent = String(body.userAgent || "").substring(0, 200);
+      const timestamp = String(body.timestamp || "").substring(0, 30);
+      
+      const sessionId = req.cookies?.session;
+      let userEmail = "unknown";
+      if (sessionId) {
+        try {
+          const session = await storage.getSession(sessionId);
+          if (session) {
+            const userId = (session.sess as any)?.userId;
+            if (userId) {
+              const user = await storage.getUser(userId);
+              userEmail = user?.email || "unknown";
+            }
+          }
+        } catch (e) {}
+      }
+      console.error(`🚨 CLIENT ERROR from ${userEmail} at ${url}:`, {
+        message, stack, componentStack, userAgent, timestamp,
+      });
+      res.json({ received: true });
+    } catch (error) {
+      res.json({ received: false });
+    }
+  });
   
   // Debug endpoint for production troubleshooting
   app.get("/api/debug/status", async (req, res) => {

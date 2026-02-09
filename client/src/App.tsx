@@ -43,7 +43,6 @@ function DashboardRedirect() {
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
-  // Mostra loading durante il controllo dell'autenticazione
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 flex items-center justify-center">

@@ -32,17 +32,24 @@ export default function Home() {
     retry: false
   });
 
-  // Fetch user's latest meal plan for AI summary
   const { data: mealPlans } = useQuery<any[]>({
     queryKey: ["/api/meal-plans"],
     enabled: !!user,
     retry: false
   });
   
-  // Get the most recent meal plan with AI summary
-  const latestPlan = mealPlans && mealPlans.length > 0 
-    ? mealPlans.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]
-    : null;
+  let latestPlan: any = null;
+  try {
+    if (Array.isArray(mealPlans) && mealPlans.length > 0) {
+      latestPlan = [...mealPlans].sort((a, b) => {
+        const dateA = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })[0] || null;
+    }
+  } catch (e) {
+    console.error("Error processing meal plans:", e);
+  }
   
   // Calculate ideal weight if user profile exists
   const calculateIdealWeight = (height: number, age: number): number => {
