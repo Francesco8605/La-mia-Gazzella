@@ -26,7 +26,7 @@ export default function Home() {
   const canAccessOffer = hasActiveSubscription && !isInTrial;
   
   // Fetch user profile for weight calculation
-  const { data: userProfile } = useQuery({
+  const { data: userProfile } = useQuery<any>({
     queryKey: ["/api/user-profiles/current"],
     enabled: !!user,
     retry: false

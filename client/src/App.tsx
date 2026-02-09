@@ -32,6 +32,7 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminClientDetail from "@/pages/admin-client-detail";
 import ExclusiveOffer from "@/pages/exclusive-offer";
 import ShoppingList from "@/pages/shopping-list";
+import { ErrorBoundary } from "@/components/error-boundary";
 
 function DashboardRedirect() {
   const [, setLoc] = useLocation();
@@ -269,13 +270,15 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <InstallPWABanner />
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Router />
+          <InstallPWABanner />
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 
