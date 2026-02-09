@@ -33,8 +33,15 @@ type LoginFormData = z.infer<typeof loginSchema>;
 type SignupFormData = z.infer<typeof signupSchema>;
 
 export default function Auth() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  const getRedirectPath = () => {
+    if (location === "/piani-abbonamento" || location === "/dashboard") {
+      return "/piani-abbonamento";
+    }
+    return "/";
+  };
 
   const loginForm = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -69,17 +76,16 @@ export default function Auth() {
       return response.json();
     },
     onSuccess: (user) => {
+      const redirectTo = getRedirectPath();
       toast({
         title: "Benvenuto!",
         description: `Accesso effettuato con successo come ${user.email}`,
       });
-      // Invalida e aggiorna la cache dell'autenticazione
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       queryClient.setQueryData(["/api/auth/user"], user);
       
-      // Breve delay per assicurarsi che la cache sia aggiornata e reindirizza alla dashboard
       setTimeout(() => {
-        setLocation("/");
+        setLocation(redirectTo);
       }, 100);
     },
     onError: (error) => {

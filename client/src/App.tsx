@@ -1,5 +1,5 @@
-import React from "react";
-import { Switch, Route } from "wouter";
+import React, { useEffect } from "react";
+import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -32,6 +32,12 @@ import AdminDashboard from "@/pages/admin-dashboard";
 import AdminClientDetail from "@/pages/admin-client-detail";
 import ExclusiveOffer from "@/pages/exclusive-offer";
 import ShoppingList from "@/pages/shopping-list";
+
+function DashboardRedirect() {
+  const [, setLoc] = useLocation();
+  useEffect(() => { setLoc("/"); }, [setLoc]);
+  return null;
+}
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -75,12 +81,7 @@ function Router() {
       <Navigation />
       <Switch>
         <Route path="/" component={Home} />
-        <Route path="/dashboard">
-          {() => {
-            window.location.href = "/";
-            return null;
-          }}
-        </Route>
+        <Route path="/dashboard" component={DashboardRedirect} />
         <Route path="/auth" component={() => { 
           window.location.href = "/";
           return null;
