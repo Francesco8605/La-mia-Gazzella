@@ -119,7 +119,7 @@ export async function sendWelcomeEmail(email: string, username: string) {
 
             <!-- Call to action -->
             <div style="text-align: center; margin: 40px 0 30px 0;">
-              <a href="https://lamiagazzella.replit.app/dashboard" 
+              <a href="https://lamiagazzella.replit.app/piani-abbonamento" 
                  style="background: linear-gradient(135deg, #2d5016 0%, #22c55e 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(45, 80, 22, 0.3);">
                 🚀 Inizia il Tuo Percorso
               </a>

@@ -62,6 +62,8 @@ function Router() {
         <Route path="/admin" component={AdminDashboard} />
         <Route path="/admin/dashboard" component={AdminDashboard} />
         <Route path="/admin/client/:userId" component={AdminClientDetail} />
+        <Route path="/dashboard" component={Auth} />
+        <Route path="/piani-abbonamento" component={Auth} />
         <Route component={Auth} />
       </Switch>
     );
@@ -73,8 +75,13 @@ function Router() {
       <Navigation />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/dashboard">
+          {() => {
+            window.location.href = "/";
+            return null;
+          }}
+        </Route>
         <Route path="/auth" component={() => { 
-          // Se l'utente autenticato prova ad accedere a /auth, reindirizza alla home
           window.location.href = "/";
           return null;
         }} />
