@@ -5,7 +5,7 @@ import { insertUserSchema, insertUserProfileSchema, insertMealPlanSchema, insert
 import { db } from "./db";
 import { eq, desc, sql } from "drizzle-orm";
 import { generateMealPlan, generateRecipe, calculateNutritionalNeeds, generatePersonalizedRecipe, generateAIChatResponse } from "./services/openai";
-import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sendDailyBusinessSummary, sendContentRequestConfirmation } from "./services/email";
+import { sendPasswordRecoveryEmail, sendWelcomeEmail, sendAdminNotification, sendDailyBusinessSummary, sendContentRequestConfirmation, sendPaymentFailedEmail } from "./services/email";
 import { getBusinessSummary, getYesterdayBusinessSummary } from "./services/business-metrics";
 import { getShopifyService } from "./services/shopify";
 import { whatsappService } from "./services/whatsapp";
@@ -3045,16 +3045,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         try {
           if (failedInvoice.subscription) {
-            // Find user by subscription ID
             let targetUser = null;
+            let customerEmail = '';
             if (storage.getAllUsers) {
               const allUsers = await storage.getAllUsers();
               targetUser = allUsers.find(user => user.stripeSubscriptionId === failedInvoice.subscription);
             }
             
             if (targetUser) {
-              console.log('❌ Payment failed for user:', targetUser.username);
-              // Stripe will handle retries and cancellation automatically
+              customerEmail = targetUser.email || targetUser.username || '';
+            } else if ((failedInvoice as any).customer_email) {
+              customerEmail = (failedInvoice as any).customer_email;
+            } else if ((failedInvoice as any).customer) {
+              try {
+                const stripeCustomer = await stripe.customers.retrieve((failedInvoice as any).customer as string);
+                if (stripeCustomer && !stripeCustomer.deleted) {
+                  customerEmail = (stripeCustomer as any).email || '';
+                }
+              } catch (e) {}
+            }
+
+            const attemptCount = (failedInvoice as any).attempt_count || 1;
+            const amountDue = ((failedInvoice as any).amount_due || 2900) / 100;
+            const amountStr = amountDue.toFixed(2).replace('.', ',');
+
+            console.log(`❌ Payment failed for ${customerEmail || 'unknown'} - attempt ${attemptCount}, amount: ${amountStr}€`);
+
+            if (customerEmail) {
+              try {
+                await sendPaymentFailedEmail(customerEmail, attemptCount, amountStr);
+                console.log(`📧 Payment failed email (attempt ${attemptCount}) sent to ${customerEmail}`);
+              } catch (emailError: any) {
+                console.error(`❌ Failed to send payment failed email to ${customerEmail}:`, emailError.message);
+              }
+
+              try {
+                await sendAdminNotification('payment_failed', customerEmail, {
+                  amount: (failedInvoice as any).amount_due,
+                  attemptCount,
+                  subscriptionPlan: 'monthly'
+                });
+              } catch (adminEmailError: any) {
+                console.error('⚠️ Admin payment failed notification error:', adminEmailError.message);
+              }
             }
           }
         } catch (error) {

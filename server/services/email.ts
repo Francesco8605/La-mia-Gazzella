@@ -279,6 +279,12 @@ export async function sendAdminNotification(eventType: string, userEmail: string
         eventColor = '#ef4444';
         eventIcon = '❌';
         break;
+      case 'payment_failed':
+        subject = `💳 Pagamento Fallito (Tentativo ${details.attemptCount || '?'}) - La Mia Gazzella`;
+        eventTitle = `Pagamento Non Riuscito - Tentativo ${details.attemptCount || '?'}`;
+        eventColor = '#dc2626';
+        eventIcon = '💳';
+        break;
       default:
         subject = '🔔 Notifica Sistema - La Mia Gazzella';
         eventTitle = 'Evento Sistema';
@@ -757,6 +763,156 @@ export async function sendContentRequestConfirmation(
   } catch (error: any) {
     console.error('❌ Error sending content request confirmation:', error);
     // Don't throw - we don't want notification errors to break user flow
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendPaymentFailedEmail(
+  email: string, 
+  attemptNumber: number, 
+  amount: string
+) {
+  try {
+    const transporter = createTransporter();
+
+    const logoPath = path.join(process.cwd(), 'client/src/immagini/Logo-gazzella.jpg');
+    let logoAttachment = null;
+    try {
+      if (fs.existsSync(logoPath)) {
+        logoAttachment = {
+          filename: 'logo-gazzella.jpg',
+          path: logoPath,
+          cid: 'logo-gazzella'
+        };
+      }
+    } catch (e) {}
+
+    let subject = '';
+    let headerColor = '';
+    let headerIcon = '';
+    let bodyContent = '';
+
+    if (attemptNumber <= 1) {
+      subject = 'Pagamento non riuscito - La Mia Gazzella';
+      headerColor = '#f59e0b';
+      headerIcon = '⚠️';
+      bodyContent = `
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          Ti informiamo che il pagamento di <strong>${amount}€</strong> per il rinnovo del tuo abbonamento a La Mia Gazzella <strong>non è andato a buon fine</strong>.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          I nostri Esperti e i nostri Chef hanno già preparato contenuti personalizzati per il tuo percorso, e il servizio che ti è stato riservato ha un costo che deve essere onorato.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+          Ti chiediamo di <strong>aggiornare il tuo metodo di pagamento</strong> il prima possibile per regolarizzare la tua posizione.
+        </p>
+      `;
+    } else if (attemptNumber === 2) {
+      subject = '⚠️ Secondo sollecito - Pagamento di ' + amount + '€ ancora non ricevuto';
+      headerColor = '#ef4444';
+      headerIcon = '⚠️';
+      bodyContent = `
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          Ti contattiamo nuovamente perché il pagamento di <strong>${amount}€</strong> per il tuo abbonamento risulta <strong>ancora non saldato</strong>, nonostante il nostro precedente avviso.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          Ti ricordiamo che al momento della registrazione hai accettato i termini di servizio che prevedono il pagamento dell'abbonamento mensile. <strong>L'importo resta dovuto.</strong>
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+          Il nostro team ha dedicato tempo e risorse per creare un percorso su misura per te, e ci aspettiamo che l'impegno preso venga rispettato.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+          Aggiorna il tuo metodo di pagamento per saldare quanto dovuto.
+        </p>
+      `;
+    } else {
+      subject = '❌ Ultimo sollecito - Importo di ' + amount + '€ insoluto';
+      headerColor = '#991b1b';
+      headerIcon = '❌';
+      bodyContent = `
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          Questo è il nostro <strong>terzo e ultimo sollecito</strong> per il pagamento di <strong>${amount}€</strong> relativo al tuo abbonamento a La Mia Gazzella.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 20px;">
+          Ad oggi il tuo pagamento risulta insoluto nonostante i ripetuti tentativi di addebito e le nostre precedenti comunicazioni. Ti ricordiamo che <strong>l'importo è dovuto</strong> in base ai termini di servizio da te accettati al momento dell'iscrizione.
+        </p>
+        <p style="color: #333; font-size: 16px; margin-bottom: 25px;">
+          Ti invitiamo a regolarizzare <strong>immediatamente</strong> la tua posizione aggiornando il metodo di pagamento.
+        </p>
+        <div style="background-color: #fef2f2; border: 2px solid #991b1b; padding: 20px; border-radius: 8px; margin: 25px 0;">
+          <p style="color: #991b1b; font-size: 15px; margin: 0; font-weight: 500;">
+            In assenza di pagamento, ci riserviamo il diritto di procedere secondo quanto previsto dai nostri termini di servizio per il recupero dell'importo dovuto.
+          </p>
+        </div>
+      `;
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${subject}</title>
+      </head>
+      <body style="font-family: 'Georgia', serif; background-color: #f8f9fa; padding: 20px; line-height: 1.6;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 12px; box-shadow: 0 8px 25px rgba(0,0,0,0.15); overflow: hidden;">
+          
+          <div style="background: ${headerColor}; color: white; padding: 40px 30px; text-align: center;">
+            ${logoAttachment ? `<img src="cid:logo-gazzella" alt="La Mia Gazzella Logo" style="width: 60px; height: 60px; border-radius: 50%; margin-bottom: 15px; border: 3px solid rgba(255,255,255,0.3);">` : ''}
+            <div style="font-size: 2.5em; margin-bottom: 10px;">${headerIcon}</div>
+            <h1 style="margin: 0; font-size: 1.6em; font-weight: bold;">La Mia Gazzella</h1>
+            <p style="margin: 10px 0 0 0; font-size: 1.1em; opacity: 0.9;">Comunicazione Importante</p>
+          </div>
+          
+          <div style="padding: 40px 30px;">
+            ${bodyContent}
+
+            <div style="text-align: center; margin: 35px 0;">
+              <a href="https://lamiagazzella.replit.app/piani-abbonamento" 
+                 style="background: ${headerColor}; color: white; padding: 16px 40px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+                Aggiorna Metodo di Pagamento
+              </a>
+            </div>
+
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin: 25px 0; border-left: 4px solid #94a3b8;">
+              <p style="margin: 0 0 10px 0; color: #333; font-size: 14px; font-weight: 600;">Se il problema dipende dalla tua banca, ti consigliamo di:</p>
+              <ul style="color: #555; margin: 0; padding-left: 20px; font-size: 14px;">
+                <li style="margin-bottom: 5px;">Verificare che la carta non sia scaduta</li>
+                <li style="margin-bottom: 5px;">Controllare di avere fondi sufficienti</li>
+                <li>Contattare la tua banca per autorizzare il pagamento</li>
+              </ul>
+            </div>
+
+            <p style="color: #666; font-size: 13px; text-align: center; margin-top: 30px;">
+              Per qualsiasi chiarimento, rispondi a questa email.
+            </p>
+          </div>
+          
+          <div style="background-color: #f8f9fa; padding: 25px 30px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; font-size: 12px; margin: 0;">
+              <strong>La Mia Gazzella</strong> - Sistema Nutrizionale Personalizzato<br>
+              Questa comunicazione è inviata ai sensi dei termini di servizio accettati al momento della registrazione.
+            </p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const mailOptions = {
+      from: `"La Mia Gazzella" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: subject,
+      html: htmlContent,
+      ...(logoAttachment && { attachments: [logoAttachment] })
+    };
+
+    const result = await transporter.sendMail(mailOptions);
+    console.log(`✅ Payment failed email (attempt ${attemptNumber}) sent to ${email}`);
+    return { success: true, messageId: result.messageId };
+    
+  } catch (error: any) {
+    console.error(`❌ Error sending payment failed email (attempt ${attemptNumber}) to ${email}:`, error);
     return { success: false, error: error.message };
   }
 }

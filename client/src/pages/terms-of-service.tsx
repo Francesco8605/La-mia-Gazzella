@@ -58,11 +58,19 @@ export default function TermsOfService() {
               <h2 className="text-xl font-semibold text-slate-800 mb-3">4. Pagamenti e Abbonamenti</h2>
               <p className="text-slate-600 mb-3">Riguardo agli abbonamenti:</p>
               <ul className="list-disc pl-6 text-slate-600 space-y-1">
-                <li>I pagamenti sono elaborati tramite Stripe</li>
-                <li>Gli abbonamenti si rinnovano automaticamente</li>
+                <li>I pagamenti sono elaborati in modo sicuro tramite Stripe</li>
+                <li>Gli abbonamenti si rinnovano automaticamente alla scadenza del periodo corrente</li>
                 <li>Offriamo un periodo di prova gratuito di 3 giorni</li>
-                <li>Puoi cancellare in qualsiasi momento</li>
+                <li>Puoi cancellare in qualsiasi momento dalle impostazioni del tuo account</li>
                 <li>I rimborsi sono gestiti caso per caso</li>
+              </ul>
+              <p className="text-slate-600 mt-3 mb-3">Obblighi di pagamento:</p>
+              <ul className="list-disc pl-6 text-slate-600 space-y-1">
+                <li>Con l'attivazione dell'abbonamento, l'utente si impegna al pagamento dell'importo mensile previsto dal piano scelto</li>
+                <li>In caso di mancato pagamento, l'importo resta dovuto e il sistema effettuerà automaticamente ulteriori tentativi di addebito</li>
+                <li>Ad ogni tentativo di pagamento non riuscito, l'utente riceverà una comunicazione via email a titolo di sollecito</li>
+                <li>La Mia Gazzella si riserva il diritto di intraprendere le azioni necessarie per il recupero degli importi dovuti e non saldati, in conformità con la normativa vigente</li>
+                <li>L'utente è tenuto a garantire che il metodo di pagamento associato al proprio account sia valido e con disponibilità sufficiente per l'addebito</li>
               </ul>
             </section>
 
