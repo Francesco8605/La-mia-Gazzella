@@ -244,6 +244,7 @@ export default function Auth() {
                                 type="email"
                                 placeholder="La tua email" 
                                 className="pl-10"
+                                autoComplete="username"
                                 {...field} 
                                 data-testid="input-login-email"
                               />
@@ -267,6 +268,9 @@ export default function Auth() {
                                 type="password" 
                                 placeholder="La tua password"
                                 className="pl-10"
+                                autoComplete="current-password"
+                                data-lpignore="true"
+                                data-form-type="login"
                                 {...field}
                                 data-testid="input-login-password"
                               />
@@ -427,6 +431,7 @@ export default function Auth() {
                                 type="email" 
                                 placeholder="tua@email.com"
                                 className="pl-10"
+                                autoComplete="email"
                                 {...field}
                                 data-testid="input-signup-email"
                               />
@@ -474,6 +479,8 @@ export default function Auth() {
                                 type="password" 
                                 placeholder="Crea una password sicura"
                                 className="pl-10"
+                                autoComplete="new-password"
+                                data-lpignore="true"
                                 {...field}
                                 data-testid="input-signup-password"
                               />
@@ -497,6 +504,8 @@ export default function Auth() {
                                 type="password" 
                                 placeholder="Ripeti la password"
                                 className="pl-10"
+                                autoComplete="new-password"
+                                data-lpignore="true"
                                 {...field}
                                 data-testid="input-signup-confirm-password"
                               />
